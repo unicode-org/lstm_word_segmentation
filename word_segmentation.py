@@ -105,12 +105,30 @@ def remove_tags(line, st_tag, fn_tag):
             new_line += line[fn_delete[i] + 1 + add: st_delete[i + 1]]
         new_line += line[fn_delete[len(fn_delete) - 1] + 1:]
     new_line = new_line.replace("| | |", "| |")
-    # print(line)
-    # print(new_line)
-    # print(st_delete)
-    # print(fn_delete)
-    # x = input()
     return new_line
+
+def get__text(str, times, n):
+    # Extracts the training data ready for embedding from str
+    X = np.zeros(shape=[times, 1])
+    Y = np.zeros(shape=[times, 4])
+    for i in range(times):
+        new_char = rd.choice(string.ascii_letters)
+        new_int = 0
+        if ord('A') <= ord(new_char) <= ord('Z'):
+            new_int = ord(new_char) - ord('A')
+        elif ord('a') <= ord(new_char) <= ord('z'):
+            new_int = ord(new_char) - ord('a') + 26
+        X[i, 0] = new_int
+
+        if new_char in ['a', 'e', 'o', 'i', 'u', 'A', 'E', 'O', 'I', 'U']:
+            Y[i, 0] = 1
+            Y[i, 1] = 0
+        else:
+            Y[i, 0] = 0
+            Y[i, 1] = 1
+    return X, Y
+
+
 
 # The current algorithm segments the [refrigerator] as [cold] + [cabinet], and [night] as [middle] + [night]
 # (there are multiple words for night in thai), and [sun] as [horoscope] + [week]:
@@ -143,12 +161,6 @@ print("Words:\n{}".format(word_segmented_str))
 # x = input()
 bies = get_bies(char_brkpoints, word_brkpoints)
 print_bies(input_str, bies)
-
-
-# str = "sahand farhoodi is sweet"
-# str = str.replace("s", 't')
-# print(str)
-# x = input()
 
 grapheme_clusters_dic = dict()
 icu_mismatch = 0
@@ -192,7 +204,6 @@ for text_num in range(1, 20):
                 word_brkpoints.append(i-found_bars)
                 found_bars += 1
         unsegmented_line = line.replace("|", "")
-
 
         # Detect different grapheme clusters in each line
         chars_break_iterator = BreakIterator.createCharacterInstance(Locale.getUS())
@@ -246,7 +257,7 @@ for text_num in range(1, 20):
 
 
 # Analyzing grapheme clusters for embeddings
-# '''
+'''
 graph_clust_freq = grapheme_clusters_dic
 graph_clust_freq = {k: v for k, v in sorted(graph_clust_freq.items(), key=lambda item: item[1], reverse=True)}
 graph_clust_ratio = graph_clust_freq
@@ -267,4 +278,6 @@ print("{} grapheme clusters form {} of the text".format(cnt, thrsh))
 plt.hist(graph_clust_freq.values(), bins=50)
 plt.show()
 # plt.savefig("./Figure/hist_graph_clust_freq.png")
-# '''
+'''
+
+

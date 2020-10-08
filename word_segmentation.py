@@ -6,6 +6,7 @@ import datetime
 from icu import UnicodeString, BreakIterator, Locale
 import matplotlib.pyplot as plt
 
+import tensorflow as tf
 from keras.models import Sequential
 from keras.layers import LSTM
 from keras.layers import Dense
@@ -28,13 +29,15 @@ def print_forward(boundary):
 '''
 
 
+def sigmoid(x):
+    return 1.0/(1.0+np.exp(-x))
+
 def get_segmented_string(str, brkpoints):
     # Prints the original text segmented
     out = "|"
     for i in range(len(brkpoints)-1):
         out += str[brkpoints[i]: brkpoints[i+1]] + "|"
     return out
-
 
 def get_bies(char_brkpoints, word_brkpoints):
     bies = np.zeros(shape=[4, len(char_brkpoints)-1])
@@ -59,7 +62,6 @@ def get_bies(char_brkpoints, word_brkpoints):
             word_ind += 1
             continue
     return bies
-
 
 def print_bies(str, bies):
     print("BIES:")
@@ -276,6 +278,34 @@ def get_pseudo_trainable_data(input_str, times, n, graph_clust_ids):
         y_data[i, :] = pseudo_bies[:, i]
     return x_data, y_data
 
+def compute_hc(weight, x_t, h_tm1, c_tm1):
+    '''
+    c_tm1 = np.array([0,0]).reshape(1,2)
+    h_tm1 = np.array([0,0]).reshape(1,2)
+    x_t   = np.array([1]).reshape(1,1)
+
+    warr.shape = (nfeature, hunits*4)
+    uarr.shape = (hunits, hunits*4)
+    barr.shape = (hunits*4, )
+    '''
+
+    warr, uarr, barr = weight
+    warr = warr.numpy()
+    uarr = uarr.numpy()
+    barr = barr.numpy()
+    # print(x_t.shape)
+    # print(warr.shape)
+    # x = input()
+    s_t = (x_t.dot(warr) + h_tm1.dot(uarr) + barr)
+    hunit = uarr.shape[0]
+    i = sigmoid(s_t[:, :hunit])
+    f = sigmoid(s_t[:, 1 * hunit:2 * hunit])
+    _c = np.tanh(s_t[:, 2 * hunit:3 * hunit])
+    o = sigmoid(s_t[:, 3 * hunit:])
+    c_t = i * _c + f * c_tm1
+    h_t = o * np.tanh(c_t)
+    return [h_t, c_t]
+
 class KerasBatchGenerator(object):
     def __init__(self, x_data, y_data, time_steps, batch_size, dim_features, dim_output, times):
         self.x_data = x_data  # dim = times * dim_features
@@ -303,11 +333,11 @@ class KerasBatchGenerator(object):
             y[i, :, :] = self.y_data[self.time_steps * i: self.time_steps * (i + 1), :]
         return x, y
 
-# Playing with an custom input string
+# Playing with a custom input string
 '''
 # The current algorithm segments the [refrigerator] as [cold] + [cabinet], and [night] as [middle] + [night]
 # (there are multiple words for night in thai), and [sun] as [horoscope] + [week]:
-# input_str = "ฉันซื้อตู้เย็นเมื่อวานนี้และฉันชอบมันมากวันกลางคืนดวงอาทิตย์ฉันเป็นหมอฟัน"
+# input_str = "ฉันซื้อตู้เย็นเมื่อวานนี้และฉันชอบมันมากวันกลางคืนดวงอาทิตย์ฉันเป็นหมอฟัน
 input_str = "ชนะรัฐไทยด้วย"
 
 # The current algorithm segments [dentist] as [doctor] + [teeth]. It seems it fails to detect almost all compound words
@@ -487,7 +517,6 @@ plt.show()
 # plt.savefig("./Figure/hist_graph_clust_freq.png")
 '''
 
-
 # line = "ผม|นอน|ดู|การ|ถ่ายทอด|ฟุตบอล|คู่|สำคัญ|ทาง|โทรทัศน์|ตั้งแต่|บ่าย| |แล้ว|งีบ|หลับ|ไป|เสีย|นาน| |ตื่น|ขึ้น|มา| |แสง|แดด|สลัว|ลง|ไป|มาก| |อีก|ไม่|ถึง|ชั่วโมง|ท้อง|ฟ้า|ก็|จะ|มืด|แล้ว| |ทั้ง|บ้าน|เงียบ|สงัด| |<NE>เสาวภาคย์</NE>|เมีย|ผม|คง|ยัง|ไม่|กลับ|จาก|งาน|วัน|เกิด|<NE>คุณวิทู</NE>|"
 # line = "abc| |<NE>def</NE>| |sahand|<AB>sahand</AB>| |ghi|"
 # line = remove_tags2(line, "<NE>", "</NE>")
@@ -498,13 +527,13 @@ plt.show()
 
 # Building the LSTM model using the segmented data
 # '''
-num_texts = 5
+num_texts = 1
 train_texts_first = 1
 valid_texts_first = 10
 test_texts_first = 30
 input_str = get_clean_text(starting_text=train_texts_first, ending_text=train_texts_first+num_texts)
 print(len(input_str))
-times = 100000  # Number of characters that we cover
+times = 1000  # Number of characters that we cover
 n = 50         # length of each batches
 x_data, y_data = get_trainable_data(input_str, times, n, grapheme_clusters_ids)
 train_generator = KerasBatchGenerator(x_data, y_data, time_steps=n, batch_size=times//n, dim_features=1, dim_output=4,
@@ -522,17 +551,90 @@ x_data, y_data = get_trainable_data(input_str, times, n, grapheme_clusters_ids)
 test_generator = KerasBatchGenerator(x_data, y_data, time_steps=n, batch_size=times//n, dim_features=1, dim_output=4,
                                       times=times)
 
+hunits = 30
+vocab = 20
 model = Sequential()
-model.add(Embedding(thrsh, 20, input_length=n))
-model.add(Bidirectional(LSTM(20, return_sequences=True), input_shape=(n, 1)))
+model.add(Embedding(thrsh, vocab, input_length=n))
+#model.add(Dropout(0.2))
+model.add(Bidirectional(LSTM(hunits, return_sequences=True), input_shape=(n, 1)))
 model.add(Dropout(0.2))
 model.add(TimeDistributed(Dense(4, activation='softmax')))
 model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['accuracy'])
 
 model.fit(train_generator.generate(), steps_per_epoch=train_generator.times//train_generator.batch_size,
-                    epochs=15, validation_data=valid_generator.generate(), validation_steps=valid_generator.times//
+                    epochs=3, validation_data=valid_generator.generate(), validation_steps=valid_generator.times//
                                                                                             valid_generator.batch_size)
 
+
+# Testing the trained model manually
+# print(len(model.weights))
+# print(model.weights)
+# print("************************************************")
+# print(model.summary())
+
+all_test_input, all_actual_y = test_generator.generate_all_batches()
+all_y_hat = model.predict(all_test_input)
+test_input = all_test_input[0, :]
+y_hat = all_y_hat[0, :]
+# print(all_test_input.shape)
+# print(all_y_hat.shape)
+# x = input()
+
+# Forward LSTM
+embedarr = model.weights[0]
+embedarr = embedarr.numpy()
+weightLSTM = model.weights[1: 4]
+c_fw = np.zeros([1, hunits])
+h_fw = np.zeros([1, hunits])
+all_h_fw = np.zeros([len(test_input), hunits])
+for i in range(len(test_input)):
+    input_graph = test_input[i]
+    input_graph_id = grapheme_clusters_ids.get(input_graph, thrsh-1)
+    x_t = embedarr[input_graph_id, :]
+    x_t = x_t.reshape(1, x_t.shape[0])
+    h_fw, c_fw = compute_hc(weightLSTM, x_t, h_fw, c_fw)
+    all_h_fw[i, :] = h_fw
+
+# Backward LSTM
+embedarr = model.weights[0]
+embedarr = embedarr.numpy()
+weightLSTM = model.weights[4: 7]
+c_bw = np.zeros([1, hunits])
+h_bw = np.zeros([1, hunits])
+all_h_bw = np.zeros([len(test_input), hunits])
+for i in range(len(test_input)-1, -1, -1):
+    input_graph = test_input[i]
+    input_graph_id = grapheme_clusters_ids.get(input_graph, thrsh-1)
+    x_t = embedarr[input_graph_id, :]
+    x_t = x_t.reshape(1, x_t.shape[0])
+    h_bw, c_bw = compute_hc(weightLSTM, x_t, h_bw, c_bw)
+    all_h_bw[i, :] = h_bw
+
+timew = model.weights[7]
+timew = timew.numpy()
+timeb = model.weights[8]
+timeb = timeb.numpy()
+est = np.zeros([len(test_input), 4])
+for i in range(len(test_input)):
+    final_h = np.concatenate((all_h_fw[i, :], all_h_fw[i, :]), axis=0)
+    final_h = final_h.reshape(1, 2*hunits)
+    # print(all_h_fw[i, :])
+    # print(all_h_bw[i, :])
+    # print(final_h)
+    curr_est = final_h.dot(timew) + timeb
+    curr_est = curr_est[0]
+    curr_est = np.exp(curr_est)/sum(np.exp(curr_est))
+    est[i, :] = curr_est
+
+for i in range(len(test_input)):
+    print("Test case {}".format(i))
+    print(y_hat[i, :])
+    print(est[i, :])
+
+x = input()
+
+# Testing the trained model using model.predict()
+'''
 all_test_input, all_actual_y = test_generator.generate_all_batches()
 all_y_hat = model.predict(all_test_input)
 test_acc = []
@@ -554,6 +656,7 @@ for i in range(times//n):  # for each batch
 test_acc = np.array(test_acc)
 print("test accuracy: \n{}".format(test_acc))
 print("the average test accuracy: {}".format(np.mean(test_acc)))
+'''
 
 # '''
 

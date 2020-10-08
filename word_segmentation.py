@@ -232,7 +232,7 @@ def get_trainable_data(input_str, times, n, graph_clust_ids):
     # print("BIES  STR: {}".format(true_bies_str[:200]))
 
     # Creating x_data and y_data
-    excess_grapheme_ids = max(graph_clust_ids.values())
+    excess_grapheme_ids = thrsh - 1
     for i in range(times):
         char_st = char_brkpoints[i]
         char_fn = char_brkpoints[i+1]
@@ -293,9 +293,7 @@ def compute_hc(weight, x_t, h_tm1, c_tm1):
     warr = warr.numpy()
     uarr = uarr.numpy()
     barr = barr.numpy()
-    # print(x_t.shape)
-    # print(warr.shape)
-    # x = input()
+
     s_t = (x_t.dot(warr) + h_tm1.dot(uarr) + barr)
     hunit = uarr.shape[0]
     i = sigmoid(s_t[:, :hunit])
@@ -527,14 +525,14 @@ plt.show()
 
 # Building the LSTM model using the segmented data
 # '''
-num_texts = 1
+num_texts = 5
 train_texts_first = 1
 valid_texts_first = 10
 test_texts_first = 30
 input_str = get_clean_text(starting_text=train_texts_first, ending_text=train_texts_first+num_texts)
 print(len(input_str))
-times = 1000  # Number of characters that we cover
-n = 50         # length of each batches
+times = 200000  # Number of characters that we cover
+n = 100         # length of each batches
 x_data, y_data = get_trainable_data(input_str, times, n, grapheme_clusters_ids)
 train_generator = KerasBatchGenerator(x_data, y_data, time_steps=n, batch_size=times//n, dim_features=1, dim_output=4,
                                       times=times)
@@ -551,7 +549,7 @@ x_data, y_data = get_trainable_data(input_str, times, n, grapheme_clusters_ids)
 test_generator = KerasBatchGenerator(x_data, y_data, time_steps=n, batch_size=times//n, dim_features=1, dim_output=4,
                                       times=times)
 
-hunits = 30
+hunits = 20
 vocab = 20
 model = Sequential()
 model.add(Embedding(thrsh, vocab, input_length=n))
@@ -562,76 +560,66 @@ model.add(TimeDistributed(Dense(4, activation='softmax')))
 model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['accuracy'])
 
 model.fit(train_generator.generate(), steps_per_epoch=train_generator.times//train_generator.batch_size,
-                    epochs=3, validation_data=valid_generator.generate(), validation_steps=valid_generator.times//
+                    epochs=10, validation_data=valid_generator.generate(), validation_steps=valid_generator.times//
                                                                                             valid_generator.batch_size)
 
-
-# Testing the trained model manually
-# print(len(model.weights))
-# print(model.weights)
-# print("************************************************")
-# print(model.summary())
-
+# Code that computes output of tf.prediction manually
+'''
 all_test_input, all_actual_y = test_generator.generate_all_batches()
 all_y_hat = model.predict(all_test_input)
-test_input = all_test_input[0, :]
-y_hat = all_y_hat[0, :]
-# print(all_test_input.shape)
-# print(all_y_hat.shape)
-# x = input()
+for batch_id in range(all_test_input.shape[0]):
+    test_input = all_test_input[batch_id, :]
+    actual_y = all_actual_y[batch_id, :, :]
+    y_hat = all_y_hat[batch_id, :]
 
-# Forward LSTM
-embedarr = model.weights[0]
-embedarr = embedarr.numpy()
-weightLSTM = model.weights[1: 4]
-c_fw = np.zeros([1, hunits])
-h_fw = np.zeros([1, hunits])
-all_h_fw = np.zeros([len(test_input), hunits])
-for i in range(len(test_input)):
-    input_graph = test_input[i]
-    input_graph_id = grapheme_clusters_ids.get(input_graph, thrsh-1)
-    x_t = embedarr[input_graph_id, :]
-    x_t = x_t.reshape(1, x_t.shape[0])
-    h_fw, c_fw = compute_hc(weightLSTM, x_t, h_fw, c_fw)
-    all_h_fw[i, :] = h_fw
+    # Forward LSTM
+    embedarr = model.weights[0]
+    embedarr = embedarr.numpy()
+    weightLSTM = model.weights[1: 4]
+    c_fw = np.zeros([1, hunits])
+    h_fw = np.zeros([1, hunits])
+    all_h_fw = np.zeros([len(test_input), hunits])
+    for i in range(len(test_input)):
+        input_graph_id = int(test_input[i])
+        x_t = embedarr[input_graph_id, :]
+        x_t = x_t.reshape(1, x_t.shape[0])
+        h_fw, c_fw = compute_hc(weightLSTM, x_t, h_fw, c_fw)
+        all_h_fw[i, :] = h_fw
 
-# Backward LSTM
-embedarr = model.weights[0]
-embedarr = embedarr.numpy()
-weightLSTM = model.weights[4: 7]
-c_bw = np.zeros([1, hunits])
-h_bw = np.zeros([1, hunits])
-all_h_bw = np.zeros([len(test_input), hunits])
-for i in range(len(test_input)-1, -1, -1):
-    input_graph = test_input[i]
-    input_graph_id = grapheme_clusters_ids.get(input_graph, thrsh-1)
-    x_t = embedarr[input_graph_id, :]
-    x_t = x_t.reshape(1, x_t.shape[0])
-    h_bw, c_bw = compute_hc(weightLSTM, x_t, h_bw, c_bw)
-    all_h_bw[i, :] = h_bw
+    # Backward LSTM
+    embedarr = model.weights[0]
+    embedarr = embedarr.numpy()
+    weightLSTM = model.weights[4: 7]
+    c_bw = np.zeros([1, hunits])
+    h_bw = np.zeros([1, hunits])
+    all_h_bw = np.zeros([len(test_input), hunits])
+    for i in range(len(test_input)-1, -1, -1):
+        input_graph_id = int(test_input[i])
+        x_t = embedarr[input_graph_id, :]
+        x_t = x_t.reshape(1, x_t.shape[0])
+        h_bw, c_bw = compute_hc(weightLSTM, x_t, h_bw, c_bw)
+        all_h_bw[i, :] = h_bw
 
-timew = model.weights[7]
-timew = timew.numpy()
-timeb = model.weights[8]
-timeb = timeb.numpy()
-est = np.zeros([len(test_input), 4])
-for i in range(len(test_input)):
-    final_h = np.concatenate((all_h_fw[i, :], all_h_fw[i, :]), axis=0)
-    final_h = final_h.reshape(1, 2*hunits)
-    # print(all_h_fw[i, :])
-    # print(all_h_bw[i, :])
-    # print(final_h)
-    curr_est = final_h.dot(timew) + timeb
-    curr_est = curr_est[0]
-    curr_est = np.exp(curr_est)/sum(np.exp(curr_est))
-    est[i, :] = curr_est
+    timew = model.weights[7]
+    timew = timew.numpy()
+    timeb = model.weights[8]
+    timeb = timeb.numpy()
+    est = np.zeros([len(test_input), 4])
+    for i in range(len(test_input)):
+        final_h = np.concatenate((all_h_fw[i, :], all_h_bw[i, :]), axis=0)
+        final_h = final_h.reshape(1, 2*hunits)
+        curr_est = final_h.dot(timew) + timeb
+        curr_est = curr_est[0]
+        curr_est = np.exp(curr_est)/sum(np.exp(curr_est))
+        est[i, :] = curr_est
 
-for i in range(len(test_input)):
-    print("Test case {}".format(i))
-    print(y_hat[i, :])
-    print(est[i, :])
-
-x = input()
+    for i in range(len(test_input)):
+        print("Batch size = {}, Test case {}".format(batch_id, i))
+        # print(y_hat[i, :])
+        # print(est[i, :])
+        print("tf bies    : {}".format(get_bies_string_from_softmax(y_hat)))
+        print("manual bies: {}".format(get_bies_string_from_softmax(est)))
+'''
 
 # Testing the trained model using model.predict()
 '''
@@ -639,7 +627,7 @@ all_test_input, all_actual_y = test_generator.generate_all_batches()
 all_y_hat = model.predict(all_test_input)
 test_acc = []
 for i in range(times//n):  # for each batch
-    print("test batch = {}".format(i))
+    # print("test batch = {}".format(i))
     test_input = all_test_input[i, :]
     actual_y = all_actual_y[i, :, :]
     actual_y = get_bies_string(np.transpose(actual_y))
@@ -648,17 +636,85 @@ for i in range(times//n):  # for each batch
     y_hat = get_bies_string_from_softmax(y_hat)
     print(y_hat)
     mismatch = 0
-    for i in range(len(actual_y)):
-        if actual_y[i] != y_hat[i]:
+    for j in range(len(actual_y)):
+        if actual_y[j] != y_hat[j]:
             mismatch += 1
     test_acc.append(1 - mismatch/len(actual_y))
 
 test_acc = np.array(test_acc)
-print("test accuracy: \n{}".format(test_acc))
+# print("test accuracy: \n{}".format(test_acc))
 print("the average test accuracy: {}".format(np.mean(test_acc)))
 '''
 
+
+# Checking LSTM for the case where the length of input text is not necessarily n
 # '''
+all_test_input, all_actual_y = test_generator.generate_all_batches()
+all_y_hat = model.predict(all_test_input)
+test_acc1 = []
+test_acc_sep = []
+test_acc_comb = []
+for i in range(times//n - 1):  # for each batch
+    # print("test batch = {}".format(i))
+    test_input1 = all_test_input[i, :]
+    test_input2 = all_test_input[i+1, :]
+    test_input = np.concatenate((test_input1, test_input2), axis=0)
+    test_input = np.reshape(test_input, newshape=[1, test_input.shape[0]])
+    y_hat_comb = model.predict(test_input)
+    y_hat_comb = get_bies_string_from_softmax(y_hat_comb[0, :, :])
+    # print("combined y_hat = {}".format(y_hat_comb))
+
+    y_hat1 = all_y_hat[i, :, :]
+    y_hat1 = get_bies_string_from_softmax(y_hat1)
+    y_hat2 = all_y_hat[i+1, :, :]
+    y_hat2 = get_bies_string_from_softmax(y_hat2)
+    y_hat_sep = y_hat1 + y_hat2
+    # print("separate y_hat = {}".format(y_hat_sep))
+
+    actual_y1 = all_actual_y[i, :, :]
+    actual_y1 = get_bies_string(np.transpose(actual_y1))
+    actual_y2 = all_actual_y[i+1, :, :]
+    actual_y2 = get_bies_string(np.transpose(actual_y2))
+    actual_y = actual_y1 + actual_y2
+    # print("actual y       = {}".format(actual_y))
+
+    # print(y_hat1.shape)
+    # print(y_hat2.shape)
+    # print(y_hat.shape)
+
+    mismatch_sep = 0
+    mismatch_comb = 0
+    mismatch1 = 0
+    for j in range(len(actual_y1)):
+        if actual_y1[j] != y_hat1[j]:
+            mismatch1 += 1
+    test_acc1.append(1 - mismatch1 / len(actual_y1))
+    # print(len(actual_y))
+    # print(len(y_hat_sep))
+    # print(len(y_hat_comb))
+    # x = input()
+    for j in range(len(actual_y)):
+        if actual_y[j] != y_hat_sep[j]:
+            mismatch_sep += 1
+        if actual_y[j] != y_hat_comb[j]:
+            mismatch_comb += 1
+    test_acc_sep.append(1 - mismatch_sep/len(actual_y))
+    test_acc_comb.append(1 - mismatch_comb/len(actual_y))
+
+test_acc_acc1 = np.array(test_acc1)
+test_acc_sep = np.array(test_acc_sep)
+test_acc_comb = np.array(test_acc_comb)
+print("the average test accuracy for case 1   : {}".format(np.mean(test_acc1)))
+print("the average test accuracy for seperated: {}".format(np.mean(test_acc_sep)))
+print("the average test accuracy for combined : {}".format(np.mean(test_acc_comb)))
+plt.plot(test_acc_sep, label="seperate")
+plt.plot(test_acc_comb, label="combined")
+plt.legend()
+plt.show()
+# print("test accuracy: \n{}".format(test_acc))
+
+# '''
+
 
 # Building the LSTM model using the segmented data
 '''

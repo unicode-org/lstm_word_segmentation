@@ -177,7 +177,7 @@ def get_text_temp(str, times, n):
             Y[i, 1] = 1
     return X, Y
 
-def get_clean_text(starting_text, ending_text):
+def get_BEST_text(starting_text, ending_text):
     category = ["news", "encyclopedia", "article", "novel"]
     out_str = ""
     for text_num in range(starting_text, ending_text):
@@ -204,6 +204,8 @@ def get_clean_text(starting_text, ending_text):
     return out_str
 
 def get_trainable_data(input_str, times, n, graph_clust_ids):
+    if len(input_str) < times:
+        print("Warning: length of input_str is smaller than times")
     x_data = np.zeros(shape=[times, 1])
     y_data = np.zeros(shape=[times, 4])
     # Finding word breakpoints
@@ -330,6 +332,95 @@ class KerasBatchGenerator(object):
             x[i, :] = self.x_data[self.time_steps * i: self.time_steps * (i + 1), 0]
             y[i, :, :] = self.y_data[self.time_steps * i: self.time_steps * (i + 1), :]
         return x, y
+
+# This class is supposed to implement the bi-directional LSTM model for segmentation
+class WordSegmenter:
+    def __init__(self, input_n, input_t, input_graph_clust_dic, input_embedding_dim, input_hunits, input_dropout_rate, input_feature_dim,
+                 input_output_dim, input_epochs):
+        # n: default length of the input for LSTM model
+        # T: total length of data used to train and validate the model
+        # batch_num: number of batches used to train the model
+        # graph_clust_dic: a dictionary that matches most used grapheme clusters to integers
+        # clusters_num: number of grapheme clusters used in graph_clust_dic
+        # embedding_dim: length of the embedding vectors for each grapheme cluster
+        # hunits: number of units used in each cell of LSTM
+        # dropout_rate: dropout rate usd in after bidirectional LSTM layer
+        # feature_dim: dimension of the input layer
+        # output_dim: dimension of the output layer
+        # epochs: number of epochs used to train the model
+
+        self.n = input_n
+        self.t = input_t
+        if self.t % self.n != 0:
+            print("Warning: t is not divided by n")
+        self.batch_num = self.t // self.n
+        self.graph_clust_dic = input_graph_clust_dic
+        self.clusters_num = len(self.graph_clust_dic.keys()) + 1
+        self.embedding_dim = input_embedding_dim
+        self.hunits = input_hunits
+        self.dropout_rate = input_dropout_rate
+        self.feature_dim = input_feature_dim
+        self.output_dim = input_output_dim
+        self.epochs = input_epochs
+
+    def train_model(self):
+
+        # Get training data of length T
+        input_str = get_BEST_text(starting_text=1, ending_text=6)
+        x_data, y_data = get_trainable_data(input_str, self.t, self.n, self.graph_clust_dic)
+        train_generator = KerasBatchGenerator(x_data, y_data, time_steps=self.n, batch_size=self.batch_num,
+                                              dim_features=self.feature_dim, dim_output=self.output_dim, times=self.t)
+
+         # Get validation data
+        input_str = get_BEST_text(starting_text=10, ending_text=16)
+        x_data, y_data = get_trainable_data(input_str, self.t, self.n, self.graph_clust_dic)
+        valid_generator = KerasBatchGenerator(x_data, y_data, time_steps=self.n, batch_size=self.batch_num,
+                                              dim_features=self.feature_dim, dim_output=self.output_dim, times=self.t)
+
+        # Building the model
+        model = Sequential()
+        model.add(Embedding(self.clusters_num, self.embedding_dim, input_length=self.n))
+        # model.add(Dropout(0.2))
+        model.add(Bidirectional(LSTM(self.hunits, return_sequences=True), input_shape=(self.n, 1)))
+        model.add(Dropout(self.dropout_rate))
+        model.add(TimeDistributed(Dense(self.output_dim, activation='softmax')))
+        model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['accuracy'])
+
+        # Fitting the model
+        model.fit(train_generator.generate(), steps_per_epoch=self.batch_num,
+                  epochs=self.epochs, validation_data=valid_generator.generate(), validation_steps=self.batch_num)
+
+        self.model = model
+    def test_model(self):
+        # Get test data
+        input_str = get_BEST_text(starting_text=30, ending_text=36)
+        x_data, y_data = get_trainable_data(input_str, self.t, self.n, self.graph_clust_dic)
+        test_generator = KerasBatchGenerator(x_data, y_data, time_steps=self.n, batch_size=self.batch_num,
+                                              dim_features=self.feature_dim, dim_output=self.output_dim, times=self.t)
+
+        # Testing batch by batch (each batch of length n)
+        all_test_input, all_actual_y = test_generator.generate_all_batches()
+        all_y_hat = self.model.predict(all_test_input)
+        test_acc = []
+        for i in range(self.t // self.n):  # for each batch
+            # test_input = all_test_input[i, :]
+            actual_y = all_actual_y[i, :, :]
+            actual_y = get_bies_string(np.transpose(actual_y))
+            # print(actual_y)
+            y_hat = all_y_hat[i, :, :]
+            y_hat = get_bies_string_from_softmax(y_hat)
+            # print(y_hat)
+            mismatch = 0
+            for j in range(len(actual_y)):
+                if actual_y[j] != y_hat[j]:
+                    mismatch += 1
+            test_acc.append(1 - mismatch / len(actual_y))
+
+        test_acc = np.array(test_acc)
+        # print("test accuracy: \n{}".format(test_acc))
+        plt.plot(test_acc)
+        plt.show()
+        print("the average test accuracy: {}".format(np.mean(test_acc)))
 
 # Playing with a custom input string
 '''
@@ -486,7 +577,7 @@ for key in graph_clust_ratio.keys():
     if cnt == thrsh-1:
         break
     cnt += 1
-# print(grapheme_clusters_ids)
+
 
 # Assessing the precision of icu algorithm
 # print("The bies precision of icu algorithm is {}".format(1 - icu_mismatch/icu_total_bies_lengths))
@@ -522,6 +613,12 @@ plt.show()
 # print(line)
 # x = input()
 
+word_segmenter = WordSegmenter(input_n=50, input_t=1000, input_graph_clust_dic=grapheme_clusters_ids,
+                               input_embedding_dim=20, input_hunits=20, input_dropout_rate=0.2, input_feature_dim=1,
+                               input_output_dim=4, input_epochs=10)
+word_segmenter.train_model()
+word_segmenter.test_model()
+x = input()
 
 # Building the LSTM model using the segmented data
 # '''
@@ -529,21 +626,23 @@ num_texts = 5
 train_texts_first = 1
 valid_texts_first = 10
 test_texts_first = 30
-input_str = get_clean_text(starting_text=train_texts_first, ending_text=train_texts_first+num_texts)
+input_str = get_BEST_text(starting_text=train_texts_first, ending_text=train_texts_first+num_texts)
 print(len(input_str))
-times = 200000  # Number of characters that we cover
-n = 100         # length of each batches
+times = 100000  # Number of characters that we cover
+n = 50         # length of each batches
 x_data, y_data = get_trainable_data(input_str, times, n, grapheme_clusters_ids)
 train_generator = KerasBatchGenerator(x_data, y_data, time_steps=n, batch_size=times//n, dim_features=1, dim_output=4,
                                       times=times)
+print(x_data.shape)
+print(y_data.shape)
 
-input_str = get_clean_text(starting_text=valid_texts_first, ending_text=valid_texts_first+num_texts)
+input_str = get_BEST_text(starting_text=valid_texts_first, ending_text=valid_texts_first+num_texts)
 print(len(input_str))
 x_data, y_data = get_trainable_data(input_str, times, n, grapheme_clusters_ids)
 valid_generator = KerasBatchGenerator(x_data, y_data, time_steps=n, batch_size=times//n, dim_features=1, dim_output=4,
                                       times=times)
 
-input_str = get_clean_text(starting_text=test_texts_first, ending_text=test_texts_first+num_texts)
+input_str = get_BEST_text(starting_text=test_texts_first, ending_text=test_texts_first+num_texts)
 print(len(input_str))
 x_data, y_data = get_trainable_data(input_str, times, n, grapheme_clusters_ids)
 test_generator = KerasBatchGenerator(x_data, y_data, time_steps=n, batch_size=times//n, dim_features=1, dim_output=4,
@@ -622,7 +721,7 @@ for batch_id in range(all_test_input.shape[0]):
 '''
 
 # Testing the trained model using model.predict()
-'''
+# '''
 all_test_input, all_actual_y = test_generator.generate_all_batches()
 all_y_hat = model.predict(all_test_input)
 test_acc = []
@@ -644,11 +743,11 @@ for i in range(times//n):  # for each batch
 test_acc = np.array(test_acc)
 # print("test accuracy: \n{}".format(test_acc))
 print("the average test accuracy: {}".format(np.mean(test_acc)))
-'''
+# '''
 
 
 # Checking LSTM for the case where the length of input text is not necessarily n
-# '''
+'''
 all_test_input, all_actual_y = test_generator.generate_all_batches()
 all_y_hat = model.predict(all_test_input)
 test_acc1 = []
@@ -713,7 +812,7 @@ plt.legend()
 plt.show()
 # print("test accuracy: \n{}".format(test_acc))
 
-# '''
+'''
 
 
 # Building the LSTM model using the segmented data
@@ -722,7 +821,7 @@ num_texts = 5
 train_texts_first = 1
 valid_texts_first = 10
 test_texts_first = 30
-input_str = get_clean_text(starting_text=train_texts_first, ending_text=train_texts_first+num_texts)
+input_str = get_BEST_text(starting_text=train_texts_first, ending_text=train_texts_first+num_texts)
 print(len(input_str))
 times = 100000  # Number of characters that we cover
 n = 50         # length of each batches
@@ -730,13 +829,13 @@ x_data, y_data = get_pseudo_trainable_data(input_str, times, n, grapheme_cluster
 train_generator = KerasBatchGenerator(x_data, y_data, time_steps=n, batch_size=times//n, dim_features=1, dim_output=4,
                                       times=times)
 
-input_str = get_clean_text(starting_text=valid_texts_first, ending_text=valid_texts_first+num_texts)
+input_str = get_BEST_text(starting_text=valid_texts_first, ending_text=valid_texts_first+num_texts)
 print(len(input_str))
 x_data, y_data = get_pseudo_trainable_data(input_str, times, n, grapheme_clusters_ids)
 valid_generator = KerasBatchGenerator(x_data, y_data, time_steps=n, batch_size=times//n, dim_features=1, dim_output=4,
                                       times=times)
 
-input_str = get_clean_text(starting_text=test_texts_first, ending_text=test_texts_first+num_texts)
+input_str = get_BEST_text(starting_text=test_texts_first, ending_text=test_texts_first+num_texts)
 print(len(input_str))
 x_data, y_data = get_trainable_data(input_str, times, n, grapheme_clusters_ids)
 test_generator = KerasBatchGenerator(x_data, y_data, time_steps=n, batch_size=times//n, dim_features=1, dim_output=4,

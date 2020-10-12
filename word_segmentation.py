@@ -333,10 +333,10 @@ class KerasBatchGenerator(object):
             y[i, :, :] = self.y_data[self.time_steps * i: self.time_steps * (i + 1), :]
         return x, y
 
-# This class is supposed to implement the bi-directional LSTM model for segmentation
+
 class WordSegmenter:
     def __init__(self, input_n, input_t, input_graph_clust_dic, input_embedding_dim, input_hunits, input_dropout_rate, input_feature_dim,
-                 input_output_dim, input_epochs):
+                 input_output_dim, input_epochs, input_training_data, input_evaluating_data):
         # n: default length of the input for LSTM model
         # T: total length of data used to train and validate the model
         # batch_num: number of batches used to train the model
@@ -348,6 +348,8 @@ class WordSegmenter:
         # feature_dim: dimension of the input layer
         # output_dim: dimension of the output layer
         # epochs: number of epochs used to train the model
+        # training_data: name of the data used to train the model
+        # evaluating_data: name of the data used to evaluate the model
 
         self.n = input_n
         self.t = input_t
@@ -362,18 +364,26 @@ class WordSegmenter:
         self.feature_dim = input_feature_dim
         self.output_dim = input_output_dim
         self.epochs = input_epochs
+        self.training_data = input_training_data
+        self.evaluating_data = input_evaluating_data
 
     def train_model(self):
 
         # Get training data of length T
-        input_str = get_BEST_text(starting_text=1, ending_text=6)
-        x_data, y_data = get_trainable_data(input_str, self.t, self.n, self.graph_clust_dic)
+        if self.training_data == "BEST":
+            input_str = get_BEST_text(starting_text=1, ending_text=6)
+            x_data, y_data = get_trainable_data(input_str, self.t, self.n, self.graph_clust_dic)
+        else:
+            print("Warning: no implementation for this training data exists!")
         train_generator = KerasBatchGenerator(x_data, y_data, time_steps=self.n, batch_size=self.batch_num,
                                               dim_features=self.feature_dim, dim_output=self.output_dim, times=self.t)
 
-         # Get validation data
-        input_str = get_BEST_text(starting_text=10, ending_text=16)
-        x_data, y_data = get_trainable_data(input_str, self.t, self.n, self.graph_clust_dic)
+        # Get validation data
+        if self.training_data == "BEST":
+            input_str = get_BEST_text(starting_text=10, ending_text=16)
+            x_data, y_data = get_trainable_data(input_str, self.t, self.n, self.graph_clust_dic)
+        else:
+            print("Warning: no implementation for this validation data exists!")
         valid_generator = KerasBatchGenerator(x_data, y_data, time_steps=self.n, batch_size=self.batch_num,
                                               dim_features=self.feature_dim, dim_output=self.output_dim, times=self.t)
 
@@ -389,12 +399,15 @@ class WordSegmenter:
         # Fitting the model
         model.fit(train_generator.generate(), steps_per_epoch=self.batch_num,
                   epochs=self.epochs, validation_data=valid_generator.generate(), validation_steps=self.batch_num)
-
         self.model = model
+
     def test_model(self):
         # Get test data
-        input_str = get_BEST_text(starting_text=30, ending_text=36)
-        x_data, y_data = get_trainable_data(input_str, self.t, self.n, self.graph_clust_dic)
+        if self.evaluating_data == "BEST":
+            input_str = get_BEST_text(starting_text=30, ending_text=36)
+            x_data, y_data = get_trainable_data(input_str, self.t, self.n, self.graph_clust_dic)
+        else:
+            print("Warning: no implementation for this evaluation data exists!")
         test_generator = KerasBatchGenerator(x_data, y_data, time_steps=self.n, batch_size=self.batch_num,
                                               dim_features=self.feature_dim, dim_output=self.output_dim, times=self.t)
 
@@ -615,7 +628,8 @@ plt.show()
 
 word_segmenter = WordSegmenter(input_n=50, input_t=1000, input_graph_clust_dic=grapheme_clusters_ids,
                                input_embedding_dim=20, input_hunits=20, input_dropout_rate=0.2, input_feature_dim=1,
-                               input_output_dim=4, input_epochs=10)
+                               input_output_dim=4, input_epochs=10, input_training_data="BEST",
+                               input_evaluating_data="BEST")
 word_segmenter.train_model()
 word_segmenter.test_model()
 x = input()

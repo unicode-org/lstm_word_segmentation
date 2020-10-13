@@ -203,23 +203,19 @@ def get_BEST_text(starting_text, ending_text):
         out_str = '|' + out_str
     return out_str
 
-def get_trainable_data(input_str, times, n, graph_clust_ids):
-    if len(input_str) < times:
-        print("Warning: length of input_str is smaller than times")
-    x_data = np.zeros(shape=[times, 1])
-    y_data = np.zeros(shape=[times, 4])
+def get_trainable_data(input_line, graph_clust_ids):
     # Finding word breakpoints
     word_brkpoints = []
     found_bars = 0
-    for i in range(len(input_str)):
-        if input_str[i] == '|':
+    for i in range(len(input_line)):
+        if input_line[i] == '|':
             word_brkpoints.append(i - found_bars)
             found_bars += 1
-    unsegmented_str = input_str.replace("|", "")
+    unsegmented_line = input_line.replace("|", "")
 
     # Finding grapheme cluster breakpoints
     chars_break_iterator = BreakIterator.createCharacterInstance(Locale.getUS())
-    chars_break_iterator.setText(unsegmented_str)
+    chars_break_iterator.setText(unsegmented_line)
     char_brkpoints = [0]
     for brkpoint in chars_break_iterator:
         char_brkpoints.append(brkpoint)
@@ -228,17 +224,15 @@ def get_trainable_data(input_str, times, n, graph_clust_ids):
     true_bies = get_bies(char_brkpoints, word_brkpoints)
     true_bies_str = get_bies_string(true_bies)
 
-    # Printing for debugging
-    # print("INPUT STR: {}".format(input_str[:200]))
-    # print("UNSEG STR: {}".format(unsegmented_str[:200]))
-    # print("BIES  STR: {}".format(true_bies_str[:200]))
+    times = len(char_brkpoints)-1
+    x_data = np.zeros(shape=[times, 1])
+    y_data = np.zeros(shape=[times, 4])
 
-    # Creating x_data and y_data
-    excess_grapheme_ids = thrsh - 1
+    excess_grapheme_ids = max(grapheme_clusters_ids.values()) + 1
     for i in range(times):
         char_st = char_brkpoints[i]
-        char_fn = char_brkpoints[i+1]
-        curr_char = unsegmented_str[char_st: char_fn]
+        char_fn = char_brkpoints[i + 1]
+        curr_char = unsegmented_line[char_st: char_fn]
         x_data[i, 0] = graph_clust_ids.get(curr_char, excess_grapheme_ids)
         y_data[i, :] = true_bies[:, i]
     return x_data, y_data
@@ -369,19 +363,26 @@ class WordSegmenter:
 
     def train_model(self):
 
-        # Get training data of length T
+        # Get training data of length self.t
         if self.training_data == "BEST":
+            # this chunk of data has ~ 10^6 data points
             input_str = get_BEST_text(starting_text=1, ending_text=6)
-            x_data, y_data = get_trainable_data(input_str, self.t, self.n, self.graph_clust_dic)
+            x_data, y_data = get_trainable_data(input_str, self.graph_clust_dic)
+            x_data = x_data[:self.t]
+            y_data = y_data[:self.t, :]
         else:
             print("Warning: no implementation for this training data exists!")
+
         train_generator = KerasBatchGenerator(x_data, y_data, time_steps=self.n, batch_size=self.batch_num,
                                               dim_features=self.feature_dim, dim_output=self.output_dim, times=self.t)
 
-        # Get validation data
+        # Get validation data of length self.t
         if self.training_data == "BEST":
+            # this chunk of data has ~ 10^6 data points
             input_str = get_BEST_text(starting_text=10, ending_text=16)
-            x_data, y_data = get_trainable_data(input_str, self.t, self.n, self.graph_clust_dic)
+            x_data, y_data = get_trainable_data(input_str, self.graph_clust_dic)
+            x_data = x_data[:self.t]
+            y_data = y_data[:self.t, :]
         else:
             print("Warning: no implementation for this validation data exists!")
         valid_generator = KerasBatchGenerator(x_data, y_data, time_steps=self.n, batch_size=self.batch_num,
@@ -390,22 +391,26 @@ class WordSegmenter:
         # Building the model
         model = Sequential()
         model.add(Embedding(self.clusters_num, self.embedding_dim, input_length=self.n))
-        # model.add(Dropout(0.2))
+        model.add(Dropout(self.dropout_rate))
         model.add(Bidirectional(LSTM(self.hunits, return_sequences=True), input_shape=(self.n, 1)))
         model.add(Dropout(self.dropout_rate))
         model.add(TimeDistributed(Dense(self.output_dim, activation='softmax')))
         model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['accuracy'])
 
         # Fitting the model
-        model.fit(train_generator.generate(), steps_per_epoch=self.batch_num,
-                  epochs=self.epochs, validation_data=valid_generator.generate(), validation_steps=self.batch_num)
+        model.fit(train_generator.generate(), steps_per_epoch=self.t//self.batch_num,
+                  epochs=self.epochs, validation_data=valid_generator.generate(),
+                  validation_steps=self.t//self.batch_num)
         self.model = model
 
     def test_model(self):
         # Get test data
         if self.evaluating_data == "BEST":
+            # this chunk of data has ~ 10^6 data points
             input_str = get_BEST_text(starting_text=30, ending_text=36)
-            x_data, y_data = get_trainable_data(input_str, self.t, self.n, self.graph_clust_dic)
+            x_data, y_data = get_trainable_data(input_str, self.graph_clust_dic)
+            x_data = x_data[:self.t]
+            y_data = y_data[:self.t, :]
         else:
             print("Warning: no implementation for this evaluation data exists!")
         test_generator = KerasBatchGenerator(x_data, y_data, time_steps=self.n, batch_size=self.batch_num,
@@ -416,59 +421,56 @@ class WordSegmenter:
         all_y_hat = self.model.predict(all_test_input)
         test_acc = []
         for i in range(self.t // self.n):  # for each batch
-            # test_input = all_test_input[i, :]
             actual_y = all_actual_y[i, :, :]
             actual_y = get_bies_string(np.transpose(actual_y))
-            # print(actual_y)
             y_hat = all_y_hat[i, :, :]
             y_hat = get_bies_string_from_softmax(y_hat)
-            # print(y_hat)
             mismatch = 0
             for j in range(len(actual_y)):
                 if actual_y[j] != y_hat[j]:
                     mismatch += 1
             test_acc.append(1 - mismatch / len(actual_y))
-
         test_acc = np.array(test_acc)
-        # print("test accuracy: \n{}".format(test_acc))
-        plt.plot(test_acc)
-        plt.show()
         print("the average test accuracy: {}".format(np.mean(test_acc)))
 
-# Playing with a custom input string
-'''
-# The current algorithm segments the [refrigerator] as [cold] + [cabinet], and [night] as [middle] + [night]
-# (there are multiple words for night in thai), and [sun] as [horoscope] + [week]:
-# input_str = "ฉันซื้อตู้เย็นเมื่อวานนี้และฉันชอบมันมากวันกลางคืนดวงอาทิตย์ฉันเป็นหมอฟัน
-input_str = "ชนะรัฐไทยด้วย"
+    def test_text(self, cat, text_num):
+        text_num_str = "{}".format(text_num).zfill(5)
+        file = open("./Data/Best/{}/{}_".format(cat, cat) + text_num_str + ".txt", 'r')
+        test_acc = []
+        while True:
+            line = file.readline().strip()
+            if not line:
+                break
+            if len(line) >= 1 and line[len(line) - 1] != '|':
+                line += "|"
+            line = remove_tags2(line, "<NE>", "</NE>")
+            line = remove_tags2(line, "<AB>", "</AB>")
+            if "http" in line or len(line) == 0:
+                continue
+            if line[0] != '|':
+                line = '|' + line
+            x_data, y_data = get_trainable_data(line, self.graph_clust_dic)
+            y_hat = self.model.predict(x_data)
+            y_hat = y_hat[:, 0, :]
+            y_hat = get_bies_string_from_softmax(y_hat)
+            actual_y = get_bies_string_from_softmax(y_data)
+            mismatch = 0
+            for j in range(len(actual_y)):
+                if actual_y[j] != y_hat[j]:
+                    mismatch += 1
+            test_acc.append(1 - mismatch / len(actual_y))
+            # print(actual_y)
+            # print(y_hat)
+        print("the average test accuracy: {}".format(np.mean(test_acc)))
+        return test_acc
 
-# The current algorithm segments [dentist] as [doctor] + [teeth]. It seems it fails to detect almost all compound words
-# because it is optimized based on finding consecutive words -- it finds the simplest (shortest) words
-# input_str = "ฉันเป็นหมอฟัน"
-# input_str = "คนขับรถผ่านแยกนี้ไม่มากนัก"
-
-print("input_str:\n{}".format(input_str))
-
-# Here chars is in fact grapheme clusters, I just use characters because of the naming of the function
-words_break_iterator = BreakIterator.createWordInstance(Locale.getUS())
-chars_break_iterator = BreakIterator.createCharacterInstance(Locale.getUS())
-words_break_iterator.setText(input_str)
-chars_break_iterator.setText(input_str)
-word_brkpoints = [0]
-for brkpoint in words_break_iterator:
-    word_brkpoints.append(brkpoint)
-char_brkpoints = [0]
-for brkpoint in chars_break_iterator:
-    char_brkpoints.append(brkpoint)
-char_segmented_str = get_segmented_string(input_str, char_brkpoints)
-word_segmented_str = get_segmented_string(input_str, word_brkpoints)
-print("Chars:\n{}".format(char_segmented_str))
-print("Words:\n{}".format(word_segmented_str))
-# print(word_brkpoints)
-# x = input()
-bies = get_bies(char_brkpoints, word_brkpoints)
-print_bies(input_str, bies)
-'''
+    def test_model_line_by_line(self):
+        all_test_acc = []
+        category = ["news", "encyclopedia", "article", "novel"]
+        for text_num in range(30, 36):
+            for cat in category:
+                all_test_acc += self.test_text(cat, text_num)
+        print("the average test accuracy: {}".format(np.mean(test_acc)))
 
 # Pre-processing for grapheme clusters analysis and icu accuracy computations
 '''
@@ -583,6 +585,7 @@ graph_clust_ratio = np.load(os.getcwd() + '/Data/graph_clust_ratio.npy', allow_p
 # print(graph_clust_ratio)
 cnt = 0
 thrsh = 350  # The vocabulary size for embeddings
+thrsh = 700  # The vocabulary size for embeddings
 grapheme_clusters_ids = dict()
 for key in graph_clust_ratio.keys():
     if cnt < thrsh-1:
@@ -590,7 +593,6 @@ for key in graph_clust_ratio.keys():
     if cnt == thrsh-1:
         break
     cnt += 1
-
 
 # Assessing the precision of icu algorithm
 # print("The bies precision of icu algorithm is {}".format(1 - icu_mismatch/icu_total_bies_lengths))
@@ -626,12 +628,13 @@ plt.show()
 # print(line)
 # x = input()
 
-word_segmenter = WordSegmenter(input_n=50, input_t=1000, input_graph_clust_dic=grapheme_clusters_ids,
-                               input_embedding_dim=20, input_hunits=20, input_dropout_rate=0.2, input_feature_dim=1,
+word_segmenter = WordSegmenter(input_n=100, input_t=200000, input_graph_clust_dic=grapheme_clusters_ids,
+                               input_embedding_dim=40, input_hunits=64, input_dropout_rate=0.2, input_feature_dim=1,
                                input_output_dim=4, input_epochs=10, input_training_data="BEST",
                                input_evaluating_data="BEST")
 word_segmenter.train_model()
 word_segmenter.test_model()
+word_segmenter.test_text(cat="news", text_num=1)
 x = input()
 
 # Building the LSTM model using the segmented data
@@ -644,21 +647,28 @@ input_str = get_BEST_text(starting_text=train_texts_first, ending_text=train_tex
 print(len(input_str))
 times = 100000  # Number of characters that we cover
 n = 50         # length of each batches
-x_data, y_data = get_trainable_data(input_str, times, n, grapheme_clusters_ids)
+x_data, y_data = get_trainable_data(input_str, grapheme_clusters_ids)
+x_data = x_data[:times]
+y_data = y_data[:times, :]
 train_generator = KerasBatchGenerator(x_data, y_data, time_steps=n, batch_size=times//n, dim_features=1, dim_output=4,
                                       times=times)
+
 print(x_data.shape)
 print(y_data.shape)
 
 input_str = get_BEST_text(starting_text=valid_texts_first, ending_text=valid_texts_first+num_texts)
 print(len(input_str))
-x_data, y_data = get_trainable_data(input_str, times, n, grapheme_clusters_ids)
+x_data, y_data = get_trainable_data(input_str, grapheme_clusters_ids)
+x_data = x_data[:times]
+y_data = y_data[:times, :]
 valid_generator = KerasBatchGenerator(x_data, y_data, time_steps=n, batch_size=times//n, dim_features=1, dim_output=4,
                                       times=times)
 
 input_str = get_BEST_text(starting_text=test_texts_first, ending_text=test_texts_first+num_texts)
 print(len(input_str))
-x_data, y_data = get_trainable_data(input_str, times, n, grapheme_clusters_ids)
+x_data, y_data = get_trainable_data(input_str, grapheme_clusters_ids)
+x_data = x_data[:times]
+y_data = y_data[:times, :]
 test_generator = KerasBatchGenerator(x_data, y_data, time_steps=n, batch_size=times//n, dim_features=1, dim_output=4,
                                       times=times)
 
@@ -666,7 +676,7 @@ hunits = 20
 vocab = 20
 model = Sequential()
 model.add(Embedding(thrsh, vocab, input_length=n))
-#model.add(Dropout(0.2))
+model.add(Dropout(0.2))
 model.add(Bidirectional(LSTM(hunits, return_sequences=True), input_shape=(n, 1)))
 model.add(Dropout(0.2))
 model.add(TimeDistributed(Dense(4, activation='softmax')))

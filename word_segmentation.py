@@ -530,6 +530,9 @@ class WordSegmenter:
                 print("Warning: size of the test data is less than self.t")
             x_data = x_data[:self.t]
             y_data = y_data[:self.t, :]
+        elif self.evaluation_data == "SAFT":
+            input_str = get_SAFT_text()
+
         else:
             print("Warning: no implementation for this evaluation data exists!")
         test_generator = KerasBatchGenerator(x_data, y_data, n=self.n, batch_size=self.batch_size,
@@ -686,9 +689,9 @@ for key in graph_clust_ratio.keys():
     cnt += 1
 
 # Making the bi-directional LSTM model using BEST data set
-word_segmenter = WordSegmenter(input_n=50, input_t=100000, input_graph_clust_dic=graph_clust_dic,
+word_segmenter = WordSegmenter(input_n=50, input_t=10000, input_graph_clust_dic=graph_clust_dic,
                                input_embedding_dim=20, input_hunits=20, input_dropout_rate=0.2, input_output_dim=4,
-                               input_epochs=15, input_training_data="BEST", input_evaluating_data="BEST")
+                               input_epochs=10, input_training_data="BEST", input_evaluating_data="BEST")
 word_segmenter.train_model()
 word_segmenter.test_model()
 word_segmenter.test_model_line_by_line()

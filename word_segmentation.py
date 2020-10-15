@@ -707,3 +707,5 @@ for drp in drp_list:
     test1.append(word_segmenter.test_model())
     test2.append(word_segmenter.test_model_line_by_line())
 '''
+
+# Write a code for grid search for learning rateg

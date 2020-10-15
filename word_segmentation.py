@@ -46,8 +46,9 @@ def analyze_grapheme_clusters(ratios, thrsh):
     """
     This function analyzes the grapheme clusters, to see what percentage of them form which percent of the text, and
     provides a histogram that shows frequency of grapheme clusters
+    ratios: a dictionary that holds the ratio of text that is represented by each grapheme cluster
+    thrsh: shows what percent of the text we want to cover
     """
-    print("number of different grapheme clusters = {}".format(len(ratios.keys())))
     cum_sum = 0
     cnt = 0
     for val in ratios.values():
@@ -55,15 +56,15 @@ def analyze_grapheme_clusters(ratios, thrsh):
         cnt += 1
         if cum_sum > thrsh:
             break
+    print("number of different grapheme clusters = {}".format(len(ratios.keys())))
     print("{} grapheme clusters form {} of the text".format(cnt, thrsh))
     # plt.hist(ratios.values(), bins=50)
     # plt.show()
-    # plt.savefig("./Figure/hist_graph_clust_freq.png")
 
 
 def get_segmented_string(str, brkpoints):
     """
-    Rerurns a segmented string based using the unsegmented string and and break points
+    Rerurns a segmented string using the unsegmented string and and break points. Simply inserts | at break points.
     str: unsegmented string
     brkpoints: break points
     """
@@ -75,7 +76,7 @@ def get_segmented_string(str, brkpoints):
 
 def get_bies(char_brkpoints, word_brkpoints):
     """
-    Given break points for words and grapheme clusters, returns the matrix that represents BIES
+    Given break points for words and grapheme clusters, returns the matrix that represents BIES.
     The output is a matrix of size (n * 4) where n is the number of grapheme clusters in the string
     char_brkpoints: break points for grapheme clusters
     word_brkpoints: break points for words
@@ -106,9 +107,9 @@ def get_bies(char_brkpoints, word_brkpoints):
 
 def get_bies_string_from_softmax (mat):
     """
-    Computes estimated BIES based on a softmax matrix of size n*4
-    Each row of matrix gives four floats that add up to 1, which are probability of B, I, E,  and S
-    This function simply pick the one with highest probability
+    Computes estimated BIES based on a softmax matrix of size n*4.
+    Each row of matrix gives four floats that add up to 1, which are probability of B, I, E,  and S.
+    This function simply pick the one with highest probability. In ties, it picks B over I, I over E, and E over S.
     mat: Input matrix that contains softmax probabilities. Dimension is n*4 where n is length of the string.
     """
     out = ""
@@ -116,11 +117,11 @@ def get_bies_string_from_softmax (mat):
         max_softmax = max(mat[i, :])
         if mat[i, 0] == max_softmax:
             out += "b"
-        if mat[i, 1] == max_softmax:
+        elif mat[i, 1] == max_softmax:
             out += "i"
-        if mat[i, 2] == max_softmax:
+        elif mat[i, 2] == max_softmax:
             out += "e"
-        if mat[i, 3] == max_softmax:
+        elif mat[i, 3] == max_softmax:
             out += "s"
     return out
 
@@ -131,6 +132,11 @@ def remove_tags(line, st_tag, fn_tag):
     line: the input string
     st_tag: the first substring
     fn_tag: the secibd substring
+    It handles spaces around tags as follows:
+        abc|<NE>def</NE>|ghi      ---> abc|ghi
+        abc| |<NE>def</NE>|ghi    ---> abc| |ghi
+        abc|<NE>def</NE>| |ghi    ---> abc| |ghi
+        abc| |<NE>def</NE>| |ghi  ---> abc| |ghi
     """
 
     new_line = ""
@@ -141,11 +147,9 @@ def remove_tags(line, st_tag, fn_tag):
             while fn_ind < len(line):
                 if line[fn_ind: fn_ind+len(fn_tag)] == fn_tag:
                     fn_ind = fn_ind+len(fn_tag) + 1
-                    # print("st_ind = {}, fn_ind = {}".format(st_ind, fn_ind))
                     if st_ind -2 >= 0 and fn_ind+2 <= len(line):
                         if line[st_ind-2:st_ind] == " |" and line[fn_ind:fn_ind+2] == " |":
                             fn_ind += 2
-                            # print("special case")
                     st_ind = fn_ind
                     break
                 else:
@@ -156,11 +160,47 @@ def remove_tags(line, st_tag, fn_tag):
     return new_line
 
 
+def clean_line(line):
+    """
+    This line cleans a line as follows such that it is ready for process by different components of the code. It returns
+    the clean line or -1, if the line should be omitted.
+        1) remove tags and https from the line.
+        2) Put a | at the begining and end of the line if it isn't already there
+        3) if line is very short (len < 3) or if it is all in English or it has a link in it, return -1
+    """
+
+    # Remove lines with links
+    if "http" in line or len(line) == 0:
+        return -1
+
+    # Remove texts between following tags
+    line = remove_tags(line, "<NE>", "</NE>")
+    line = remove_tags(line, "<AB>", "</AB>")
+
+    # Remove lines that are all fully in English
+    if is_all_english(line):
+        return -1
+
+    # Exclude cases such as "", " ", "| ", " |", etc.
+    if len(line) < 3:
+        return -1
+
+    # Add "|" to the end of each line if it is not there
+    if len(line) >= 1 and line[len(line) - 1] != '|':
+        line += "|"
+
+    # Adding "|" to the start of each line if it is not there
+    if line[0] != '|':
+        line = '|' + line
+
+    return line
+
+
 def preprocess():
     """
-    This function uses the BEST data set to 1) compute the grapheme cluster dictionary that holds the frequency of
-    different grapheme clusters, and 2) to demonstrate the performance of icu word breakIterator and compute its
-    accuracy
+    This function uses the BEST data set to
+        1) compute the grapheme cluster dictionary that holds the frequency of different grapheme clusters
+        2) demonstrate the performance of icu word breakIterator and compute its accuracy
     """
     grapheme_clusters_dic = dict()
     icu_mismatch = 0
@@ -175,28 +215,8 @@ def preprocess():
                 if not line:
                     break
 
-                # Adding "|" to the end of each line if it is not there
-                if len(line) >= 1 and line[len(line) - 1] != '|':
-                    line += "|"
-
-                # Remove texts between following tags
-                line = remove_tags(line, "<NE>", "</NE>")
-                line = remove_tags(line, "<AB>", "</AB>")
-
-                # Remove lines with links
-                if "http" in line or len(line) == 0:
-                    continue
-
-                # Adding "|" to the start of each line if it is not there
-                if line[0] != '|':
-                    line = '|' + line
-
-                # Remove lines that are all fully in English
-                if is_all_english(line):
-                    continue
-
-                # Excluding cases such as "", " ", "| ", " |", etc.
-                if len(line) < 3:
+                line = clean_line(line)
+                if line == -1:
                     continue
 
                 # Finding word breakpoints using the segmented data
@@ -243,6 +263,7 @@ def preprocess():
                     if tru != icu:
                         icu_mismatch += 1
 
+                # Visualize how icu segmenter works
                 # char_segmented_str = get_segmented_string(unsegmented_line, char_brkpoints)
                 # print("Cat: {}, Text number: {}".format(cat, text_num))
                 # print("LINE {} - UNSEG LINE      : {}".format(line_counter, unsegmented_line))
@@ -286,25 +307,20 @@ def get_BEST_text(starting_text, ending_text):
                 line = file.readline().strip()
                 if not line:
                     break
-                if len(line) >= 1 and line[len(line) - 1] != '|':
-                    line += "|"
-                line += " |"
-                line = remove_tags(line, "<NE>", "</NE>")
-                line = remove_tags(line, "<AB>", "</AB>")
-                if "http" in line or len(line) == 0:
+                line = clean_line(line)
+                if line == -1:
                     continue
-                if is_all_english(line):
-                    continue
-                out_str += line
+                if len(out_str) == 0:
+                    out_str = line
+                else:
+                    out_str = out_str + " " + line
                 line_counter += 1
-    if out_str[0] != '|':
-        out_str = '|' + out_str
     return out_str
 
 
 def get_trainable_data(input_line, graph_clust_ids):
     """
-    Given an unsegmented line, extracts x_data (with respect to a dictionary that maps grapheme clusters to integers)
+    Given a segmented line, extracts x_data (with respect to a dictionary that maps grapheme clusters to integers)
     and y_data which is a n*4 matrix that represents BIES where n is the length of the unsegmented line. All grapheme
     clusters not found in the dictionary are set to the largest value of the dictionary plus 1
     input_line: the unsegmented line
@@ -319,8 +335,6 @@ def get_trainable_data(input_line, graph_clust_ids):
             found_bars += 1
     unsegmented_line = input_line.replace("|", "")
 
-
-
     # Finding grapheme cluster breakpoints
     chars_break_iterator = BreakIterator.createCharacterInstance(Locale.getUS())
     chars_break_iterator.setText(unsegmented_line)
@@ -328,18 +342,14 @@ def get_trainable_data(input_line, graph_clust_ids):
     for brkpoint in chars_break_iterator:
         char_brkpoints.append(brkpoint)
 
-    # print(unsegmented_line)
-    # print(char_brkpoints)
-    # print(word_brkpoints)
-
-    # Finding bies
+    # Finding BIES
     true_bies = get_bies(char_brkpoints, word_brkpoints)
     true_bies_str = get_bies_string_from_softmax(np.transpose(true_bies))
 
+    # Making x_data and y_data
     times = len(char_brkpoints)-1
     x_data = np.zeros(shape=[times, 1])
     y_data = np.zeros(shape=[times, 4])
-
     excess_grapheme_ids = max(graph_clust_ids.values()) + 1
     for i in range(times):
         char_st = char_brkpoints[i]
@@ -350,51 +360,6 @@ def get_trainable_data(input_line, graph_clust_ids):
     return x_data, y_data
 
 
-def get_pseudo_trainable_data(input_str, times, graph_clust_ids):
-    """
-    Given a segmented/unsegmented input, re-segment it using ICU, and create x_data (unsegmented text) and y_data (a matrix with
-    BIES information) that is ready to be used for training.
-    input_str: the input string
-    times: the length of x_data and y_data
-    graph_clust_ids: a dictionary that stores maps from grapheme clusters to integers
-    """
-    x_data = np.zeros(shape=[times, 1])
-    y_data = np.zeros(shape=[times, 4])
-    # Finding word breakpoints
-    unsegmented_str = input_str.replace("|", "")
-    words_break_iterator = BreakIterator.createWordInstance(Locale.getUS())
-    words_break_iterator.setText(unsegmented_str)
-    word_brkpoints = [0]
-    for brkpoint in words_break_iterator:
-        word_brkpoints.append(brkpoint)
-
-    # Finding grapheme cluster breakpoints
-    chars_break_iterator = BreakIterator.createCharacterInstance(Locale.getUS())
-    chars_break_iterator.setText(unsegmented_str)
-    char_brkpoints = [0]
-    for brkpoint in chars_break_iterator:
-        char_brkpoints.append(brkpoint)
-
-    # Finding bies
-    pseudo_bies = get_bies(char_brkpoints, word_brkpoints)
-    pseudo_bies_str = get_bies_string(pseudo_bies)
-
-    # Printing for debugging
-    print("INPUT STR: {}".format(input_str[:200]))
-    print("UNSEG STR: {}".format(unsegmented_str[:200]))
-    print("BIES  STR: {}".format(pseudo_bies_str[:200]))
-
-    # Creating x_data and y_data
-    excess_grapheme_ids = max(graph_clust_ids.values())
-    for i in range(times):
-        char_st = char_brkpoints[i]
-        char_fn = char_brkpoints[i + 1]
-        curr_char = unsegmented_str[char_st: char_fn]
-        x_data[i, 0] = graph_clust_ids.get(curr_char, excess_grapheme_ids)
-        y_data[i, :] = pseudo_bies[:, i]
-    return x_data, y_data
-
-
 def compute_hc(weight, x_t, h_tm1, c_tm1):
     """
     Given weights of a LSTM model, the input at time t, and values for h and c at time t-1, compute the values of h and
@@ -402,12 +367,12 @@ def compute_hc(weight, x_t, h_tm1, c_tm1):
     weights: a list of three matrices, which are W (from input to cell), U (from h to cell), and b (bias) respectively.
     Dimensions: warr.shape = (nfeature, hunits*4), uarr.shape = (hunits, hunits*4), barr.shape = (hunits*4,)
     """
-
     warr, uarr, barr = weight
     warr = warr.numpy()
     uarr = uarr.numpy()
     barr = barr.numpy()
 
+    # Implementing gates (forget, input, and output)
     s_t = (x_t.dot(warr) + h_tm1.dot(uarr) + barr)
     hunit = uarr.shape[0]
     i = sigmoid(s_t[:, :hunit])
@@ -416,6 +381,7 @@ def compute_hc(weight, x_t, h_tm1, c_tm1):
     o = sigmoid(s_t[:, 3 * hunit:])
     c_t = i * _c + f * c_tm1
     h_t = o * np.tanh(c_t)
+
     return [h_t, c_t]
 
 
@@ -439,6 +405,9 @@ class KerasBatchGenerator(object):
             print("Warning: x_data or y_data is not large enough!")
 
     def generate(self):
+        """
+        generates batches one by one, used for training and validation
+        """
         x = np.zeros([self.batch_size, self.n])
         y = np.zeros([self.batch_size, self.n, self.dim_output])
         while True:
@@ -448,6 +417,9 @@ class KerasBatchGenerator(object):
             yield x, y
 
     def generate_all_batches(self):
+        """
+        returns all batches together, used mostly for testing
+        """
         x = np.zeros([self.batch_size, self.n])
         y = np.zeros([self.batch_size, self.n, self.dim_output])
         for i in range(self.batch_size):
@@ -488,6 +460,7 @@ class WordSegmenter:
         self.epochs = input_epochs
         self.training_data = input_training_data
         self.evaluating_data = input_evaluating_data
+        self.model = None
 
     def train_model(self):
         """
@@ -495,9 +468,10 @@ class WordSegmenter:
         the data set with a space between them and then divide this large string into strings of fixed length self.n.
         Therefore, it may (and probably will) break some words and puts different part of them in different batches.
         """
+
+        # Get training data of length self.t
         x_data = []
         y_data = []
-        # Get training data of length self.t
         if self.training_data == "BEST":
             # this chunk of data has ~ 2*10^6 data points
             input_str = get_BEST_text(starting_text=1, ending_text=10)
@@ -546,9 +520,11 @@ class WordSegmenter:
          by spaces) to test the model.
         """
         # Get test data
+        x_data = []
+        y_data = []
         if self.evaluating_data == "BEST":
             # this chunk of data has ~ 2*10^6 data points
-            input_str = get_BEST_text(starting_text=30, ending_text=40)
+            input_str = get_BEST_text(starting_text=30, ending_text=33)
             x_data, y_data = get_trainable_data(input_str, self.graph_clust_dic)
             if self.t > x_data.shape[0]:
                 print("Warning: size of the test data is less than self.t")
@@ -557,9 +533,9 @@ class WordSegmenter:
         else:
             print("Warning: no implementation for this evaluation data exists!")
         test_generator = KerasBatchGenerator(x_data, y_data, n=self.n, batch_size=self.batch_size,
-                                              dim_output=self.output_dim)
+                                             dim_output=self.output_dim)
 
-        # Testing batch by batch (each batch of length n)
+        # Testing batch by batch (each batch of length self.n)
         all_test_input, all_actual_y = test_generator.generate_all_batches()
         all_y_hat = self.model.predict(all_test_input)
         test_acc = []
@@ -576,7 +552,7 @@ class WordSegmenter:
                     mismatch += 1
             test_acc.append(1 - mismatch / len(actual_y))
         test_acc = np.array(test_acc)
-        print("the average test accuracy: {}".format(np.mean(test_acc)))
+        print("the average test accuracy in test_model function: {}".format(np.mean(test_acc)))
         return np.mean(test_acc)
 
     def test_text_line_by_line(self, cat, text_num):
@@ -594,32 +570,11 @@ class WordSegmenter:
             line = file.readline().strip()
             if not line:
                 break
-
-            # Add a | at the end of line if it is not there
-            if len(line) >= 1 and line[len(line) - 1] != '|':
-                line += "|"
-
-            # Remove texts between following tags
-            line = remove_tags(line, "<NE>", "</NE>")
-            line = remove_tags(line, "<AB>", "</AB>")
-
-            # Remove lines with links
-            if "http" in line or len(line) == 0:
+            line = clean_line(line)
+            if line == -1:
                 continue
 
-            # Add a "|" at the start of the text if it doesn't already have one
-            if line[0] != '|':
-                line = '|' + line
-
-            # Remove lines that are all fully in English
-            if is_all_english(line):
-                continue
-
-            # Excluding cases such as "", " ", "| ", " |", etc.
-            if len(line) < 3:
-                continue
-
-            # If the new line is too short, combine it with previous short lines. Process it if it gets long enough
+            # If the new line is too short, combine it with previous short lines. Process it if it gets long enough.
             # If this value is set to infinity, basically we are converting the whole text into one big string and
             # evaluating that; just like test_model() function
             if len(line) < 30:
@@ -630,9 +585,10 @@ class WordSegmenter:
                 else:
                     continue
 
+            # Get trainable data
             x_data, y_data = get_trainable_data(line, self.graph_clust_dic)
 
-            # Use the manual predict function -- the tf function doesn't work always properly for varying length strings
+            # Use the manual predict function -- the tf function doesn't always work properly for varying length strings
             y_hat = self.manual_predict(x_data)
             y_hat = get_bies_string_from_softmax(y_hat)
             actual_y = get_bies_string_from_softmax(y_data)
@@ -643,7 +599,7 @@ class WordSegmenter:
                 if actual_y[j] != y_hat[j]:
                     mismatch += 1
             test_acc.append(1 - mismatch / len(actual_y))
-        print("the average test accuracy for text {} : {}".format(text_num, np.mean(test_acc)))
+        print("the average test accuracy (line by line) for text {} : {}".format(text_num, np.mean(test_acc)))
         return test_acc
 
     def test_model_line_by_line(self):
@@ -657,7 +613,7 @@ class WordSegmenter:
             print("testing text {}".format(text_num))
             for cat in category:
                 all_test_acc += self.test_text_line_by_line(cat, text_num)
-        print("the average test accuracy: {}".format(np.mean(all_test_acc)))
+        print("the average test accuracy by test_model_line_by_line function: {}".format(np.mean(all_test_acc)))
         return np.mean(all_test_acc)
 
     def manual_predict(self, test_input):
@@ -714,6 +670,8 @@ class WordSegmenter:
 # print("icu accuracy is {}".format(icu_accuracy))
 # np.save(os.getcwd() + '/Data/graph_clust_ratio.npy', graph_clust_ratio)
 # analyze_grapheme_clusters(ratios=graph_clust_ratio, thrsh=0.999)
+
+# Loading the graph_clust from memory
 graph_clust_ratio = np.load(os.getcwd() + '/Data/graph_clust_ratio.npy', allow_pickle=True).item()
 
 # Making the grapheme cluster dictionary to be used in the bi-directional LSTM model
@@ -730,7 +688,7 @@ for key in graph_clust_ratio.keys():
 # Making the bi-directional LSTM model using BEST data set
 word_segmenter = WordSegmenter(input_n=50, input_t=100000, input_graph_clust_dic=graph_clust_dic,
                                input_embedding_dim=20, input_hunits=20, input_dropout_rate=0.2, input_output_dim=4,
-                               input_epochs=10, input_training_data="BEST", input_evaluating_data="BEST")
+                               input_epochs=15, input_training_data="BEST", input_evaluating_data="BEST")
 word_segmenter.train_model()
 word_segmenter.test_model()
 word_segmenter.test_model_line_by_line()
@@ -749,8 +707,3 @@ for drp in drp_list:
     test1.append(word_segmenter.test_model())
     test2.append(word_segmenter.test_model_line_by_line())
 '''
-
-
-
-
-

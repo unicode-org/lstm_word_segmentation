@@ -1,5 +1,3 @@
-# Test!!
-
 import numpy as np
 import os
 import icu
@@ -691,9 +689,9 @@ for key in graph_clust_ratio.keys():
     cnt += 1
 
 # Making the bi-directional LSTM model using BEST data set
-word_segmenter = WordSegmenter(input_n=50, input_t=10000, input_graph_clust_dic=graph_clust_dic,
-                               input_embedding_dim=20, input_hunits=20, input_dropout_rate=0.2, input_output_dim=4,
-                               input_epochs=10, input_training_data="BEST", input_evaluating_data="BEST")
+word_segmenter = WordSegmenter(input_n=100, input_t=200000, input_graph_clust_dic=graph_clust_dic,
+                               input_embedding_dim=20, input_hunits=40, input_dropout_rate=0.2, input_output_dim=4,
+                               input_epochs=20, input_training_data="BEST", input_evaluating_data="BEST")
 word_segmenter.train_model()
 word_segmenter.test_model()
 word_segmenter.test_model_line_by_line()

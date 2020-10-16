@@ -553,19 +553,15 @@ class WordSegmenter:
         x_data = []
         y_data = []
         if self.evaluating_data == "BEST":
-<<<<<<< HEAD
             # this chunk of data has ~ 2*10^6 data points
             input_str = get_BEST_text(starting_text=30, ending_text=40)
-=======
             input_str = get_BEST_text(starting_text=30, ending_text=31)
             x_data, y_data = get_trainable_data(input_str, self.graph_clust_dic)
         elif self.evaluating_data == "SAFT":
             input_str = get_file_text("./Data/SAFT/test.txt")
->>>>>>> e1e4706d1133cd78d5f084fdbdb31fd90ef3f12e
             x_data, y_data = get_trainable_data(input_str, self.graph_clust_dic)
         else:
             print("Warning: no implementation for this evaluation data exists!")
-        print(x_data.shape[0])
         test_batch_size = x_data.shape[0]//self.n
         test_generator = KerasBatchGenerator(x_data, y_data, n=self.n, batch_size=test_batch_size,
                                              dim_output=self.output_dim)
@@ -750,7 +746,6 @@ for drp in drp_list:
     test2.append(word_segmenter.test_model_line_by_line())
 '''
 
-<<<<<<< HEAD
 # Grid search for embedding size
 '''
 test1 = []

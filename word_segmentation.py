@@ -524,7 +524,7 @@ class WordSegmenter:
         y_data = []
         if self.evaluating_data == "BEST":
             # this chunk of data has ~ 2*10^6 data points
-            input_str = get_BEST_text(starting_text=30, ending_text=33)
+            input_str = get_BEST_text(starting_text=30, ending_text=40)
             x_data, y_data = get_trainable_data(input_str, self.graph_clust_dic)
             if self.t > x_data.shape[0]:
                 print("Warning: size of the test data is less than self.t")
@@ -679,7 +679,7 @@ graph_clust_ratio = np.load(os.getcwd() + '/Data/graph_clust_ratio.npy', allow_p
 
 # Making the grapheme cluster dictionary to be used in the bi-directional LSTM model
 cnt = 0
-graph_thrsh = 700  # The vocabulary size for embeddings
+graph_thrsh = 500  # The vocabulary size for embeddings
 graph_clust_dic = dict()
 for key in graph_clust_ratio.keys():
     if cnt < graph_thrsh-1:
@@ -689,12 +689,12 @@ for key in graph_clust_ratio.keys():
     cnt += 1
 
 # Making the bi-directional LSTM model using BEST data set
-word_segmenter = WordSegmenter(input_n=100, input_t=200000, input_graph_clust_dic=graph_clust_dic,
-                               input_embedding_dim=20, input_hunits=40, input_dropout_rate=0.2, input_output_dim=4,
-                               input_epochs=20, input_training_data="BEST", input_evaluating_data="BEST")
-word_segmenter.train_model()
-word_segmenter.test_model()
-word_segmenter.test_model_line_by_line()
+# word_segmenter = WordSegmenter(input_n=50, input_t=100000, input_graph_clust_dic=graph_clust_dic,
+#                                input_embedding_dim=40, input_hunits=40, input_dropout_rate=0.2, input_output_dim=4,
+#                                input_epochs=10, input_training_data="BEST", input_evaluating_data="BEST")
+# word_segmenter.train_model()
+# word_segmenter.test_model()
+# word_segmenter.test_model_line_by_line()
 
 # Grid search for dropout rate
 '''
@@ -702,13 +702,36 @@ test1 = []
 test2 = []
 drp_list = [0.2]
 for drp in drp_list:
-    word_segmenter = WordSegmenter(input_n=50, input_t=1000, input_graph_clust_dic=grapheme_clusters_ids,
+    word_segmenter = WordSegmenter(input_n=50, input_t=1000, input_graph_clust_dic=graph_clust_dic,
                                    input_embedding_dim=20, input_hunits=20, input_dropout_rate=drp, input_output_dim=4
-                                   , input_epochs=3, input_training_data="BEST",
-                                   input_evaluating_data="BEST")
+                                   , input_epochs=3, input_training_data="BEST", input_evaluating_data="BEST")
     word_segmenter.train_model()
     test1.append(word_segmenter.test_model())
     test2.append(word_segmenter.test_model_line_by_line())
 '''
 
-# Write a code for grid search for learning rateg
+# Grid search for embedding size
+'''
+test1 = []
+embd_list = [10, 20, 30, 40, 50, 100]
+for embd in embd_list:
+    word_segmenter = WordSegmenter(input_n=50, input_t=100000, input_graph_clust_dic=graph_clust_dic,
+                                   input_embedding_dim=embd, input_hunits=20, input_dropout_rate=0.2, input_output_dim=4
+                                   , input_epochs=10, input_training_data="BEST", input_evaluating_data="BEST")
+    word_segmenter.train_model()
+    test1.append(word_segmenter.test_model())
+print(test1)
+'''
+
+# Grid search for hunits size
+# '''
+test1 = []
+hu_list = [10, 20, 40, 64, 128, 256]
+for hu in hu_list:
+    word_segmenter = WordSegmenter(input_n=50, input_t=100000, input_graph_clust_dic=graph_clust_dic,
+                                   input_embedding_dim=40, input_hunits=hu, input_dropout_rate=0.2, input_output_dim=4
+                                   , input_epochs=20, input_training_data="BEST", input_evaluating_data="BEST")
+    word_segmenter.train_model()
+    test1.append(word_segmenter.test_model())
+print(test1)
+# '''

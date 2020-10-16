@@ -553,15 +553,10 @@ class WordSegmenter:
         x_data = []
         y_data = []
         if self.evaluating_data == "BEST":
-<<<<<<< HEAD
-            # this chunk of data has ~ 2*10^6 data points
-            input_str = get_BEST_text(starting_text=30, ending_text=40)
-=======
             input_str = get_BEST_text(starting_text=30, ending_text=31)
             x_data, y_data = get_trainable_data(input_str, self.graph_clust_dic)
         elif self.evaluating_data == "SAFT":
             input_str = get_file_text("./Data/SAFT/test.txt")
->>>>>>> e1e4706d1133cd78d5f084fdbdb31fd90ef3f12e
             x_data, y_data = get_trainable_data(input_str, self.graph_clust_dic)
         else:
             print("Warning: no implementation for this evaluation data exists!")
@@ -721,19 +716,11 @@ for key in graph_clust_ratio.keys():
     cnt += 1
 
 # Making the bi-directional LSTM model using BEST data set
-<<<<<<< HEAD
-# word_segmenter = WordSegmenter(input_n=50, input_t=100000, input_graph_clust_dic=graph_clust_dic,
-#                                input_embedding_dim=40, input_hunits=40, input_dropout_rate=0.2, input_output_dim=4,
-#                                input_epochs=10, input_training_data="BEST", input_evaluating_data="BEST")
-# word_segmenter.train_model()
-# word_segmenter.test_model()
-=======
 word_segmenter = WordSegmenter(input_n=50, input_t=200000, input_graph_clust_dic=graph_clust_dic,
                                input_embedding_dim=40, input_hunits=40, input_dropout_rate=0.2, input_output_dim=4,
                                input_epochs=1, input_training_data="BEST", input_evaluating_data="SAFT")
 word_segmenter.train_model()
 word_segmenter.test_model()
->>>>>>> e1e4706d1133cd78d5f084fdbdb31fd90ef3f12e
 # word_segmenter.test_model_line_by_line()
 
 # Grid search for dropout rate
@@ -750,31 +737,3 @@ for drp in drp_list:
     test2.append(word_segmenter.test_model_line_by_line())
 '''
 
-<<<<<<< HEAD
-# Grid search for embedding size
-'''
-test1 = []
-embd_list = [10, 20, 30, 40, 50, 100]
-for embd in embd_list:
-    word_segmenter = WordSegmenter(input_n=50, input_t=100000, input_graph_clust_dic=graph_clust_dic,
-                                   input_embedding_dim=embd, input_hunits=20, input_dropout_rate=0.2, input_output_dim=4
-                                   , input_epochs=10, input_training_data="BEST", input_evaluating_data="BEST")
-    word_segmenter.train_model()
-    test1.append(word_segmenter.test_model())
-print(test1)
-'''
-
-# Grid search for hunits size
-# '''
-test1 = []
-hu_list = [10, 20, 40, 64, 128, 256]
-for hu in hu_list:
-    word_segmenter = WordSegmenter(input_n=50, input_t=100000, input_graph_clust_dic=graph_clust_dic,
-                                   input_embedding_dim=40, input_hunits=hu, input_dropout_rate=0.2, input_output_dim=4
-                                   , input_epochs=20, input_training_data="BEST", input_evaluating_data="BEST")
-    word_segmenter.train_model()
-    test1.append(word_segmenter.test_model())
-print(test1)
-# '''
-=======
->>>>>>> e1e4706d1133cd78d5f084fdbdb31fd90ef3f12e

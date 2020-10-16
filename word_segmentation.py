@@ -724,35 +724,9 @@ word_segmenter.train_model()
 word_segmenter.test_model()
 # word_segmenter.test_model_line_by_line()
 
-# Grid search for dropout rate
-'''
-test1 = []
-test2 = []
-drp_list = [0.2]
-for drp in drp_list:
-    word_segmenter = WordSegmenter(input_n=50, input_t=1000, input_graph_clust_dic=graph_clust_dic,
-                                   input_embedding_dim=20, input_hunits=20, input_dropout_rate=drp, input_output_dim=4
-                                   , input_epochs=3, input_training_data="BEST", input_evaluating_data="BEST")
-    word_segmenter.train_model()
-    test1.append(word_segmenter.test_model())
-    test2.append(word_segmenter.test_model_line_by_line())
-'''
 
-# Grid search for embedding size
+# Grid search
 '''
-test1 = []
-embd_list = [10, 20, 30, 40, 50, 100]
-for embd in embd_list:
-    word_segmenter = WordSegmenter(input_n=50, input_t=100000, input_graph_clust_dic=graph_clust_dic,
-                                   input_embedding_dim=embd, input_hunits=20, input_dropout_rate=0.2, input_output_dim=4
-                                   , input_epochs=10, input_training_data="BEST", input_evaluating_data="BEST")
-    word_segmenter.train_model()
-    test1.append(word_segmenter.test_model())
-print(test1)
-'''
-
-# Grid search for hunits size
-# '''
 test1 = []
 hu_list = [10, 20, 40, 64, 128, 256]
 for hu in hu_list:
@@ -762,4 +736,4 @@ for hu in hu_list:
     word_segmenter.train_model()
     test1.append(word_segmenter.test_model())
 print(test1)
-# '''
+'''

@@ -5,6 +5,7 @@ import datetime
 from icu import UnicodeString, BreakIterator, Locale
 import matplotlib.pyplot as plt
 
+from tensorflow import keras
 import tensorflow as tf
 from keras.models import Sequential
 from keras.layers import LSTM
@@ -13,6 +14,7 @@ from keras.layers import TimeDistributed
 from keras.layers import Bidirectional
 from keras.layers import Embedding
 from keras.layers import Dropout
+# from keras import optimizer
 
 
 def is_all_english(str):
@@ -318,6 +320,32 @@ def get_BEST_text(starting_text, ending_text):
     return out_str
 
 
+def get_file_text(filename):
+    """
+    Gives a long string, that contains all lines (separated by a single space) from a file as well as a list of points
+    to starts and ends of actual lines. Each two consecutive lines are separated by a space.
+    It removes all texts between pair of tags (<NE>, </NE>) and (<AB>, </AB>), assures that each line starts and ends
+    with a "|", and ignores empty lines, lines with "http" in them, and lines that are all in english
+    (since these are usually not segmented)
+    """
+    file = open(filename, 'r')
+    line_counter = 0
+    out_str = ""
+    while True:
+        line = file.readline().strip()
+        if not line:
+            break
+        line = clean_line(line)
+        if line == -1:
+            continue
+        if len(out_str) == 0:
+            out_str = line
+        else:
+            out_str = out_str + " " + line
+        line_counter += 1
+    return out_str
+
+
 def get_trainable_data(input_line, graph_clust_ids):
     """
     Given a segmented line, extracts x_data (with respect to a dictionary that maps grapheme clusters to integers)
@@ -506,7 +534,9 @@ class WordSegmenter:
         model.add(Bidirectional(LSTM(self.hunits, return_sequences=True), input_shape=(self.n, 1)))
         model.add(Dropout(self.dropout_rate))
         model.add(TimeDistributed(Dense(self.output_dim, activation='softmax')))
-        model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['accuracy'])
+        # opt = keras.optimizers.Adam(learning_rate=0.01)
+        # model.compile(loss='categorical_crossentropy', optimizer=opt, metrics=['accuracy'])
+        model.compile(loss='categorical_crossentropy', optimizer="adam", metrics=['accuracy'])
 
         # Fitting the model
         model.fit(train_generator.generate(), steps_per_epoch=self.t//self.batch_size,
@@ -523,26 +553,23 @@ class WordSegmenter:
         x_data = []
         y_data = []
         if self.evaluating_data == "BEST":
-            # this chunk of data has ~ 2*10^6 data points
-            input_str = get_BEST_text(starting_text=30, ending_text=33)
+            input_str = get_BEST_text(starting_text=30, ending_text=31)
             x_data, y_data = get_trainable_data(input_str, self.graph_clust_dic)
-            if self.t > x_data.shape[0]:
-                print("Warning: size of the test data is less than self.t")
-            x_data = x_data[:self.t]
-            y_data = y_data[:self.t, :]
-        elif self.evaluation_data == "SAFT":
-            input_str = get_SAFT_text()
-
+        elif self.evaluating_data == "SAFT":
+            input_str = get_file_text("./Data/SAFT/test.txt")
+            x_data, y_data = get_trainable_data(input_str, self.graph_clust_dic)
         else:
             print("Warning: no implementation for this evaluation data exists!")
-        test_generator = KerasBatchGenerator(x_data, y_data, n=self.n, batch_size=self.batch_size,
+        print(x_data.shape[0])
+        test_batch_size = x_data.shape[0]//self.n
+        test_generator = KerasBatchGenerator(x_data, y_data, n=self.n, batch_size=test_batch_size,
                                              dim_output=self.output_dim)
 
         # Testing batch by batch (each batch of length self.n)
         all_test_input, all_actual_y = test_generator.generate_all_batches()
         all_y_hat = self.model.predict(all_test_input)
         test_acc = []
-        for i in range(self.batch_size):
+        for i in range(test_batch_size):
             actual_y = all_actual_y[i, :, :]
             actual_y = get_bies_string_from_softmax(actual_y)
             y_hat = all_y_hat[i, :, :]
@@ -689,12 +716,12 @@ for key in graph_clust_ratio.keys():
     cnt += 1
 
 # Making the bi-directional LSTM model using BEST data set
-word_segmenter = WordSegmenter(input_n=100, input_t=200000, input_graph_clust_dic=graph_clust_dic,
-                               input_embedding_dim=20, input_hunits=40, input_dropout_rate=0.2, input_output_dim=4,
-                               input_epochs=20, input_training_data="BEST", input_evaluating_data="BEST")
+word_segmenter = WordSegmenter(input_n=50, input_t=200000, input_graph_clust_dic=graph_clust_dic,
+                               input_embedding_dim=40, input_hunits=40, input_dropout_rate=0.2, input_output_dim=4,
+                               input_epochs=1, input_training_data="BEST", input_evaluating_data="SAFT")
 word_segmenter.train_model()
 word_segmenter.test_model()
-word_segmenter.test_model_line_by_line()
+# word_segmenter.test_model_line_by_line()
 
 # Grid search for dropout rate
 '''

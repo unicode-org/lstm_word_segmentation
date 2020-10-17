@@ -265,7 +265,7 @@ def preprocess():
                     if tru != icu:
                         icu_mismatch += 1
 
-                # Visualize how icu segmenter works
+                # Demonstrate how icu segmenter works
                 # char_segmented_str = get_segmented_string(unsegmented_line, char_brkpoints)
                 # print("Cat: {}, Text number: {}".format(cat, text_num))
                 # print("LINE {} - UNSEG LINE      : {}".format(line_counter, unsegmented_line))
@@ -278,6 +278,7 @@ def preprocess():
                 # print('**********************************************************************************')
 
                 line_counter += 1
+
     icu_accuracy = 1 - icu_mismatch/icu_total_bies_lengths
     graph_clust_freq = grapheme_clusters_dic
     graph_clust_freq = {k: v for k, v in sorted(graph_clust_freq.items(), key=lambda item: item[1], reverse=True)}
@@ -287,6 +288,80 @@ def preprocess():
 
     return graph_clust_ratio, icu_accuracy
 
+
+def compute_ICU_accuracy(filename):
+    """
+    This function uses a dataset to compute the accuracy of icu word breakIterator
+    filename: The path of the file
+    """
+    file = open(filename, 'r')
+    line_counter = 0
+    icu_mismatch = 0
+    icu_total_bies_lengths = 0
+    while True:
+        line = file.readline().strip()
+        if not line:
+            break
+
+        line = clean_line(line)
+        if line == -1:
+            continue
+
+        # Finding word breakpoints using the segmented data
+        word_brkpoints = []
+        found_bars = 0
+        for i in range(len(line)):
+            if line[i] == '|':
+                word_brkpoints.append(i - found_bars)
+                found_bars += 1
+
+        # Creating the unsegmented line
+        unsegmented_line = line.replace("|", "")
+
+        # # Making the grapheme clusters brkpoints
+        chars_break_iterator = BreakIterator.createCharacterInstance(Locale.getUS())
+        chars_break_iterator.setText(unsegmented_line)
+        char_brkpoints = [0]
+        for brkpoint in chars_break_iterator:
+            char_brkpoints.append(brkpoint)
+
+        true_bies = get_bies(char_brkpoints, word_brkpoints)
+        true_bies_str = get_bies_string_from_softmax(np.transpose(true_bies))
+
+        # Compute segmentations of icu and BIES associated with it
+        words_break_iterator = BreakIterator.createWordInstance(Locale.getUS())
+        words_break_iterator.setText(unsegmented_line)
+        icu_word_brkpoints = [0]
+        for brkpoint in words_break_iterator:
+            icu_word_brkpoints.append(brkpoint)
+
+        icu_word_segmented_str = get_segmented_string(unsegmented_line, icu_word_brkpoints)
+        icu_bies = get_bies(char_brkpoints, icu_word_brkpoints)
+        icu_bies_str = get_bies_string_from_softmax(np.transpose(icu_bies))
+
+        # Counting the number of mismatches between icu_bies and true_bies
+        icu_total_bies_lengths += len(icu_bies_str)
+        for i in range(len(icu_bies_str)):
+            tru = true_bies_str[i]
+            icu = icu_bies_str[i]
+            if tru != icu:
+                icu_mismatch += 1
+
+        # Demonstrate how icu segmenter works
+        # char_segmented_str = get_segmented_string(unsegmented_line, char_brkpoints)
+        # print("Cat: {}, Text number: {}".format(cat, text_num))
+        # print("LINE {} - UNSEG LINE      : {}".format(line_counter, unsegmented_line))
+        # print("LINE {} - TRUE SEG LINE   : {}".format(line_counter, line))
+        # print("LINE {} - ICU SEG LINE    : {}".format(line_counter, icu_word_segmented_str))
+        # print("LINE {} - CHARACTERS      : {}".format(line_counter, char_segmented_str))
+        # print("LINE {} - TRUE BIES STRING: {}".format(line_counter, true_bies_str))
+        # print("LINE {} -  ICU BIES STRING: {}".format(line_counter, icu_bies_str))
+        # print("LINE {} - TRUE WORD BREAKS: {}".format(line_counter, word_brkpoints))
+        # print('**********************************************************************************')
+
+        line_counter += 1
+    icu_accuracy = 1 - icu_mismatch / icu_total_bies_lengths
+    return icu_accuracy
 
 def get_BEST_text(starting_text, ending_text):
     """
@@ -705,6 +780,9 @@ class WordSegmenter:
 # Loading the graph_clust from memory
 graph_clust_ratio = np.load(os.getcwd() + '/Data/graph_clust_ratio.npy', allow_pickle=True).item()
 
+# Looking at the accuracy of the ICU on SAFT data set
+# print(compute_ICU_accuracy(os.getcwd() + "/Data/SAFT/test.txt"))
+
 # Making the grapheme cluster dictionary to be used in the bi-directional LSTM model
 cnt = 0
 graph_thrsh = 500  # The vocabulary size for embeddings
@@ -717,9 +795,9 @@ for key in graph_clust_ratio.keys():
     cnt += 1
 
 # Making the bi-directional LSTM model using BEST data set
-word_segmenter = WordSegmenter(input_n=50, input_t=200000, input_graph_clust_dic=graph_clust_dic,
+word_segmenter = WordSegmenter(input_n=50, input_t=100000, input_graph_clust_dic=graph_clust_dic,
                                input_embedding_dim=40, input_hunits=40, input_dropout_rate=0.2, input_output_dim=4,
-                               input_epochs=1, input_training_data="BEST", input_evaluating_data="SAFT")
+                               input_epochs=10, input_training_data="BEST", input_evaluating_data="SAFT")
 word_segmenter.train_model()
 word_segmenter.test_model()
 # word_segmenter.test_model_line_by_line()

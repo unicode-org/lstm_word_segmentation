@@ -610,8 +610,9 @@ class WordSegmenter:
         model.add(Dropout(self.dropout_rate))
         model.add(TimeDistributed(Dense(self.output_dim, activation='softmax')))
         # opt = keras.optimizers.Adam(learning_rate=0.01)
-        # model.compile(loss='categorical_crossentropy', optimizer=opt, metrics=['accuracy'])
-        model.compile(loss='categorical_crossentropy', optimizer="adam", metrics=['accuracy'])
+        opt = keras.optimizers.SGD(learning_rate=0.1, momentum=0.95)
+        model.compile(loss='categorical_crossentropy', optimizer=opt, metrics=['accuracy'])
+        # model.compile(loss='categorical_crossentropy', optimizer="adam", metrics=['accuracy'])
 
         # Fitting the model
         model.fit(train_generator.generate(), steps_per_epoch=self.t//self.batch_size,
@@ -781,7 +782,7 @@ class WordSegmenter:
 graph_clust_ratio = np.load(os.getcwd() + '/Data/graph_clust_ratio.npy', allow_pickle=True).item()
 
 # Looking at the accuracy of the ICU on SAFT data set
-# print(compute_ICU_accuracy(os.getcwd() + "/Data/SAFT/test.txt"))
+# print("Accuracy of ICU on SAFT data is {}.".format(compute_ICU_accuracy(os.getcwd() + "/Data/SAFT/test.txt")))
 
 # Making the grapheme cluster dictionary to be used in the bi-directional LSTM model
 cnt = 0
@@ -797,7 +798,7 @@ for key in graph_clust_ratio.keys():
 # Making the bi-directional LSTM model using BEST data set
 word_segmenter = WordSegmenter(input_n=50, input_t=100000, input_graph_clust_dic=graph_clust_dic,
                                input_embedding_dim=40, input_hunits=40, input_dropout_rate=0.2, input_output_dim=4,
-                               input_epochs=10, input_training_data="BEST", input_evaluating_data="SAFT")
+                               input_epochs=10, input_training_data="BEST", input_evaluating_data="BEST")
 word_segmenter.train_model()
 word_segmenter.test_model()
 # word_segmenter.test_model_line_by_line()

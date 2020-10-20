@@ -289,7 +289,7 @@ def preprocess():
     return graph_clust_ratio, icu_accuracy
 
 
-def add_space_bars(read_filename, write_filename):
+def add_additional_bars(read_filename, write_filename):
     rfile = open(read_filename, 'r')
     wfile = open(write_filename, 'w')
     while True:
@@ -298,8 +298,9 @@ def add_space_bars(read_filename, write_filename):
             break
         new_line = ""
         for ch in line:
-            if ch == " ":
-                new_line += "| |"
+            # if ch == " ":
+            if 33 <= ord(ch) <= 47 or 58 <= ord(ch) <= 64:
+                new_line = new_line + "|" + ch + "|"
             else:
                 new_line += ch
         new_line += "\n"
@@ -790,6 +791,10 @@ class WordSegmenter:
         return est
 
 
+# Adding space bars to the SAFT data around spaces
+add_additional_bars("./Data/SAFT/test_raw.txt", "./Data/SAFT/test.txt")
+x = input()
+
 # graph_clust_ratio, icu_accuracy = preprocess()
 # print("icu accuracy is {}".format(icu_accuracy))
 # np.save(os.getcwd() + '/Data/graph_clust_ratio.npy', graph_clust_ratio)
@@ -812,33 +817,11 @@ for key in graph_clust_ratio.keys():
         break
     cnt += 1
 
-print("starting")
-add_space_bars("./Data/SAFT/test_raw.txt", "./Data/SAFT/test.txt")
-print("ending")
-
-
-print("The accuracy of ICU for SAFT data is {}".format(compute_ICU_accuracy("./Data/SAFT/test.txt")))
-
-x = input()
-
 # Making the bi-directional LSTM model using BEST data set
 word_segmenter = WordSegmenter(input_n=50, input_t=100000, input_graph_clust_dic=graph_clust_dic,
                                input_embedding_dim=40, input_hunits=40, input_dropout_rate=0.2, input_output_dim=4,
                                input_epochs=10, input_training_data="BEST", input_evaluating_data="BEST")
 word_segmenter.train_model()
 word_segmenter.test_model()
-# word_segmenter.test_model_line_by_line()
+word_segmenter.test_model_line_by_line()
 
-
-# Grid search
-'''
-test1 = []
-hu_list = [10, 20, 40, 64, 128, 256]
-for hu in hu_list:
-    word_segmenter = WordSegmenter(input_n=50, input_t=100000, input_graph_clust_dic=graph_clust_dic,
-                                   input_embedding_dim=40, input_hunits=hu, input_dropout_rate=0.2, input_output_dim=4
-                                   , input_epochs=20, input_training_data="BEST", input_evaluating_data="BEST")
-    word_segmenter.train_model()
-    test1.append(word_segmenter.test_model())
-print(test1)
-'''

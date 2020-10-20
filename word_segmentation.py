@@ -289,6 +289,23 @@ def preprocess():
     return graph_clust_ratio, icu_accuracy
 
 
+def add_space_bars(read_filename, write_filename):
+    rfile = open(read_filename, 'r')
+    wfile = open(write_filename, 'w')
+    while True:
+        line = rfile.readline().strip()
+        if not line:
+            break
+        new_line = ""
+        for ch in line:
+            if ch == " ":
+                new_line += "| |"
+            else:
+                new_line += ch
+        new_line += "\n"
+        wfile.write(new_line)
+
+
 def compute_ICU_accuracy(filename):
     """
     This function uses a dataset to compute the accuracy of icu word breakIterator
@@ -362,6 +379,7 @@ def compute_ICU_accuracy(filename):
         line_counter += 1
     icu_accuracy = 1 - icu_mismatch / icu_total_bies_lengths
     return icu_accuracy
+
 
 def get_BEST_text(starting_text, ending_text):
     """
@@ -609,8 +627,8 @@ class WordSegmenter:
         model.add(Bidirectional(LSTM(self.hunits, return_sequences=True), input_shape=(self.n, 1)))
         model.add(Dropout(self.dropout_rate))
         model.add(TimeDistributed(Dense(self.output_dim, activation='softmax')))
-        # opt = keras.optimizers.Adam(learning_rate=0.01)
-        opt = keras.optimizers.SGD(learning_rate=0.1, momentum=0.95)
+        opt = keras.optimizers.Adam(learning_rate=0.1)
+        # opt = keras.optimizers.SGD(learning_rate=0.4, momentum=0.9)
         model.compile(loss='categorical_crossentropy', optimizer=opt, metrics=['accuracy'])
         # model.compile(loss='categorical_crossentropy', optimizer="adam", metrics=['accuracy'])
 
@@ -630,8 +648,7 @@ class WordSegmenter:
         y_data = []
         if self.evaluating_data == "BEST":
             # this chunk of data has ~ 2*10^6 data points
-            input_str = get_BEST_text(starting_text=30, ending_text=40)
-            input_str = get_BEST_text(starting_text=30, ending_text=31)
+            input_str = get_BEST_text(starting_text=40, ending_text=45)
             x_data, y_data = get_trainable_data(input_str, self.graph_clust_dic)
         elif self.evaluating_data == "SAFT":
             input_str = get_file_text("./Data/SAFT/test.txt")
@@ -794,6 +811,15 @@ for key in graph_clust_ratio.keys():
     if cnt == graph_thrsh-1:
         break
     cnt += 1
+
+print("starting")
+add_space_bars("./Data/SAFT/test_raw.txt", "./Data/SAFT/test.txt")
+print("ending")
+
+
+print("The accuracy of ICU for SAFT data is {}".format(compute_ICU_accuracy("./Data/SAFT/test.txt")))
+
+x = input()
 
 # Making the bi-directional LSTM model using BEST data set
 word_segmenter = WordSegmenter(input_n=50, input_t=100000, input_graph_clust_dic=graph_clust_dic,

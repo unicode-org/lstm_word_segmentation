@@ -297,10 +297,31 @@ def add_additional_bars(read_filename, write_filename):
         if not line:
             break
         new_line = ""
-        for ch in line:
-            # if ch == " ":
-            if 33 <= ord(ch) <= 47 or 58 <= ord(ch) <= 64:
-                new_line = new_line + "|" + ch + "|"
+        for i in range(len(line)):
+            ch = line[i]
+            if ch == " ":
+            # The following if will put bars for !? as |!||?| instead of |!|?|. This should be fixed if the following 
+            # if is going to be used. It can easily be fixed by keeping track of the last character in new_line.
+            # if 32 <= ord(ch) <= 47 or 58 <= ord(ch) <= 64:
+                if i == 0:
+                    if i+1 < len(line) and line[i+1] == "|":
+                        new_line = new_line + "|" + ch
+                    else:
+                        new_line = new_line + "|" + ch + "|"
+                elif i == len(line)-1:
+                    if line[i-1] == "|":
+                        new_line = new_line + ch + "|"
+                    else:
+                        new_line = new_line + "|" + ch + "|"
+                else:
+                    if line[i-1] != "|" and line[i+1] != "|":
+                        new_line = new_line + "|" + ch + "|"
+                    if line[i-1] == "|" and line[i+1] != "|":
+                        new_line = new_line + ch + "|"
+                    if line[i-1] != "|" and line[i+1] == "|":
+                        new_line = new_line + "|" + ch
+                    if line[i-1] == "|" and line[i+1] == "|":
+                        new_line = new_line + ch
             else:
                 new_line += ch
         new_line += "\n"
@@ -792,8 +813,9 @@ class WordSegmenter:
 
 
 # Adding space bars to the SAFT data around spaces
-add_additional_bars("./Data/SAFT/test_raw.txt", "./Data/SAFT/test.txt")
-x = input()
+# add_additional_bars("./Data/SAFT/test_raw.txt", "./Data/SAFT/test.txt")
+# Looking at the accuracy of the ICU on SAFT data set
+# print("Accuracy of ICU on SAFT data is {}.".format(compute_ICU_accuracy(os.getcwd() + "/Data/SAFT/test.txt")))
 
 # graph_clust_ratio, icu_accuracy = preprocess()
 # print("icu accuracy is {}".format(icu_accuracy))
@@ -802,9 +824,6 @@ x = input()
 
 # Loading the graph_clust from memory
 graph_clust_ratio = np.load(os.getcwd() + '/Data/graph_clust_ratio.npy', allow_pickle=True).item()
-
-# Looking at the accuracy of the ICU on SAFT data set
-# print("Accuracy of ICU on SAFT data is {}.".format(compute_ICU_accuracy(os.getcwd() + "/Data/SAFT/test.txt")))
 
 # Making the grapheme cluster dictionary to be used in the bi-directional LSTM model
 cnt = 0
@@ -820,8 +839,7 @@ for key in graph_clust_ratio.keys():
 # Making the bi-directional LSTM model using BEST data set
 word_segmenter = WordSegmenter(input_n=50, input_t=100000, input_graph_clust_dic=graph_clust_dic,
                                input_embedding_dim=40, input_hunits=40, input_dropout_rate=0.2, input_output_dim=4,
-                               input_epochs=10, input_training_data="BEST", input_evaluating_data="BEST")
+                               input_epochs=10, input_training_data="BEST", input_evaluating_data="SAFT")
 word_segmenter.train_model()
 word_segmenter.test_model()
 word_segmenter.test_model_line_by_line()
-

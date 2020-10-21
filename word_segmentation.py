@@ -198,7 +198,7 @@ def clean_line(line):
     return line
 
 
-def preprocess():
+def preprocess_Thai():
     """
     This function uses the BEST data set to
         1) compute the grapheme cluster dictionary that holds the frequency of different grapheme clusters
@@ -287,6 +287,23 @@ def preprocess():
     graph_clust_ratio = {k: v / total for k, v in graph_clust_ratio.items()}
 
     return graph_clust_ratio, icu_accuracy
+
+
+def preprocess_Burmese():
+    file = "./Data/Okell.txt"
+    with open(file) as f:
+        content = f.readlines()
+    # content = [x.strip() for x in content]
+
+    with open(file) as f:
+        lines = []
+        line_counter = 0
+        for line in f:
+            line_counter += 1
+            if line == "\n":
+                print("enter at line {}".format(line_counter))
+                x = input()
+            lines.append(line)
 
 
 def add_additional_bars(read_filename, write_filename):
@@ -605,6 +622,12 @@ class WordSegmenter:
         self.evaluating_data = input_evaluating_data
         self.model = None
 
+    def get_model(self):
+        return self.model
+
+    def set_model(self, input_model):
+        self.model = input_model
+
     def train_model(self):
         """
         This function trains the model using the dataset specified in the __init__ function. It combine all sentences in
@@ -669,7 +692,6 @@ class WordSegmenter:
         x_data = []
         y_data = []
         if self.evaluating_data == "BEST":
-            # this chunk of data has ~ 2*10^6 data points
             input_str = get_BEST_text(starting_text=40, ending_text=45)
             x_data, y_data = get_trainable_data(input_str, self.graph_clust_dic)
         elif self.evaluating_data == "SAFT":
@@ -755,7 +777,7 @@ class WordSegmenter:
         """
         all_test_acc = []
         category = ["news", "encyclopedia", "article", "novel"]
-        for text_num in range(30, 33):
+        for text_num in range(40, 45):
             print("testing text {}".format(text_num))
             for cat in category:
                 all_test_acc += self.test_text_line_by_line(cat, text_num)
@@ -817,7 +839,7 @@ class WordSegmenter:
 # Looking at the accuracy of the ICU on SAFT data set
 # print("Accuracy of ICU on SAFT data is {}.".format(compute_ICU_accuracy(os.getcwd() + "/Data/SAFT/test.txt")))
 
-# graph_clust_ratio, icu_accuracy = preprocess()
+# graph_clust_ratio, icu_accuracy = preprocess_Thai()
 # print("icu accuracy is {}".format(icu_accuracy))
 # np.save(os.getcwd() + '/Data/graph_clust_ratio.npy', graph_clust_ratio)
 # analyze_grapheme_clusters(ratios=graph_clust_ratio, thrsh=0.999)
@@ -825,7 +847,11 @@ class WordSegmenter:
 # Loading the graph_clust from memory
 graph_clust_ratio = np.load(os.getcwd() + '/Data/graph_clust_ratio.npy', allow_pickle=True).item()
 
+# Model 1: Making the bi-directional LSTM model using BEST data set
+# specifications chosen heuristically with grid search
+'''
 # Making the grapheme cluster dictionary to be used in the bi-directional LSTM model
+model_name = "model1"
 cnt = 0
 graph_thrsh = 500  # The vocabulary size for embeddings
 graph_clust_dic = dict()
@@ -836,10 +862,88 @@ for key in graph_clust_ratio.keys():
         break
     cnt += 1
 
-# Making the bi-directional LSTM model using BEST data set
 word_segmenter = WordSegmenter(input_n=50, input_t=100000, input_graph_clust_dic=graph_clust_dic,
                                input_embedding_dim=40, input_hunits=40, input_dropout_rate=0.2, input_output_dim=4,
-                               input_epochs=10, input_training_data="BEST", input_evaluating_data="SAFT")
-word_segmenter.train_model()
+                               input_epochs=15, input_training_data="BEST", input_evaluating_data="BEST")
+
+# Training and saving the model
+# word_segmenter.train_model()
+# fitted_model = word_segmenter.get_model()
+# fitted_model.save("./Models/" + model_name)
+# np.save(os.getcwd() + "/Models/" + model_name + "/" + "weights", fitted_model.weights)
+
+# Loading the model
+model = keras.models.load_model("./Models/" + model_name)
+word_segmenter.set_model(model)
+'''
+
+# Model 2: Making the bi-directional LSTM model using BEST data set
+# specifications chosen heuristically with grid search, and hunits and embedding_dim are reduced to make the model
+# smaller
+# '''
+# Making the grapheme cluster dictionary to be used in the bi-directional LSTM model
+model_name = "model2"
+cnt = 0
+graph_thrsh = 350  # The vocabulary size for embeddings
+graph_clust_dic = dict()
+for key in graph_clust_ratio.keys():
+    if cnt < graph_thrsh-1:
+        graph_clust_dic[key] = cnt
+    if cnt == graph_thrsh-1:
+        break
+    cnt += 1
+
+word_segmenter = WordSegmenter(input_n=50, input_t=100000, input_graph_clust_dic=graph_clust_dic,
+                               input_embedding_dim=20, input_hunits=20, input_dropout_rate=0.2, input_output_dim=4,
+                               input_epochs=15, input_training_data="BEST", input_evaluating_data="BEST")
+
+# Training and saving the model
+# word_segmenter.train_model()
+# fitted_model = word_segmenter.get_model()
+# fitted_model.save("./Models/" + model_name)
+# np.save(os.getcwd() + "/Models/" + model_name + "/" + "weights", fitted_model.weights)
+
+# Loading the model
+model = keras.models.load_model("./Models/" + model_name)
+word_segmenter.set_model(model)
+# '''
+
+# Model 3: Making the bi-directional LSTM model using BEST data set
+# specifications chosen heuristically with grid search, and hunits and embedding_dim are reduced to make the model
+# smaller
+'''
+# Making the grapheme cluster dictionary to be used in the bi-directional LSTM model
+model_name = "model3"
+cnt = 0
+graph_thrsh = 350  # The vocabulary size for embeddings
+graph_clust_dic = dict()
+for key in graph_clust_ratio.keys():
+    if cnt < graph_thrsh-1:
+        graph_clust_dic[key] = cnt
+    if cnt == graph_thrsh-1:
+        break
+    cnt += 1
+
+word_segmenter = WordSegmenter(input_n=50, input_t=100000, input_graph_clust_dic=graph_clust_dic,
+                               input_embedding_dim=15, input_hunits=15, input_dropout_rate=0.2, input_output_dim=4,
+                               input_epochs=15, input_training_data="BEST", input_evaluating_data="BEST")
+
+# Training and saving the model
+# word_segmenter.train_model()
+# fitted_model = word_segmenter.get_model()
+# fitted_model.save("./Models/" + model_name)
+# np.save(os.getcwd() + "/Models/" + model_name + "/" + "weights", fitted_model.weights)
+
+# Loading the model
+model = keras.models.load_model("./Models/" + model_name)
+word_segmenter.set_model(model)
+'''
+
+
+# Observing different statistics of the model
+# print(model.weights)
+print(model.count_params())
+
+# Testing the model
 word_segmenter.test_model()
 word_segmenter.test_model_line_by_line()

@@ -15,7 +15,7 @@ from keras.layers import Bidirectional
 from keras.layers import Embedding
 from keras.layers import Dropout
 # from keras import optimizer
-
+from bayes_opt import BayesianOptimization
 
 def is_all_english(str):
     """
@@ -545,6 +545,20 @@ def compute_hc(weight, x_t, h_tm1, c_tm1):
     return [h_t, c_t]
 
 
+def LSTM_score(hunits, embedding_dim):
+    hunits = int(round(hunits))
+    embedding_dim = int(round(embedding_dim))
+    word_segmenter = WordSegmenter(input_n=50, input_t=100000, input_graph_clust_dic=graph_clust_dic,
+                                   input_embedding_dim=embedding_dim, input_hunits=hunits, input_dropout_rate=0.2, input_output_dim=4,
+                                   input_epochs=3, input_training_data="BEST", input_evaluating_data="BEST")
+    word_segmenter.train_model()
+    fitted_model = word_segmenter.get_model()
+    lam = 1/88964
+    C = 0
+    return word_segmenter.test_model() - C * lam * fitted_model.count_params()
+
+
+
 class KerasBatchGenerator(object):
     """
     A batch generator component, which is used to generate batches for training, validation, and evaluation. The current
@@ -894,8 +908,8 @@ for key in graph_clust_ratio.keys():
     cnt += 1
 
 word_segmenter = WordSegmenter(input_n=50, input_t=100000, input_graph_clust_dic=graph_clust_dic,
-                               input_embedding_dim=20, input_hunits=20, input_dropout_rate=0.2, input_output_dim=4,
-                               input_epochs=15, input_training_data="BEST", input_evaluating_data="BEST")
+                               input_embedding_dim=64, input_hunits=64, input_dropout_rate=0.2, input_output_dim=4,
+                               input_epochs=1, input_training_data="BEST", input_evaluating_data="BEST")
 
 # Training and saving the model
 # word_segmenter.train_model()
@@ -939,11 +953,24 @@ model = keras.models.load_model("./Models/" + model_name)
 word_segmenter.set_model(model)
 '''
 
-
 # Observing different statistics of the model
 # print(model.weights)
-print(model.count_params())
+# print(model.count_params())
 
 # Testing the model
-word_segmenter.test_model()
-word_segmenter.test_model_line_by_line()
+# word_segmenter.test_model()
+# word_segmenter.test_model_line_by_line()
+
+bounds = {'hunits': (8, 64), 'embedding_dim': (4, 64)}
+
+optimizer = BayesianOptimization(
+    f=LSTM_score,
+    pbounds=bounds,
+    random_state=1,
+)
+
+optimizer.maximize(init_points=2, n_iter=10)
+print(optimizer.max)
+print(optimizer.res)
+
+

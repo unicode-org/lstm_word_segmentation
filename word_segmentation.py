@@ -36,6 +36,7 @@ def diff_strings(str1, str2):
         print("Warning: length of two strings are not equal")
     return sum(str1[i] != str2[i] for i in range(len(str1)))
 
+
 def sigmoid(x):
     """
     Computes the sigmoid function for a scalar
@@ -51,6 +52,7 @@ def print_grapheme_clusters(ratios, thrsh):
     provides a histogram that shows frequency of grapheme clusters
     ratios: a dictionary that holds the ratio of text that is represented by each grapheme cluster
     Args:
+        ratios: a dictionary that shows the percentage of each grapheme cluster
         thrsh: shows what percent of the text we want to cover
     """
     cum_sum = 0
@@ -178,6 +180,7 @@ def clean_line(line):
     Args:
         line: the input line
     """
+    line = line.strip()
 
     # Remove lines with links
     if "http" in line or len(line) == 0:
@@ -224,12 +227,9 @@ def preprocess_Thai(demonstrate):
             with open(file) as f:
                 for line in f:
                     line_counter += 1
-                    if line == "\n":
-                        continue
                     line = clean_line(line)
                     if line == -1:
                         continue
-
                     # Finding word breakpoints using the segmented data
                     word_brkpoints = []
                     found_bars = 0
@@ -294,28 +294,60 @@ def preprocess_Thai(demonstrate):
 
 
 # The following function is not complete, and so for now everything is commented
-def preprocess_Burmese():
+def preprocess_Burmese(demonstrate):
     """
     This function uses the Okell data set to
         1) Clean it by removing tabs from start of it
         1) Compute the grapheme cluster dictionary that holds the frequency of different grapheme clusters
         2) Demonstrate the performance of icu word breakIterator and compute its accuracy
     """
-    # file = "./Data/Okell.txt"
-    # with open(file) as f:
-    #     content = f.readlines()
-    # # content = [x.strip() for x in content]
-    #
-    # with open(file) as f:
-    #     lines = []
-    #     line_counter = 0
-    #     for line in f:
-    #         line_counter += 1
-    #         if line == "\n":
-    #             print("enter at line {}".format(line_counter))
-    #             x = input()
-    #         lines.append(line)
+    words_break_iterator = BreakIterator.createWordInstance(Locale.getUS())
+    chars_break_iterator = BreakIterator.createCharacterInstance(Locale.getUS())
+    grapheme_clusters_dic = dict()
+    file = "./Data/my.txt"
+    with open(file) as f:
+        line_counter = 0
+        for line in f:
+            line = line.strip()
+            # If the resulting line is in ascii (including an empty line) continue
+            if is_ascii(line):
+                continue
+            # Making the grapheme clusters brkpoints
+            chars_break_iterator.setText(line)
+            char_brkpoints = [0]
+            for brkpoint in chars_break_iterator:
+                char_brkpoints.append(brkpoint)
 
+            # Storing the grapheme clusters and their frequency in the dictionary
+            for i in range(len(char_brkpoints) - 1):
+                grapheme_clusters_dic[
+                    line[char_brkpoints[i]: char_brkpoints[i + 1]]] = grapheme_clusters_dic.get(
+                    line[char_brkpoints[i]: char_brkpoints[i + 1]], 0) + 1
+
+            # Compute segmentations of icu and BIES associated with it
+            words_break_iterator.setText(line)
+            icu_word_brkpoints = [0]
+            for brkpoint in words_break_iterator:
+                icu_word_brkpoints.append(brkpoint)
+            icu_word_segmented_str = get_segmented_string(line, icu_word_brkpoints)
+            icu_bies = get_bies(char_brkpoints, icu_word_brkpoints)
+            icu_bies_str = get_bies_string_from_softmax(np.transpose(icu_bies))
+
+            # Demonstrate how icu segmenter works
+            if demonstrate:
+                char_segmented_str = get_segmented_string(line, char_brkpoints)
+                print("LINE {} - UNSEG LINE       : {}".format(line_counter, line))
+                print("LINE {} - ICU SEG LINE     : {}".format(line_counter, icu_word_segmented_str))
+                print("LINE {} - GRAPHEME CLUSTERS: {}".format(line_counter, char_segmented_str))
+                print("LINE {} -  ICU BIES STRING : {}".format(line_counter, icu_bies_str))
+                print('**********************************************************************************')
+            line_counter += 1
+    graph_clust_freq = grapheme_clusters_dic
+    graph_clust_freq = {k: v for k, v in sorted(graph_clust_freq.items(), key=lambda item: item[1], reverse=True)}
+    graph_clust_ratio = graph_clust_freq
+    total = sum(graph_clust_ratio.values(), 0.0)
+    graph_clust_ratio = {k: v / total for k, v in graph_clust_ratio.items()}
+    return graph_clust_ratio
 
 def add_additional_bars(read_filename, write_filename):
     """
@@ -328,7 +360,8 @@ def add_additional_bars(read_filename, write_filename):
     wfile = open(write_filename, 'w')
     with open(read_filename) as f:
         for line in f:
-            if line == "\n":
+            line = line.strip()
+            if len(line) == 0:
                 continue
             new_line = ""
             for i in range(len(line)):
@@ -377,8 +410,6 @@ def compute_ICU_accuracy(filename):
     icu_total_bies_lengths = 0
     with open(filename) as f:
         for line in f:
-            if line == "\n":
-                continue
             line = clean_line(line)
             if line == -1:
                 continue
@@ -442,8 +473,6 @@ def get_BEST_text(starting_text, ending_text, pseudo):
             line_counter = 0
             with open(file) as f:
                 for line in f:
-                    if line == "\n":
-                        continue
                     line = clean_line(line)
                     if line == -1:
                         continue
@@ -476,8 +505,6 @@ def get_file_text(filename):
     out_str = ""
     with open(filename) as f:
         for line in f:
-            if line == "\n":
-                continue
             line = clean_line(line)
             if line == -1:
                 continue
@@ -796,8 +823,6 @@ class WordSegmenter:
         prev_str = ""
         with open(file) as f:
             for line in f:
-                if line == "\n":
-                    continue
                 line = clean_line(line)
                 if line == -1:
                     continue
@@ -897,6 +922,8 @@ class WordSegmenter:
     def set_model(self, input_model):
         self.model = input_model
 
+################################ Thai ################################
+
 # Adding space bars to the SAFT data around spaces
 # add_additional_bars("./Data/SAFT/test_raw.txt", "./Data/SAFT/test.txt")
 
@@ -904,14 +931,14 @@ class WordSegmenter:
 # print("Accuracy of ICU on SAFT data is {}.".format(compute_ICU_accuracy(os.getcwd() + "/Data/SAFT/test.txt")))
 
 # Preprocess the Thai language
-# graph_clust_ratio, icu_accuracy = preprocess_Thai(demonstrate=False)
+# Thai_graph_clust_ratio, icu_accuracy = preprocess_Thai(demonstrate=False)
 # print("icu accuracy is {}".format(icu_accuracy))
-# np.save(os.getcwd() + '/Data/graph_clust_ratio.npy', graph_clust_ratio)
+# np.save(os.getcwd() + '/Data/Thai_graph_clust_ratio.npy', Thai_graph_clust_ratio)
 
 # Loading the graph_clust from memory
-graph_clust_ratio = np.load(os.getcwd() + '/Data/graph_clust_ratio.npy', allow_pickle=True).item()
+graph_clust_ratio = np.load(os.getcwd() + '/Data/Thai_graph_clust_ratio.npy', allow_pickle=True).item()
+print(graph_clust_ratio)
 # print_grapheme_clusters(ratios=graph_clust_ratio, thrsh=0.999)
-
 
 # Performing Bayesian optimization to find the best value for hunits and embedding_dim
 '''
@@ -928,10 +955,10 @@ perfom_bayesian_optimization(hunits_lower=4, hunits_upper=64, embedding_dim_lowe
 '''
 
 # Learn a new model -- choose name cautiously to not overrite other models
-'''
-model_name = "temp"
+# '''
+model_name = "Thai_model1"
 cnt = 0
-graph_thrsh = 350  # The vocabulary size for embeddings
+graph_thrsh = 500  # The vocabulary size for embeddings
 graph_clust_dic = dict()
 for key in graph_clust_ratio.keys():
     if cnt < graph_thrsh-1:
@@ -941,49 +968,51 @@ for key in graph_clust_ratio.keys():
     cnt += 1
 
 word_segmenter = WordSegmenter(input_n=50, input_t=100000, input_graph_clust_dic=graph_clust_dic,
-                               input_embedding_dim=16, input_hunits=23, input_dropout_rate=0.2, input_output_dim=4,
+                               input_embedding_dim=40, input_hunits=40, input_dropout_rate=0.2, input_output_dim=4,
                                input_epochs=15, input_training_data="pseudo BEST", input_evaluating_data="BEST")
 
 # Training and saving the model
 word_segmenter.train_model()
+word_segmenter.test_model()
 fitted_model = word_segmenter.get_model()
 fitted_model.save("./Models/" + model_name)
 np.save(os.getcwd() + "/Models/" + model_name + "/" + "weights", fitted_model.weights)
-'''
+# '''
 
 # Choose one of the saved models to use
-# model 1: Bi-directional LSTM (trained on BEST), grid search
-# model 2: Bi-directional LSTM (trained on BEST), grid search + manual reduction of hunits and embedding_size
-# model 3: Bi-directional LSTM (trained on BEST), grid search + extreme manual reduction of hunits and embedding_size
-# model 4: Bi-directional LSTM (trained on BEST), short BayesOpt choice for hunits and embedding_size
-# model 5: Bi-directional LSTM (trained on BEST), A very parsimonious model
-# temp: a temporary model, it should be used for trying new models
+# '''
+# Thai model 1: Bi-directional LSTM (trained on BEST), grid search
+# Thai model 2: Bi-directional LSTM (trained on BEST), grid search + manual reduction of hunits and embedding_size
+# Thai model 3: Bi-directional LSTM (trained on BEST), grid search + extreme manual reduction of hunits and embedding_size
+# Thai model 4: Bi-directional LSTM (trained on BEST), short BayesOpt choice for hunits and embedding_size
+# Thai model 5: Bi-directional LSTM (trained on BEST), A very parsimonious model
+# Thai temp: a temporary model, it should be used for trying new models
 
-model_name = "model4"
+model_name = "Thai_temp"
 input_graph_thrsh = 350  # default graph_thrsh
 input_embedding_dim = 40  # default embedding_dim
 input_hunits = 40  # default hunits
-if model_name == "model1":
+if model_name == "Thai_model1":
     input_graph_thrsh = 500
     input_embedding_dim = 40
     input_hunits = 40
-if model_name == "model3":
+if model_name == "Thai_model3":
     input_graph_thrsh = 350
     input_embedding_dim = 20
     input_hunits = 20
-if model_name == "model3":
+if model_name == "Thai_model3":
     input_graph_thrsh = 350
     input_embedding_dim = 15
     input_hunits = 15
-if model_name == "model4":
+if model_name == "Thai_model4":
     input_graph_thrsh = 350
     input_embedding_dim = 16
     input_hunits = 23
-if model_name == "model5":
+if model_name == "Thai_model5":
     input_graph_thrsh = 250
     input_embedding_dim = 10
     input_hunits = 10
-if model_name == "temp":
+if model_name == "Thai_temp":
     input_graph_thrsh = 350
     input_embedding_dim = 16
     input_hunits = 23
@@ -1008,3 +1037,44 @@ word_segmenter.set_model(model)
 # Testing the model
 word_segmenter.test_model()
 word_segmenter.test_model_line_by_line()
+# '''
+
+################################ Burmese ################################
+
+
+# Preprocess the Burmese language
+# Burmese_graph_clust_ratio = preprocess_Burmese(demonstrate=False)
+# np.save(os.getcwd() + '/Data/Burmese_graph_clust_ratio.npy', Burmese_graph_clust_ratio)
+
+# Loading the graph_clust from memory
+graph_clust_ratio = np.load(os.getcwd() + '/Data/Burmese_graph_clust_ratio.npy', allow_pickle=True).item()
+# print_grapheme_clusters(ratios=graph_clust_ratio, thrsh=0.999)
+
+'''
+model_name = "temp"
+cnt = 0
+graph_thrsh = 350  # The vocabulary size for embeddings
+graph_clust_dic = dict()
+for key in graph_clust_ratio.keys():
+    if cnt < graph_thrsh-1:
+        graph_clust_dic[key] = cnt
+    if cnt == graph_thrsh-1:
+        break
+    cnt += 1
+
+word_segmenter = WordSegmenter(input_n=50, input_t=100000, input_graph_clust_dic=graph_clust_dic,
+                               input_embedding_dim=16, input_hunits=23, input_dropout_rate=0.2, input_output_dim=4,
+                               input_epochs=15, input_training_data="pseudo BEST", input_evaluating_data="BEST")
+
+# Training and saving the model
+word_segmenter.train_model()
+fitted_model = word_segmenter.get_model()
+fitted_model.save("./Models/" + model_name)
+np.save(os.getcwd() + "/Models/" + model_name + "/" + "weights", fitted_model.weights)
+'''
+
+
+
+
+
+

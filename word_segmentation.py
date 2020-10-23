@@ -20,7 +20,7 @@ def is_ascii(input_str):
     """
     A very basic function that checks if all elements of str are ASCII or not
     Args:
-        str: input string
+        input_str: input string
     """
     return all(ord(char) < 128 for char in input_str)
 
@@ -293,7 +293,6 @@ def preprocess_Thai(demonstrate):
     return graph_clust_ratio, icu_accuracy
 
 
-# The following function is not complete, and so for now everything is commented
 def preprocess_Burmese(demonstrate):
     """
     This function uses the Okell data set to
@@ -452,6 +451,36 @@ def compute_ICU_accuracy(filename):
         return icu_accuracy
 
 
+def divide_train_test_data(input_text, train_text, valid_text, test_text):
+    """
+    This function divides a file into three new files, that contain train data, validation data, and testing data
+    Args:
+        input_text: address of the original file
+        train_text: address to store the train data in it
+        valid_text: address to store the validation data in it
+        test_text: address to store the test file in it
+    """
+    train_ratio = 0.4
+    valid_ratio = 0.4
+    train_file = open(train_text, 'w')
+    valid_file = open(valid_text, 'w')
+    test_file = open(test_text, 'w')
+    num_lines = sum(1 for _line in open(input_text))
+    line_counter = 0
+    with open(input_text) as f:
+        for line in f:
+            line_counter += 1
+            line = line.strip()
+            if is_ascii(line):
+                continue
+            if line_counter <= num_lines*train_ratio:
+                train_file.write(line + "\n")
+            elif num_lines*train_ratio < line_counter <= num_lines*(train_ratio+valid_ratio):
+                valid_file.write(line + "\n")
+            else:
+                test_file.write(line + "\n")
+
+
 def get_BEST_text(starting_text, ending_text, pseudo):
     """
     Gives a long string, that contains all lines (separated by a single space) from BEST data with numbers in a range
@@ -471,7 +500,6 @@ def get_BEST_text(starting_text, ending_text, pseudo):
         for cat in category:
             text_num_str = "{}".format(text_num).zfill(5)
             file = "./Data/Best/{}/{}_".format(cat, cat) + text_num_str + ".txt"
-            line_counter = 0
             with open(file) as f:
                 for line in f:
                     line = clean_line(line)
@@ -489,7 +517,39 @@ def get_BEST_text(starting_text, ending_text, pseudo):
                         out_str = line
                     else:
                         out_str = out_str + " " + line
-                    line_counter += 1
+    return out_str
+
+
+def get_burmese_text(filename):
+    """
+    This function first combine all lines in a file where each two lines are separated with a space, and then uses ICU
+    to segment the new long string.
+    Note: Because in some of the Burmese texts some lines start with glyphs that are not valid, I first combine all
+    lines and then segment them, rather than first segmenting each line and then combining them. This can result in a
+    more robust segmentation. Eample: see line 457457 of the my_train.txt
+    of the
+    Args:
+        filename: address of the input file
+    """
+    words_break_iterator = BreakIterator.createWordInstance(Locale.getUS())
+    out_str = ""
+    line_counter = 0
+    with open(filename) as f:
+        for line in f:
+            line_counter += 1
+            line = line.strip()
+            if is_ascii(line):
+                continue
+            if len(out_str) == 0:
+                out_str = line
+            else:
+                out_str = out_str + " " + line
+
+    words_break_iterator.setText(out_str)
+    icu_word_brkpoints = [0]
+    for brkpoint in words_break_iterator:
+        icu_word_brkpoints.append(brkpoint)
+    out_str = get_segmented_string(out_str, icu_word_brkpoints)
     return out_str
 
 
@@ -544,7 +604,6 @@ def get_trainable_data(input_line, graph_clust_ids):
 
     # Finding BIES
     true_bies = get_bies(char_brkpoints, word_brkpoints)
-    true_bies_str = get_bies_string_from_softmax(np.transpose(true_bies))
 
     # Making x_data and y_data
     times = len(char_brkpoints)-1
@@ -604,6 +663,28 @@ def LSTM_score(hunits, embedding_dim):
     lam = 1/88964  # This is number of parameters in the largest model
     C = 0
     return word_segmenter.test_model() - C * lam * fitted_model.count_params()
+
+
+def store_ICU_segmented_file(unseg_filename, seg_filename):
+    """
+    This function uses ICU to segment a file line by line and store that segmented file
+    Args:
+        unseg_filename: address of the unsegmented file
+        seg_filename: address that the segmented file will be stored
+    """
+    words_break_iterator = BreakIterator.createWordInstance(Locale.getUS())
+    wfile = open(seg_filename, 'w')
+    with open(unseg_filename) as f:
+        for line in f:
+            line = line.strip()
+            if len(line) == 0:
+                continue
+            words_break_iterator.setText(line)
+            icu_word_brkpoints = [0]
+            for brkpoint in words_break_iterator:
+                icu_word_brkpoints.append(brkpoint)
+            segmented_line = get_segmented_string(line, icu_word_brkpoints)
+            wfile.write(segmented_line + "\n")
 
 
 def perfom_bayesian_optimization(hunits_lower, hunits_upper, embedding_dim_lower, embedding_dim_upper):
@@ -721,9 +802,19 @@ class WordSegmenter:
                 print("Warning: size of the training data is less than self.t")
             x_data = x_data[:self.t]
             y_data = y_data[:self.t, :]
+
         elif self.training_data == "pseudo BEST":
             # this chunk of data has ~ 2*10^6 data points
             input_str = get_BEST_text(starting_text=1, ending_text=10, pseudo=True)
+            x_data, y_data = get_trainable_data(input_str, self.graph_clust_dic)
+            if self.t > x_data.shape[0]:
+                print("Warning: size of the training data is less than self.t")
+            x_data = x_data[:self.t]
+            y_data = y_data[:self.t, :]
+
+        elif self.training_data == "my":
+            # this chunk of data has ~ 2*10^6 data points
+            input_str = get_burmese_text("./Data/my_train.txt")
             x_data, y_data = get_trainable_data(input_str, self.graph_clust_dic)
             if self.t > x_data.shape[0]:
                 print("Warning: size of the training data is less than self.t")
@@ -749,6 +840,14 @@ class WordSegmenter:
             x_data, y_data = get_trainable_data(input_str, self.graph_clust_dic)
             if self.t > x_data.shape[0]:
                 print("Warning: size of the validation data is less than self.t")
+            x_data = x_data[:self.t]
+            y_data = y_data[:self.t, :]
+        elif self.training_data == "my":
+            # this chunk of data has ~ 2*10^6 data points
+            input_str = get_burmese_text("./Data/my_valid.txt")
+            x_data, y_data = get_trainable_data(input_str, self.graph_clust_dic)
+            if self.t > x_data.shape[0]:
+                print("Warning: size of the training data is less than self.t")
             x_data = x_data[:self.t]
             y_data = y_data[:self.t, :]
         else:
@@ -787,6 +886,9 @@ class WordSegmenter:
         elif self.evaluating_data == "SAFT":
             input_str = get_file_text("./Data/SAFT/test.txt")
             x_data, y_data = get_trainable_data(input_str, self.graph_clust_dic)
+        elif self.evaluating_data == "my":
+            input_str = get_burmese_text("./Data/my_test.txt")
+            x_data, y_data = get_trainable_data(input_str, self.graph_clust_dic)
         else:
             print("Warning: no implementation for this evaluation data exists!")
         test_batch_size = x_data.shape[0]//self.n
@@ -810,24 +912,25 @@ class WordSegmenter:
         print("the average test accuracy in test_model function: {}".format(np.mean(test_acc)))
         return np.mean(test_acc)
 
-    def test_text_line_by_line(self, cat, text_num):
+    def test_text_line_by_line(self, file, line_limit):
         """
         This function tests the model fitted in self.train() using BEST data set. Unlike test_model() function, this
         function tests the model line by line. It combines very short lines together before testing.
         Args:
-            cat: category of the text in BEST data. It can be "news", "encyclopedia", "article" or "novel"
-            text_num: number of the text in the BEST data
+            file: the address of the file that is going to be tested
+            line_limit: number of lines to be tested
         """
-        text_num_str = "{}".format(text_num).zfill(5)
-        file = "./Data/Best/{}/{}_".format(cat, cat) + text_num_str + ".txt"
         test_acc = []
         prev_str = ""
+        line_counter = 0
         with open(file) as f:
             for line in f:
+                if line_counter == line_limit:
+                    break
                 line = clean_line(line)
                 if line == -1:
                     continue
-
+                line_counter += 1
                 # If the new line is too short, combine it with previous short lines. Process it if it gets long enough.
                 # If this value is set to infinity, basically we are converting the whole text into one big string and
                 # evaluating that; just like test_model() function
@@ -838,7 +941,6 @@ class WordSegmenter:
                         prev_str = ""
                     else:
                         continue
-
                 # Get trainable data
                 x_data, y_data = get_trainable_data(line, self.graph_clust_dic)
 
@@ -850,7 +952,7 @@ class WordSegmenter:
                 # Compute the BIES accuracy
                 mismatch = diff_strings(actual_y, y_hat)
                 test_acc.append(1 - mismatch / len(actual_y))
-            print("the average test accuracy (line by line) for text {} : {}".format(text_num, np.mean(test_acc)))
+            print("the average test accuracy (line by line) for file {} : {}".format(file, np.mean(test_acc)))
             return test_acc
 
     def test_model_line_by_line(self):
@@ -859,12 +961,25 @@ class WordSegmenter:
         final score is the average of scores computed for each individual text.
         """
         all_test_acc = []
-        category = ["news", "encyclopedia", "article", "novel"]
-        for text_num in range(40, 45):
-            print("testing text {}".format(text_num))
-            for cat in category:
-                all_test_acc += self.test_text_line_by_line(cat, text_num)
+        if self.evaluating_data == "BEST":
+            category = ["news", "encyclopedia", "article", "novel"]
+            for text_num in range(40, 45):
+                print("testing text {}".format(text_num))
+                for cat in category:
+                    text_num_str = "{}".format(text_num).zfill(5)
+                    file = "./Data/Best/{}/{}_".format(cat, cat) + text_num_str + ".txt"
+                    all_test_acc += self.test_text_line_by_line(file, line_limit=-1)
+        elif self.evaluating_data == "my":
+            file = "./Data/my_test_segmented.txt"
+            num_lines = sum(1 for _line in open(file))
+            line_limit = 2000
+            if line_limit > num_lines:
+                print("Warning: number of lines you are using is larger than the total numbe of lines in " + file)
+            all_test_acc += self.test_text_line_by_line(file, line_limit=line_limit)
+        else:
+            print("Warning: no implementation for this evaluation data exists!")
         print("the average test accuracy by test_model_line_by_line function: {}".format(np.mean(all_test_acc)))
+
         return np.mean(all_test_acc)
 
     def manual_predict(self, test_input):
@@ -955,8 +1070,8 @@ for key in graph_clust_ratio.keys():
 perfom_bayesian_optimization(hunits_lower=4, hunits_upper=64, embedding_dim_lower=4, embedding_dim_upper=64)
 '''
 
-# Learn a new model -- choose name cautiously to not overrite other models
-# '''
+# Train a new model -- choose name cautiously to not overwrite other models
+'''
 model_name = "Thai_model5"
 cnt = 0
 graph_thrsh = 250  # The vocabulary size for embeddings
@@ -978,10 +1093,10 @@ word_segmenter.test_model()
 fitted_model = word_segmenter.get_model()
 fitted_model.save("./Models/" + model_name)
 np.save(os.getcwd() + "/Models/" + model_name + "/" + "weights", fitted_model.weights)
-# '''
+'''
 
 # Choose one of the saved models to use
-# '''
+'''
 # Thai model 1: Bi-directional LSTM (trained on BEST), grid search
 # Thai model 2: Bi-directional LSTM (trained on BEST), grid search + manual reduction of hunits and embedding_size
 # Thai model 3: Bi-directional LSTM (trained on BEST), grid search + extreme manual reduction of hunits and embedding_size
@@ -989,7 +1104,7 @@ np.save(os.getcwd() + "/Models/" + model_name + "/" + "weights", fitted_model.we
 # Thai model 5: Bi-directional LSTM (trained on BEST), A very parsimonious model
 # Thai temp: a temporary model, it should be used for trying new models
 
-model_name = "Thai_model5"
+model_name = "Thai_model4"
 input_graph_thrsh = 350  # default graph_thrsh
 input_embedding_dim = 40  # default embedding_dim
 input_hunits = 40  # default hunits
@@ -1038,21 +1153,45 @@ word_segmenter.set_model(model)
 # Testing the model
 word_segmenter.test_model()
 word_segmenter.test_model_line_by_line()
-# '''
+'''
 
 ################################ Burmese ################################
 
+'''
+str = "ြင်သစ်မှာ နောက်လလုပ်မယ့် သမ္မတရွေးကောက်ပွဲမှာ သူဝင်ပြိုင်မှာ မဟုတ်ဘူးလို့ ဝန်ကြီးချုပ်ဟောင်း အလိန်ယူပေက ကြေညာလိုက်ပါတယ်။"
+chars_break_iterator = BreakIterator.createCharacterInstance(Locale.getUS())
+word_break_iterator = BreakIterator.createWordInstance(Locale.getUS())
+chars_break_iterator.setText(str)
+word_break_iterator.setText(str)
+char_brkpoints = [0]
+for brkpoint in chars_break_iterator:
+    char_brkpoints.append(brkpoint)
+word_brkpoints = [0]
+for brkpoint in word_break_iterator:
+    word_brkpoints.append(brkpoint)
+print(char_brkpoints)
+print(word_brkpoints)
+x = input()
+'''
 
 # Preprocess the Burmese language
 # Burmese_graph_clust_ratio = preprocess_Burmese(demonstrate=False)
 # np.save(os.getcwd() + '/Data/Burmese_graph_clust_ratio.npy', Burmese_graph_clust_ratio)
 
 # Loading the graph_clust from memory
-# graph_clust_ratio = np.load(os.getcwd() + '/Data/Burmese_graph_clust_ratio.npy', allow_pickle=True).item()
-# print_grapheme_clusters(ratios=graph_clust_ratio, thrsh=0.999)
+graph_clust_ratio = np.load(os.getcwd() + '/Data/Burmese_graph_clust_ratio.npy', allow_pickle=True).item()
+# print_grapheme_clusters(ratios=graph_clust_ratio, thrsh=0.99)
 
+
+# Dividing the my.txt data to train, validation, and test data sets.
+# divide_train_test_data(input_text="./Data/my.txt", train_text="./Data/my_train.txt", valid_text="./Data/my_valid.txt",
+#                        test_text="./Data/my_test.txt")
+# Making a ICU segmented version of the test data, for future tests
+# store_ICU_segmented_file(unseg_filename="./Data/my_test.txt", seg_filename="./Data/my_test_segmented.txt")
+
+# Train a new model -- choose name cautiously to not overwrite other models
 '''
-model_name = "temp"
+model_name = "Burmese_temp"
 cnt = 0
 graph_thrsh = 350  # The vocabulary size for embeddings
 graph_clust_dic = dict()
@@ -1064,18 +1203,49 @@ for key in graph_clust_ratio.keys():
     cnt += 1
 
 word_segmenter = WordSegmenter(input_n=50, input_t=100000, input_graph_clust_dic=graph_clust_dic,
-                               input_embedding_dim=16, input_hunits=23, input_dropout_rate=0.2, input_output_dim=4,
-                               input_epochs=15, input_training_data="pseudo BEST", input_evaluating_data="BEST")
+                               input_embedding_dim=20, input_hunits=20, input_dropout_rate=0.2, input_output_dim=4,
+                               input_epochs=3, input_training_data="my", input_evaluating_data="my")
 
 # Training and saving the model
 word_segmenter.train_model()
+word_segmenter.test_model()
 fitted_model = word_segmenter.get_model()
 fitted_model.save("./Models/" + model_name)
 np.save(os.getcwd() + "/Models/" + model_name + "/" + "weights", fitted_model.weights)
 '''
 
+# Choose one of the saved models to use
+'''
+model_name = "Burmese_temp"
+input_graph_thrsh = 350  # default graph_thrsh
+input_embedding_dim = 40  # default embedding_dim
+input_hunits = 40  # default hunits
+if model_name == "Burmese_temp":
+    input_graph_thrsh = 350
+    input_embedding_dim = 20
+    input_hunits = 20
 
+# Building the model instance and loading the trained model
+cnt = 0
+graph_thrsh = input_graph_thrsh  # The vocabulary size for embeddings
+graph_clust_dic = dict()
+for key in graph_clust_ratio.keys():
+    if cnt < graph_thrsh-1:
+        graph_clust_dic[key] = cnt
+    if cnt == graph_thrsh-1:
+        break
+    cnt += 1
+word_segmenter = WordSegmenter(input_n=50, input_t=100000, input_graph_clust_dic=graph_clust_dic,
+                               input_embedding_dim=input_embedding_dim, input_hunits=input_hunits,
+                               input_dropout_rate=0.2, input_output_dim=4, input_epochs=3,
+                               input_training_data="my", input_evaluating_data="my")
+model = keras.models.load_model("./Models/" + model_name)
+word_segmenter.set_model(model)
 
+# Testing the model
+word_segmenter.test_model()
+word_segmenter.test_model_line_by_line()
+'''
 
 
 

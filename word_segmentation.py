@@ -349,6 +349,7 @@ def preprocess_Burmese(demonstrate):
     graph_clust_ratio = {k: v / total for k, v in graph_clust_ratio.items()}
     return graph_clust_ratio
 
+
 def add_additional_bars(read_filename, write_filename):
     """
     This function reads a segmented file and add bars around each space in it. It assumes that spaces are used as
@@ -714,7 +715,7 @@ class WordSegmenter:
         y_data = []
         if self.training_data == "BEST":
             # this chunk of data has ~ 2*10^6 data points
-            input_str = get_BEST_text(starting_text=1, ending_text=10, pseudo=True)
+            input_str = get_BEST_text(starting_text=1, ending_text=10, pseudo=False)
             x_data, y_data = get_trainable_data(input_str, self.graph_clust_dic)
             if self.t > x_data.shape[0]:
                 print("Warning: size of the training data is less than self.t")
@@ -937,7 +938,7 @@ class WordSegmenter:
 
 # Loading the graph_clust from memory
 graph_clust_ratio = np.load(os.getcwd() + '/Data/Thai_graph_clust_ratio.npy', allow_pickle=True).item()
-print(graph_clust_ratio)
+# print(graph_clust_ratio)
 # print_grapheme_clusters(ratios=graph_clust_ratio, thrsh=0.999)
 
 # Performing Bayesian optimization to find the best value for hunits and embedding_dim
@@ -956,9 +957,9 @@ perfom_bayesian_optimization(hunits_lower=4, hunits_upper=64, embedding_dim_lowe
 
 # Learn a new model -- choose name cautiously to not overrite other models
 # '''
-model_name = "Thai_model1"
+model_name = "Thai_model5"
 cnt = 0
-graph_thrsh = 500  # The vocabulary size for embeddings
+graph_thrsh = 250  # The vocabulary size for embeddings
 graph_clust_dic = dict()
 for key in graph_clust_ratio.keys():
     if cnt < graph_thrsh-1:
@@ -968,8 +969,8 @@ for key in graph_clust_ratio.keys():
     cnt += 1
 
 word_segmenter = WordSegmenter(input_n=50, input_t=100000, input_graph_clust_dic=graph_clust_dic,
-                               input_embedding_dim=40, input_hunits=40, input_dropout_rate=0.2, input_output_dim=4,
-                               input_epochs=15, input_training_data="pseudo BEST", input_evaluating_data="BEST")
+                               input_embedding_dim=10, input_hunits=10, input_dropout_rate=0.2, input_output_dim=4,
+                               input_epochs=15, input_training_data="BEST", input_evaluating_data="BEST")
 
 # Training and saving the model
 word_segmenter.train_model()
@@ -988,7 +989,7 @@ np.save(os.getcwd() + "/Models/" + model_name + "/" + "weights", fitted_model.we
 # Thai model 5: Bi-directional LSTM (trained on BEST), A very parsimonious model
 # Thai temp: a temporary model, it should be used for trying new models
 
-model_name = "Thai_temp"
+model_name = "Thai_model5"
 input_graph_thrsh = 350  # default graph_thrsh
 input_embedding_dim = 40  # default embedding_dim
 input_hunits = 40  # default hunits
@@ -996,7 +997,7 @@ if model_name == "Thai_model1":
     input_graph_thrsh = 500
     input_embedding_dim = 40
     input_hunits = 40
-if model_name == "Thai_model3":
+if model_name == "Thai_model2":
     input_graph_thrsh = 350
     input_embedding_dim = 20
     input_hunits = 20
@@ -1047,7 +1048,7 @@ word_segmenter.test_model_line_by_line()
 # np.save(os.getcwd() + '/Data/Burmese_graph_clust_ratio.npy', Burmese_graph_clust_ratio)
 
 # Loading the graph_clust from memory
-graph_clust_ratio = np.load(os.getcwd() + '/Data/Burmese_graph_clust_ratio.npy', allow_pickle=True).item()
+# graph_clust_ratio = np.load(os.getcwd() + '/Data/Burmese_graph_clust_ratio.npy', allow_pickle=True).item()
 # print_grapheme_clusters(ratios=graph_clust_ratio, thrsh=0.999)
 
 '''

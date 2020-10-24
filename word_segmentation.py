@@ -1048,7 +1048,7 @@ class WordSegmenter:
 
 # Preprocess the Thai language
 # Thai_graph_clust_ratio, icu_accuracy = preprocess_Thai(demonstrate=False)
-# print("icu accuracy is {}".format(icu_accuracy))
+# print("icu accuracy on BEST data is {}".format(icu_accuracy))
 # np.save(os.getcwd() + '/Data/Thai_graph_clust_ratio.npy', Thai_graph_clust_ratio)
 
 # Loading the graph_clust from memory
@@ -1157,6 +1157,7 @@ word_segmenter.test_model_line_by_line()
 
 ################################ Burmese ################################
 
+# Testing how ICU detects grapheme clusters and how it segments Burmese (will be deleted later on)
 '''
 str = "ြင်သစ်မှာ နောက်လလုပ်မယ့် သမ္မတရွေးကောက်ပွဲမှာ သူဝင်ပြိုင်မှာ မဟုတ်ဘူးလို့ ဝန်ကြီးချုပ်ဟောင်း အလိန်ယူပေက ကြေညာလိုက်ပါတယ်။"
 chars_break_iterator = BreakIterator.createCharacterInstance(Locale.getUS())

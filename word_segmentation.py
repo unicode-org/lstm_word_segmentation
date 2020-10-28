@@ -1126,7 +1126,7 @@ write_json(model_name, fitted_model)
 '''
 
 # Choose one of the saved models to use
-'''
+# '''
 # Thai model 1: Bi-directional LSTM (trained on BEST), grid search
 # Thai model 2: Bi-directional LSTM (trained on BEST), grid search + manual reduction of hunits and embedding_size
 # Thai model 3: Bi-directional LSTM (trained on BEST), grid search + extreme manual reduction of hunits and embedding_size
@@ -1179,14 +1179,11 @@ word_segmenter = WordSegmenter(input_n=50, input_t=100000, input_graph_clust_dic
                                input_training_data="BEST", input_evaluating_data="BEST")
 model = keras.models.load_model("./Models/" + model_name)
 word_segmenter.set_model(model)
-write_json(model_name, model)
-print("here!")
-x = input()
 
 # Testing the model
 word_segmenter.test_model()
 word_segmenter.test_model_line_by_line()
-'''
+# '''
 
 
 ################################ Burmese ################################
@@ -1252,7 +1249,7 @@ write_json(model_name, fitted_model)
 '''
 
 # Choose one of the saved models to use
-# '''
+'''
 model_name = "Burmese_temp"
 input_graph_thrsh = 350  # default graph_thrsh
 input_embedding_dim = 40  # default embedding_dim
@@ -1278,13 +1275,11 @@ word_segmenter = WordSegmenter(input_n=50, input_t=100000, input_graph_clust_dic
                                input_training_data="my", input_evaluating_data="my")
 model = keras.models.load_model("./Models/" + model_name)
 word_segmenter.set_model(model)
-write_json(model_name, model)
-x = input()
 
 # Testing the model
 word_segmenter.test_model()
 word_segmenter.test_model_line_by_line()
-# '''
+'''
 
 
 

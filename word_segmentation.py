@@ -14,7 +14,8 @@ from keras.layers import Embedding
 from keras.layers import Dropout
 # from keras import optimizer
 from bayes_opt import BayesianOptimization
-
+import json
+import pickle
 
 def is_ascii(input_str):
     """
@@ -707,6 +708,33 @@ def perfom_bayesian_optimization(hunits_lower, hunits_upper, embedding_dim_lower
     print(optimizer.res)
 
 
+def write_json(model_name, model):
+    with open(os.getcwd() + "/Models/" + model_name + "/" + "weights.json", 'w') as wfile:
+        wfile.write("{\n")
+        wfile.write("    " + "\"model\": \"" + model_name + "\",\n")
+        for i in range(len(model.weights)):
+            mat = model.weights[i].numpy()
+            # mat = np.array([[1, 2], [3, 4]])
+            dim0 = mat.shape[0]
+            if len(mat.shape) == 1:
+                dim0 = 1
+            else:
+                dim1 = mat.shape[1]
+            wfile.write("    " + "\"mat{}\"".format(i + 1) + ": {\n")
+            wfile.write("      \"v\": 1,\n")
+            wfile.write("      \"dim\": [" + str(dim0) + ", " + str(dim1) + "],\n")
+            wfile.write("      \"data\": [")
+            serial_mat = np.reshape(mat, newshape=[1, dim0 * dim1])
+            for j in range(serial_mat.shape[1]):
+                x = serial_mat[0, j]
+                wfile.write(str(x))
+                if j != serial_mat.shape[1] - 1:
+                    wfile.write(", ")
+            wfile.write("]\n")
+            wfile.write("    }\n")
+        wfile.write("}")
+
+
 class KerasBatchGenerator(object):
     """
     A batch generator component, which is used to generate batches for training, validation, and evaluation. The current
@@ -904,7 +932,6 @@ class WordSegmenter:
             actual_y = get_bies_string_from_softmax(actual_y)
             y_hat = all_y_hat[i, :, :]
             y_hat = get_bies_string_from_softmax(y_hat)
-
             # Compute the BIES accuracy
             mismatch = diff_strings(actual_y, y_hat)
             test_acc.append(1 - mismatch / len(actual_y))
@@ -1038,6 +1065,7 @@ class WordSegmenter:
     def set_model(self, input_model):
         self.model = input_model
 
+
 ################################ Thai ################################
 
 # Adding space bars to the SAFT data around spaces
@@ -1047,7 +1075,7 @@ class WordSegmenter:
 # print("Accuracy of ICU on SAFT data is {}.".format(compute_ICU_accuracy(os.getcwd() + "/Data/SAFT/test.txt")))
 
 # Preprocess the Thai language
-# Thai_graph_clust_ratio, icu_accuracy = preprocess_Thai(demonstrate=False)
+# Thai_graph_clust_ratio, icu_accuracy = preprocess_Thai(demonstrate=True)
 # print("icu accuracy on BEST data is {}".format(icu_accuracy))
 # np.save(os.getcwd() + '/Data/Thai_graph_clust_ratio.npy', Thai_graph_clust_ratio)
 
@@ -1093,6 +1121,8 @@ word_segmenter.test_model()
 fitted_model = word_segmenter.get_model()
 fitted_model.save("./Models/" + model_name)
 np.save(os.getcwd() + "/Models/" + model_name + "/" + "weights", fitted_model.weights)
+# Saving the model in json format to be used later by rust code
+write_json(model_name, fitted_model)
 '''
 
 # Choose one of the saved models to use
@@ -1149,11 +1179,15 @@ word_segmenter = WordSegmenter(input_n=50, input_t=100000, input_graph_clust_dic
                                input_training_data="BEST", input_evaluating_data="BEST")
 model = keras.models.load_model("./Models/" + model_name)
 word_segmenter.set_model(model)
+write_json(model_name, model)
+print("here!")
+x = input()
 
 # Testing the model
 word_segmenter.test_model()
 word_segmenter.test_model_line_by_line()
 '''
+
 
 ################################ Burmese ################################
 
@@ -1213,10 +1247,12 @@ word_segmenter.test_model()
 fitted_model = word_segmenter.get_model()
 fitted_model.save("./Models/" + model_name)
 np.save(os.getcwd() + "/Models/" + model_name + "/" + "weights", fitted_model.weights)
+# Saving the model in json format to be used later by rust code
+write_json(model_name, fitted_model)
 '''
 
 # Choose one of the saved models to use
-'''
+# '''
 model_name = "Burmese_temp"
 input_graph_thrsh = 350  # default graph_thrsh
 input_embedding_dim = 40  # default embedding_dim
@@ -1242,11 +1278,13 @@ word_segmenter = WordSegmenter(input_n=50, input_t=100000, input_graph_clust_dic
                                input_training_data="my", input_evaluating_data="my")
 model = keras.models.load_model("./Models/" + model_name)
 word_segmenter.set_model(model)
+write_json(model_name, model)
+x = input()
 
 # Testing the model
 word_segmenter.test_model()
 word_segmenter.test_model_line_by_line()
-'''
+# '''
 
 
 

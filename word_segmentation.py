@@ -1405,6 +1405,8 @@ input_graph_thrsh = model.weights[0].shape[0]
 input_embedding_dim = model.weights[0].shape[1]
 input_hunits = model.weights[1].shape[1]//4
 
+print(model.weights)
+
 # Building the model instance and loading the trained model
 cnt = 0
 graph_thrsh = input_graph_thrsh  # The vocabulary size for embeddings

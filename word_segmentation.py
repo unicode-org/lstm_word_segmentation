@@ -1386,7 +1386,7 @@ write_model_json(model_name, graph_clust_dic, fitted_model)
 '''
 
 # Choose one of the saved models to use
-'''
+# '''
 # Thai model 1: Bi-directional LSTM (trained on BEST), grid search
 #     thrsh = 350, embedding_dim = 40, hunits = 40
 # Thai model 2: Bi-directional LSTM (trained on BEST), grid search + manual reduction of hunits and embedding_size
@@ -1399,7 +1399,7 @@ write_model_json(model_name, graph_clust_dic, fitted_model)
 #     thrsh = 250, embedding_dim = 10, hunits = 10
 # Thai temp: a temporary model, it should be used for storing new models
 
-model_name = "Thai_model5"
+model_name = "Thai_model4_heavy"
 model = keras.models.load_model("./Models/" + model_name)
 input_graph_thrsh = model.weights[0].shape[0]
 input_embedding_dim = model.weights[0].shape[1]
@@ -1416,7 +1416,7 @@ for key in graph_clust_ratio.keys():
         break
     cnt += 1
 # write_grapheme_clusters_dic_json(graph_clust_ratio, graph_thrsh)
-word_segmenter = WordSegmenter(input_n=50, input_t=100000, input_graph_clust_dic=graph_clust_dic,
+word_segmenter = WordSegmenter(input_n=200, input_t=600000, input_graph_clust_dic=graph_clust_dic,
                                input_embedding_dim=input_embedding_dim, input_hunits=input_hunits,
                                input_dropout_rate=0.2, input_output_dim=4, input_epochs=15,
                                input_training_data="BEST", input_evaluating_data="BEST")
@@ -1430,7 +1430,7 @@ word_segmenter.set_model(model)
 # Testing the model using large texts
 word_segmenter.test_model()
 word_segmenter.test_model_line_by_line()
-'''
+# '''
 
 # Code for testing the bies normalizer function
 # Testing the normalizer

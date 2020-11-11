@@ -672,7 +672,7 @@ def get_trainable_data(input_line, graph_clust_ids, embedding_type, language):
                     temp[ord(ch) - smallest_unicode_dec] = 1
                 else:
                     temp[largest_unicode_dec - smallest_unicode_dec + 1] = 1
-            x_data[i, :] = temp
+            x_data[i, :] = temp/np.sum(temp)
         # print(curr_char)
         # print(x_data[i, :])
         y_data[i, :] = true_bies[:, i]
@@ -1266,7 +1266,6 @@ class WordSegmenter:
         test_acc_f1 = np.array(test_acc_f1)
         print("the average BIES test accuracy in test_model function: {}".format(np.mean(test_acc_bies)))
         print("the average F1 test accuracy in test_model function: {}".format(np.mean(test_acc_f1)))
-        # return np.mean(test_acc_bies)
 
     def test_text_line_by_line(self, file, line_limit):
         """
@@ -1300,8 +1299,6 @@ class WordSegmenter:
                         continue
                 # Get trainable data
                 x_data, y_data = get_trainable_data(line, self.graph_clust_dic, self.embedding_type, self.language)
-                # if self.embedding_type == "grapheme_clusters_man":
-                #     print("do sth here!")
 
                 # Use the manual predict function -- tf function doesn't always work properly for varying length strings
                 y_hat = self.manual_predict(x_data)
@@ -1495,9 +1492,9 @@ for key in graph_clust_ratio.keys():
         break
     cnt += 1
 
-word_segmenter = WordSegmenter(input_n=50, input_t=1000, input_graph_clust_dic=graph_clust_dic,
+word_segmenter = WordSegmenter(input_n=50, input_t=100000, input_graph_clust_dic=graph_clust_dic,
                                input_embedding_dim=16, input_hunits=23, input_dropout_rate=0.2, input_output_dim=4,
-                               input_epochs=1, input_training_data="BEST", input_evaluating_data="BEST",
+                               input_epochs=15, input_training_data="BEST", input_evaluating_data="BEST",
                                input_language="Thai", input_embedding_type="generalized_vectors")
 
 # Training and saving the model
@@ -1674,6 +1671,4 @@ word_segmenter.set_model(model)
 word_segmenter.test_model()
 word_segmenter.test_model_line_by_line()
 '''
-
-
 

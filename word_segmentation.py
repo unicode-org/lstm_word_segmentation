@@ -1368,14 +1368,18 @@ class WordSegmenter:
         h_fw = np.zeros([1, self.hunits])
         all_h_fw = np.zeros([len(test_input), self.hunits])
         for i in range(len(test_input)):
-            input_graph_id = int(test_input[i])
             if self.embedding_type == "grapheme_clusters_tf":
+                input_graph_id = int(test_input[i])
                 x_t = embedarr[input_graph_id, :]
                 x_t = x_t.reshape(1, x_t.shape[0])
             if self.embedding_type == "grapheme_clusters_man":
+                input_graph_id = int(test_input[i])
                 input_graph_vec = np.zeros([1, self.clusters_num])
                 input_graph_vec[0, input_graph_id] = 1
                 x_t = input_graph_vec.dot(embedarr)
+            if self.embedding_type == "generalized_vectors":
+                x_t = test_input[i].dot(embedarr)
+
             h_fw, c_fw = compute_hc(weightLSTM, x_t, h_fw, c_fw)
             all_h_fw[i, :] = h_fw
 
@@ -1387,14 +1391,17 @@ class WordSegmenter:
         h_bw = np.zeros([1, self.hunits])
         all_h_bw = np.zeros([len(test_input), self.hunits])
         for i in range(len(test_input) - 1, -1, -1):
-            input_graph_id = int(test_input[i])
             if self.embedding_type == "grapheme_clusters_tf":
+                input_graph_id = int(test_input[i])
                 x_t = embedarr[input_graph_id, :]
                 x_t = x_t.reshape(1, x_t.shape[0])
             if self.embedding_type == "grapheme_clusters_man":
+                input_graph_id = int(test_input[i])
                 input_graph_vec = np.zeros([1, self.clusters_num])
                 input_graph_vec[0, input_graph_id] = 1
                 x_t = input_graph_vec.dot(embedarr)
+            if self.embedding_type == "generalized_vectors":
+                x_t = test_input[i].dot(embedarr)
             h_bw, c_bw = compute_hc(weightLSTM, x_t, h_bw, c_bw)
             all_h_bw[i, :] = h_bw
 
@@ -1488,16 +1495,16 @@ for key in graph_clust_ratio.keys():
         break
     cnt += 1
 
-word_segmenter = WordSegmenter(input_n=50, input_t=100000, input_graph_clust_dic=graph_clust_dic,
+word_segmenter = WordSegmenter(input_n=50, input_t=1000, input_graph_clust_dic=graph_clust_dic,
                                input_embedding_dim=16, input_hunits=23, input_dropout_rate=0.2, input_output_dim=4,
-                               input_epochs=3, input_training_data="BEST", input_evaluating_data="BEST",
+                               input_epochs=1, input_training_data="BEST", input_evaluating_data="BEST",
                                input_language="Thai", input_embedding_type="generalized_vectors")
 
 # Training and saving the model
 word_segmenter.train_model()
 word_segmenter.test_model()
-x = input("after fitting")
 word_segmenter.test_model_line_by_line()
+x = input("after fitting")
 
 fitted_model = word_segmenter.get_model()
 fitted_model.save("./Models/" + model_name)

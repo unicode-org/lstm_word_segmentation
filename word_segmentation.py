@@ -633,7 +633,7 @@ def normalize_bies(bies_str):
 
 ################################ functions for fitting LSTM ################################
 
-def get_trainable_data(input_line, graph_clust_ids):
+def get_trainable_data(input_line, graph_clust_ids, embedding_type, language):
     """
     Given a segmented line, extracts x_data (with respect to a dictionary that maps grapheme clusters to integers)
     and y_data which is a n*4 matrix that represents BIES where n is the length of the unsegmented line. All grapheme
@@ -650,14 +650,31 @@ def get_trainable_data(input_line, graph_clust_ids):
 
     # Making x_data and y_data
     line_len = len(line.char_brkpoints)-1
-    x_data = np.zeros(shape=[line_len, 1])
+    if embedding_type in ["grapheme_clusters_tf", "grapheme_clusters_man"]:
+        x_data = np.zeros(shape=[line_len, 1])
+    if embedding_type == "generalized_vectors":
+        if language == "Thai":
+            smallest_unicode_dec = int("0E01", 16)
+            largest_unicode_dec = int("0E5B", 16)
+        x_data = np.zeros(shape=[line_len, largest_unicode_dec - smallest_unicode_dec + 2])
     y_data = np.zeros(shape=[line_len, 4])
     excess_grapheme_ids = max(graph_clust_ids.values()) + 1
     for i in range(line_len):
         char_start = line.char_brkpoints[i]
         char_finish = line.char_brkpoints[i + 1]
         curr_char = line.unsegmented[char_start: char_finish]
-        x_data[i, 0] = graph_clust_ids.get(curr_char, excess_grapheme_ids)
+        if embedding_type in ["grapheme_clusters_tf", "grapheme_clusters_man"]:
+            x_data[i, 0] = graph_clust_ids.get(curr_char, excess_grapheme_ids)
+        if embedding_type == "generalized_vectors":
+            temp = np.zeros(largest_unicode_dec - smallest_unicode_dec + 2)
+            for ch in curr_char:
+                if smallest_unicode_dec <= ord(ch) <= largest_unicode_dec:
+                    temp[ord(ch) - smallest_unicode_dec] = 1
+                else:
+                    temp[largest_unicode_dec - smallest_unicode_dec + 1] = 1
+            x_data[i, :] = temp
+        # print(curr_char)
+        # print(x_data[i, :])
         y_data[i, :] = true_bies[:, i]
     return x_data, y_data
 
@@ -954,7 +971,9 @@ class KerasBatchGenerator(object):
         dim_output: dimension of the output
     """
     def __init__(self, x_data, y_data, n, batch_size, dim_output):
-        self.x_data = x_data  # dim = times * dim_features
+        self.x_data = x_data  # dim = times * 1
+        # x_data will be a number if grapheme clusters embedding is used, and is a vector if generalized
+        # encoding vectors are used.
         self.y_data = y_data  # dim = times * dim_output
         self.n = n
         self.batch_size = batch_size
@@ -962,9 +981,10 @@ class KerasBatchGenerator(object):
         if x_data.shape[0] < batch_size * n or y_data.shape[0] < batch_size * n:
             print("Warning: x_data or y_data is not large enough!")
 
-    def generate(self):
+    # Generating functions for grapheme clusters when the embedding layer is implemented by tf
+    def generate_for_grapheme_clusters_tf(self):
         """
-        generates batches one by one, used for training and validation
+        generates batches one by one, used for training and validation when the tf embedding layer is used
         """
         x = np.zeros([self.batch_size, self.n])
         y = np.zeros([self.batch_size, self.n, self.dim_output])
@@ -974,7 +994,7 @@ class KerasBatchGenerator(object):
                 y[i, :, :] = self.y_data[self.n * i: self.n * (i + 1), :]
             yield x, y
 
-    def generate_all_batches(self):
+    def generate_all_batches_for_grapheme_clusters_tf(self):
         """
         returns all batches together, used mostly for testing
         """
@@ -982,6 +1002,60 @@ class KerasBatchGenerator(object):
         y = np.zeros([self.batch_size, self.n, self.dim_output])
         for i in range(self.batch_size):
             x[i, :] = self.x_data[self.n * i: self.n * (i + 1), 0]
+            y[i, :, :] = self.y_data[self.n * i: self.n * (i + 1), :]
+        return x, y
+
+    # Generating functions for grapheme clusters when the embedding layer is implemented by a dense layer
+    def generate_for_grapheme_clusters_man(self, clusters_num):
+        """
+        generates batches one by one, used for training and validation when the manual embedding layer is used
+        """
+        x = np.zeros([self.batch_size, self.n, clusters_num])
+        y = np.zeros([self.batch_size, self.n, self.dim_output])
+        while True:
+            for i in range(self.batch_size):
+                temp = np.zeros(shape=[self.n, clusters_num])
+                for j in range(self.n):
+                    temp[j, int(self.x_data[self.n*i + j, 0])] = 1
+                x[i, :, :] = temp
+                y[i, :, :] = self.y_data[self.n * i: self.n * (i + 1), :]
+            yield x, y
+
+    def generate_all_batches_for_grapheme_clusters_man(self, clusters_num):
+        """
+        returns all batches together, used mostly for testing
+        """
+        x = np.zeros([self.batch_size, self.n, clusters_num])
+        y = np.zeros([self.batch_size, self.n, self.dim_output])
+        for i in range(self.batch_size):
+            temp = np.zeros(shape=[self.n, clusters_num])
+            for j in range(self.n):
+                temp[j, int(self.x_data[self.n * i + j, 0])] = 1
+            x[i, :, :] = temp
+            y[i, :, :] = self.y_data[self.n * i: self.n * (i + 1), :]
+        return x, y
+
+    # Generating functions for grapheme clusters when the generalized vectors are used for embedding
+    def generate_for_generalized_vectors(self):
+        """
+        generates batches one by one, used for training and validation when the manual embedding layer is used
+        """
+        x = np.zeros([self.batch_size, self.n, self.x_data.shape[1]])
+        y = np.zeros([self.batch_size, self.n, self.dim_output])
+        while True:
+            for i in range(self.batch_size):
+                x[i, :, :] = self.x_data[self.n*i: self.n*(i+1), :]
+                y[i, :, :] = self.y_data[self.n * i: self.n * (i + 1), :]
+            yield x, y
+
+    def generate_all_batches_for_generalized_vectors(self):
+        """
+        generates batches one by one, used for training and validation when the manual embedding layer is used
+        """
+        x = np.zeros([self.batch_size, self.n, self.x_data.shape[1]])
+        y = np.zeros([self.batch_size, self.n, self.dim_output])
+        for i in range(self.batch_size):
+            x[i, :, :] = self.x_data[self.n*i: self.n*(i+1), :]
             y[i, :, :] = self.y_data[self.n * i: self.n * (i + 1), :]
         return x, y
 
@@ -1000,9 +1074,11 @@ class WordSegmenter:
         input_epochs: number of epochs used to train the model
         input_training_data: name of the data used to train the model
         input_evaluating_data: name of the data used to evaluate the model
+        input_embedding_type: determines what type to be used in LSTM model
     """
     def __init__(self, input_n, input_t, input_graph_clust_dic, input_embedding_dim, input_hunits, input_dropout_rate,
-                 input_output_dim, input_epochs, input_training_data, input_evaluating_data):
+                 input_output_dim, input_epochs, input_training_data, input_evaluating_data, input_language,
+                 input_embedding_type):
         self.n = input_n
         self.t = input_t
         if self.t % self.n != 0:
@@ -1018,6 +1094,8 @@ class WordSegmenter:
         self.training_data = input_training_data
         self.evaluating_data = input_evaluating_data
         self.model = None
+        self.language = input_language
+        self.embedding_type = input_embedding_type
 
     def train_model(self):
         """
@@ -1030,18 +1108,18 @@ class WordSegmenter:
         x_data = []
         y_data = []
         if self.training_data == "BEST":
-            # this chunk of data has ~ 2*10^6 data points
+            # this chunk of data has ~ 10^6 data points
             input_str = get_best_data_text(starting_text=1, ending_text=10, pseudo=False)
-            x_data, y_data = get_trainable_data(input_str, self.graph_clust_dic)
+            x_data, y_data = get_trainable_data(input_str, self.graph_clust_dic, self.embedding_type, self.language)
             if self.t > x_data.shape[0]:
                 print("Warning: size of the training data is less than self.t")
             x_data = x_data[:self.t]
             y_data = y_data[:self.t, :]
 
         elif self.training_data == "pseudo BEST":
-            # this chunk of data has ~ 2*10^6 data points
+            # this chunk of data has ~ 10^6 data points
             input_str = get_best_data_text(starting_text=1, ending_text=10, pseudo=True)
-            x_data, y_data = get_trainable_data(input_str, self.graph_clust_dic)
+            x_data, y_data = get_trainable_data(input_str, self.graph_clust_dic, self.embedding_type, self.language)
             if self.t > x_data.shape[0]:
                 print("Warning: size of the training data is less than self.t")
             x_data = x_data[:self.t]
@@ -1051,13 +1129,14 @@ class WordSegmenter:
             # this chunk of data has ~ 2*10^6 data points
             input_str = combine_lines_of_file("./Data/my_train.txt", input_type="unsegmented",
                                                   output_type="icu_segmented")
-            x_data, y_data = get_trainable_data(input_str, self.graph_clust_dic)
+            x_data, y_data = get_trainable_data(input_str, self.graph_clust_dic, self.embedding_type, self.language)
             if self.t > x_data.shape[0]:
                 print("Warning: size of the training data is less than self.t")
             x_data = x_data[:self.t]
             y_data = y_data[:self.t, :]
         else:
             print("Warning: no implementation for this training data exists!")
+
         train_generator = KerasBatchGenerator(x_data, y_data, n=self.n, batch_size=self.batch_size,
                                               dim_output=self.output_dim)
 
@@ -1065,7 +1144,7 @@ class WordSegmenter:
         if self.training_data == "BEST":
             # this chunk of data has ~ 2*10^6 data points
             input_str = get_best_data_text(starting_text=10, ending_text=20, pseudo=False)
-            x_data, y_data = get_trainable_data(input_str, self.graph_clust_dic)
+            x_data, y_data = get_trainable_data(input_str, self.graph_clust_dic, self.embedding_type, self.language)
             if self.t > x_data.shape[0]:
                 print("Warning: size of the validation data is less than self.t")
             x_data = x_data[:self.t]
@@ -1073,7 +1152,7 @@ class WordSegmenter:
         elif self.training_data == "pseudo BEST":
             # this chunk of data has ~ 2*10^6 data points
             input_str = get_best_data_text(starting_text=10, ending_text=20, pseudo=True)
-            x_data, y_data = get_trainable_data(input_str, self.graph_clust_dic)
+            x_data, y_data = get_trainable_data(input_str, self.graph_clust_dic, self.embedding_type, self.language)
             if self.t > x_data.shape[0]:
                 print("Warning: size of the validation data is less than self.t")
             x_data = x_data[:self.t]
@@ -1082,7 +1161,7 @@ class WordSegmenter:
             # this chunk of data has ~ 2*10^6 data points
             input_str = combine_lines_of_file("./Data/my_valid.txt", input_type="unsegmented",
                                                   output_type="icu_segmented")
-            x_data, y_data = get_trainable_data(input_str, self.graph_clust_dic)
+            x_data, y_data = get_trainable_data(input_str, self.graph_clust_dic, self.embedding_type, self.language)
             if self.t > x_data.shape[0]:
                 print("Warning: size of the training data is less than self.t")
             x_data = x_data[:self.t]
@@ -1094,7 +1173,14 @@ class WordSegmenter:
 
         # Building the model
         model = Sequential()
-        model.add(Embedding(self.clusters_num, self.embedding_dim, input_length=self.n))
+        if self.embedding_type == "grapheme_clusters_tf":
+            model.add(Embedding(self.clusters_num, self.embedding_dim, input_length=self.n))
+        if self.embedding_type == "grapheme_clusters_man":
+            model.add(TimeDistributed(Dense(self.embedding_dim, activation=None, use_bias=False,
+                                            kernel_initializer='uniform')))
+        if self.embedding_type == "generalized_vectors":
+            model.add(TimeDistributed(Dense(self.embedding_dim, activation=None, use_bias=False,
+                                            kernel_initializer='uniform')))
         model.add(Dropout(self.dropout_rate))
         model.add(Bidirectional(LSTM(self.hunits, return_sequences=True), input_shape=(self.n, 1)))
         model.add(Dropout(self.dropout_rate))
@@ -1104,9 +1190,20 @@ class WordSegmenter:
         model.compile(loss='categorical_crossentropy', optimizer=opt, metrics=['accuracy'])
 
         # Fitting the model
-        model.fit(train_generator.generate(), steps_per_epoch=self.t//self.batch_size,
-                  epochs=self.epochs, validation_data=valid_generator.generate(),
-                  validation_steps=self.t//self.batch_size)
+        if self.embedding_type == "grapheme_clusters_tf":
+            model.fit(train_generator.generate_for_grapheme_clusters_tf(), steps_per_epoch=self.t//self.batch_size,
+                      epochs=self.epochs, validation_data=valid_generator.generate_for_grapheme_clusters_tf(),
+                      validation_steps=self.t//self.batch_size)
+        if self.embedding_type == "grapheme_clusters_man":
+            model.fit(train_generator.generate_for_grapheme_clusters_man(self.clusters_num),
+                      steps_per_epoch=self.t//self.batch_size, epochs=self.epochs,
+                      validation_data=valid_generator.generate_for_grapheme_clusters_man(self.clusters_num),
+                      validation_steps=self.t//self.batch_size)
+        if self.embedding_type == "generalized_vectors":
+            model.fit(train_generator.generate_for_generalized_vectors(),
+                      steps_per_epoch=self.t // self.batch_size, epochs=self.epochs,
+                      validation_data=valid_generator.generate_for_generalized_vectors(),
+                      validation_steps=self.t // self.batch_size)
         self.model = model
 
     def test_model(self):
@@ -1119,41 +1216,51 @@ class WordSegmenter:
         y_data = []
         if self.evaluating_data == "BEST":
             input_str = get_best_data_text(starting_text=40, ending_text=45, pseudo=False)
-            x_data, y_data = get_trainable_data(input_str, self.graph_clust_dic)
+            x_data, y_data = get_trainable_data(input_str, self.graph_clust_dic, self.embedding_type, self.language)
         elif self.evaluating_data == "SAFT":
             input_str = combine_lines_of_file("./Data/SAFT/test.txt", input_type="man_segmented",
-                                                  output_type="man_segmented")
-            x_data, y_data = get_trainable_data(input_str, self.graph_clust_dic)
+                                              output_type="man_segmented")
+            x_data, y_data = get_trainable_data(input_str, self.graph_clust_dic, self.embedding_type, self.language)
         elif self.evaluating_data == "my":
             input_str = combine_lines_of_file("./Data/my_test.txt", input_type="unsegmented",
-                                                  output_type="icu_segmented")
-            x_data, y_data = get_trainable_data(input_str, self.graph_clust_dic)
+                                              output_type="icu_segmented")
+            x_data, y_data = get_trainable_data(input_str, self.graph_clust_dic, self.embedding_type, self.language)
         else:
             print("Warning: no implementation for this evaluation data exists!")
-        test_batch_size = x_data.shape[0]//self.n
-        test_generator = KerasBatchGenerator(x_data, y_data, n=self.n, batch_size=test_batch_size,
-                                             dim_output=self.output_dim)
-
-        # Testing batch by batch (each batch of length self.n)
-        all_test_input, all_actual_y = test_generator.generate_all_batches()
-        all_y_hat = self.model.predict(all_test_input)
+        num_big_batches = x_data.shape[0]//self.t
         test_acc_bies = []
         test_acc_f1 = []
-        for i in range(test_batch_size):
-            actual_y = all_actual_y[i, :, :]
-            actual_y = get_bies_string_from_softmax(actual_y)
-            y_hat = all_y_hat[i, :, :]
-            y_hat = get_bies_string_from_softmax(y_hat)
+        for k in range(num_big_batches-1):
+            curr_x_data = x_data[k*self.t: (k+1)*self.t, :]
+            curr_y_data = y_data[k * self.t: (k + 1) * self.t, :]
+            # print(curr_x_data.shape)
+            test_generator = KerasBatchGenerator(curr_x_data, curr_y_data, n=self.n, batch_size=self.batch_size,
+                                                 dim_output=self.output_dim)
 
-            # Compute the BIES accuracy
-            mismatch = diff_strings(actual_y, y_hat)
-            test_acc_bies.append(1 - mismatch / len(actual_y))
+            # Testing batch by batch (each batch of length self.n)
+            if self.embedding_type == "grapheme_clusters_tf":
+                all_test_input, all_actual_y = test_generator.generate_all_batches_for_grapheme_clusters_tf()
+            if self.embedding_type == "grapheme_clusters_man":
+                all_test_input, all_actual_y = test_generator.generate_all_batches_for_grapheme_clusters_man(self.clusters_num)
+            if self.embedding_type == "generalized_vectors":
+                all_test_input, all_actual_y = test_generator.generate_all_batches_for_generalized_vectors()
+            all_y_hat = self.model.predict(all_test_input, batch_size=self.batch_size)
 
-            # Compute F1 score
-            # Note: the actual_y cannot be used directly here, because it doesn't necessarily
-            # give meaningful bies sequence. There for f1-score computed in this function is not quite precise
-            y_hat_norm = normalize_bies(y_hat)
-            test_acc_f1.append(compute_f1_score(true_bies=normalize_bies(actual_y), est_bies=y_hat_norm)[0])
+            for i in range(self.batch_size):
+                actual_y = all_actual_y[i, :, :]
+                actual_y = get_bies_string_from_softmax(actual_y)
+                y_hat = all_y_hat[i, :, :]
+                y_hat = get_bies_string_from_softmax(y_hat)
+
+                # Compute the BIES accuracy
+                mismatch = diff_strings(actual_y, y_hat)
+                test_acc_bies.append(1 - mismatch / len(actual_y))
+
+                # Compute F1 score
+                # Note: the actual_y cannot be used directly here, because it doesn't necessarily
+                # give meaningful BIES sequence. There for f1-score computed in this function is not quite precise
+                y_hat_norm = normalize_bies(y_hat)
+                test_acc_f1.append(compute_f1_score(true_bies=normalize_bies(actual_y), est_bies=y_hat_norm)[0])
 
         test_acc_bies = np.array(test_acc_bies)
         test_acc_f1 = np.array(test_acc_f1)
@@ -1192,7 +1299,9 @@ class WordSegmenter:
                     else:
                         continue
                 # Get trainable data
-                x_data, y_data = get_trainable_data(line, self.graph_clust_dic)
+                x_data, y_data = get_trainable_data(line, self.graph_clust_dic, self.embedding_type, self.language)
+                # if self.embedding_type == "grapheme_clusters_man":
+                #     print("do sth here!")
 
                 # Use the manual predict function -- tf function doesn't always work properly for varying length strings
                 y_hat = self.manual_predict(x_data)
@@ -1260,12 +1369,15 @@ class WordSegmenter:
         all_h_fw = np.zeros([len(test_input), self.hunits])
         for i in range(len(test_input)):
             input_graph_id = int(test_input[i])
-            x_t = embedarr[input_graph_id, :]
-            x_t = x_t.reshape(1, x_t.shape[0])
+            if self.embedding_type == "grapheme_clusters_tf":
+                x_t = embedarr[input_graph_id, :]
+                x_t = x_t.reshape(1, x_t.shape[0])
+            if self.embedding_type == "grapheme_clusters_man":
+                input_graph_vec = np.zeros([1, self.clusters_num])
+                input_graph_vec[0, input_graph_id] = 1
+                x_t = input_graph_vec.dot(embedarr)
             h_fw, c_fw = compute_hc(weightLSTM, x_t, h_fw, c_fw)
             all_h_fw[i, :] = h_fw
-        # print(all_h_fw)
-        # print(all_h_fw.shape)
 
         # Backward LSTM
         embedarr = self.model.weights[0]
@@ -1276,8 +1388,13 @@ class WordSegmenter:
         all_h_bw = np.zeros([len(test_input), self.hunits])
         for i in range(len(test_input) - 1, -1, -1):
             input_graph_id = int(test_input[i])
-            x_t = embedarr[input_graph_id, :]
-            x_t = x_t.reshape(1, x_t.shape[0])
+            if self.embedding_type == "grapheme_clusters_tf":
+                x_t = embedarr[input_graph_id, :]
+                x_t = x_t.reshape(1, x_t.shape[0])
+            if self.embedding_type == "grapheme_clusters_man":
+                input_graph_vec = np.zeros([1, self.clusters_num])
+                input_graph_vec[0, input_graph_id] = 1
+                x_t = input_graph_vec.dot(embedarr)
             h_bw, c_bw = compute_hc(weightLSTM, x_t, h_bw, c_bw)
             all_h_bw[i, :] = h_bw
 
@@ -1359,7 +1476,7 @@ perform_bayesian_optimization(hunits_lower=4, hunits_upper=64, embedding_dim_low
 '''
 
 # Train a new model -- choose name cautiously to not overwrite other models
-'''
+# '''
 model_name = "Thai_temp"
 cnt = 0
 graph_thrsh = 350  # The vocabulary size for embeddings
@@ -1373,39 +1490,60 @@ for key in graph_clust_ratio.keys():
 
 word_segmenter = WordSegmenter(input_n=50, input_t=100000, input_graph_clust_dic=graph_clust_dic,
                                input_embedding_dim=16, input_hunits=23, input_dropout_rate=0.2, input_output_dim=4,
-                               input_epochs=10, input_training_data="BEST", input_evaluating_data="BEST")
+                               input_epochs=3, input_training_data="BEST", input_evaluating_data="BEST",
+                               input_language="Thai", input_embedding_type="generalized_vectors")
 
 # Training and saving the model
 word_segmenter.train_model()
 word_segmenter.test_model()
-# word_segmenter.test_model_line_by_line()
+x = input("after fitting")
+word_segmenter.test_model_line_by_line()
+
 fitted_model = word_segmenter.get_model()
 fitted_model.save("./Models/" + model_name)
 np.save(os.getcwd() + "/Models/" + model_name + "/" + "weights", fitted_model.weights)
 write_model_json(model_name, graph_clust_dic, fitted_model)
-'''
+# '''
+
+# line = "แม้จะกะเวลาเอาไว้แม่นยำว่ากว่าเขาจะมาถึงก็คงประมาณหกโมงเย็น"
+# thai_lower_unicode_decimal = int("0E01", 16)
+# thai_upper_unicode_decimal = int("0E5B", 16)
+#
+# for ch in line:
+#     print(ch)
+#     print(ord(ch))
+# x = input()
+
 
 # Choose one of the saved models to use
-# '''
-# Thai model 1: Bi-directional LSTM (trained on BEST), grid search
+'''
+# Thai_model1: Bi-directional LSTM (trained on BEST), grid search
 #     thrsh = 350, embedding_dim = 40, hunits = 40
-# Thai model 2: Bi-directional LSTM (trained on BEST), grid search + manual reduction of hunits and embedding_size
+# Thai_model2: Bi-directional LSTM (trained on BEST), grid search + manual reduction of hunits and embedding_size
 #     thrsh = 350, embedding_dim = 20, hunits = 20
-# Thai model 3: Bi-directional LSTM (trained on BEST), grid search + extreme manual reduction of hunits and embedding_size
+# Thai_model3: Bi-directional LSTM (trained on BEST), grid search + extreme manual reduction of hunits and embedding_size
 #     thrsh = 350, embedding_dim = 15, hunits = 15
-# Thai model 4: Bi-directional LSTM (trained on BEST), short BayesOpt choice for hunits and embedding_size
+# Thai_model4: Bi-directional LSTM (trained on BEST), short BayesOpt choice for hunits and embedding_size
 #     thrsh = 350, embedding_dim = 16, hunits = 23
-# Thai model 5: Bi-directional LSTM (trained on BEST), A very parsimonious model
+# Thai_model5: Bi-directional LSTM (trained on BEST), A very parsimonious model
 #     thrsh = 250, embedding_dim = 10, hunits = 10
-# Thai temp: a temporary model, it should be used for storing new models
+# Thai_temp: a temporary model, it should be used for storing new models
 
-model_name = "Thai_model4_heavy"
+# For some models the heavy trained versions can be used by adding "_heavy" to the end of the model name. Such as
+# Thai_model4_heavy. In training these models n and t are set to 200 and 600000 respectively.
+
+model_name = "Thai_model4"
 model = keras.models.load_model("./Models/" + model_name)
 input_graph_thrsh = model.weights[0].shape[0]
 input_embedding_dim = model.weights[0].shape[1]
 input_hunits = model.weights[1].shape[1]//4
-
-print(model.weights)
+if "heavy" in model_name:
+    print("here")
+    input_n = 200
+    input_t = 600000
+else:
+    input_n = 50
+    input_t = 100000
 
 # Building the model instance and loading the trained model
 cnt = 0
@@ -1418,10 +1556,11 @@ for key in graph_clust_ratio.keys():
         break
     cnt += 1
 # write_grapheme_clusters_dic_json(graph_clust_ratio, graph_thrsh)
-word_segmenter = WordSegmenter(input_n=200, input_t=600000, input_graph_clust_dic=graph_clust_dic,
+word_segmenter = WordSegmenter(input_n=input_n, input_t=input_t, input_graph_clust_dic=graph_clust_dic,
                                input_embedding_dim=input_embedding_dim, input_hunits=input_hunits,
                                input_dropout_rate=0.2, input_output_dim=4, input_epochs=15,
-                               input_training_data="BEST", input_evaluating_data="BEST")
+                               input_training_data="BEST", input_evaluating_data="BEST", input_language="Thai",
+                               input_embedding_type="grapheme_clusters_tf")
 word_segmenter.set_model(model)
 
 # Testing the model by arbitrary sentences
@@ -1432,7 +1571,7 @@ word_segmenter.set_model(model)
 # Testing the model using large texts
 word_segmenter.test_model()
 word_segmenter.test_model_line_by_line()
-# '''
+'''
 
 # Code for testing the bies normalizer function
 # Testing the normalizer

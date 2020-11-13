@@ -1,18 +1,13 @@
 # coding=utf-8
 import numpy as np
 import os
-from icu import BreakIterator, Locale
+from icu import BreakIterator, Locale, Char, UCharCategory
 import matplotlib.pyplot as plt
 
 from tensorflow import keras
 import tensorflow as tf
 from keras.models import Sequential
-from keras.layers import LSTM
-from keras.layers import Dense
-from keras.layers import TimeDistributed
-from keras.layers import Bidirectional
-from keras.layers import Embedding
-from keras.layers import Dropout
+from keras.layers import LSTM, Dense, TimeDistributed, Bidirectional, Embedding, Dropout, Flatten
 # from keras import optimizer
 from bayes_opt import BayesianOptimization
 import json
@@ -504,22 +499,13 @@ def compute_f1_score(true_bies, est_bies):
         if est_bies[i] in ['b', 's']:
             est_word_brkpoints.append(i)
     est_word_brkpoints.append(len(est_bies))
-    ind0 = 0
-    correctly_segmented_words = 0
-    for i in range(len(true_word_brkpoints)-1):
-        word_start = true_word_brkpoints[i]
-        word_finish = true_word_brkpoints[i+1]
-        # print("st = {}, fn = {}, count = {}".format(word_start, word_finish, correctly_segmented_words))
-        while ind0 < len(est_word_brkpoints) and est_word_brkpoints[ind0] < word_start:
-            ind0 += 1
-        if ind0 > len(est_word_brkpoints):
-            break
-        elif est_word_brkpoints[ind0] > word_start:
-            continue
-        elif est_word_brkpoints[ind0] == word_start and est_word_brkpoints[ind0+1] == word_finish:
-            correctly_segmented_words += 1
-    true_words = len(true_word_brkpoints) - 1
-    segmented_words = len(est_word_brkpoints)-1
+    true_words_tuples = [(true_word_brkpoints[i], true_word_brkpoints[i + 1]) for i in
+                         range(len(true_word_brkpoints) - 1)]
+    est_words_tuples = [(est_word_brkpoints[i], est_word_brkpoints[i + 1]) for i in
+                        range(len(est_word_brkpoints) - 1)]
+    true_words = len(true_words_tuples)
+    segmented_words = len(est_words_tuples)
+    correctly_segmented_words = len(set(est_words_tuples).intersection(true_words_tuples))
     precision = correctly_segmented_words/segmented_words
     recall = correctly_segmented_words/true_words
     f1 = 0
@@ -642,6 +628,39 @@ def get_trainable_data(input_line, graph_clust_ids, embedding_type, language):
         input_line: the unsegmented line
         graph_clust_ids: a dictionary that stores maps from grapheme clusters to integers
     """
+    char_type_to_bucket = {UCharCategory.UPPERCASE_LETTER: 1, UCharCategory.LOWERCASE_LETTER: 1,
+                           UCharCategory.TITLECASE_LETTER: 1, UCharCategory.MODIFIER_LETTER: 1,
+                           UCharCategory.OTHER_LETTER: 1, UCharCategory.NON_SPACING_MARK: 2,
+                           UCharCategory.ENCLOSING_MARK: 2, UCharCategory.COMBINING_SPACING_MARK: 2,
+                           UCharCategory.DECIMAL_DIGIT_NUMBER: 3, UCharCategory.LETTER_NUMBER: 3,
+                           UCharCategory.OTHER_NUMBER: 3, UCharCategory.SPACE_SEPARATOR: 4,
+                           UCharCategory.LINE_SEPARATOR: 4,
+                           UCharCategory.PARAGRAPH_SEPARATOR: 4, UCharCategory.DASH_PUNCTUATION: 5,
+                           UCharCategory.START_PUNCTUATION: 5, UCharCategory.END_PUNCTUATION: 5,
+                           UCharCategory.CONNECTOR_PUNCTUATION: 5, UCharCategory.OTHER_PUNCTUATION: 5,
+                           UCharCategory.INITIAL_PUNCTUATION: 5, UCharCategory.FINAL_PUNCTUATION: 5,
+                           UCharCategory.MATH_SYMBOL: 6, UCharCategory.CURRENCY_SYMBOL: 6,
+                           UCharCategory.MODIFIER_SYMBOL: 6,
+                           UCharCategory.OTHER_SYMBOL: 6, UCharCategory.CONTROL_CHAR: 7, UCharCategory.FORMAT_CHAR: 7,
+                           UCharCategory.PRIVATE_USE_CHAR: 7, UCharCategory.SURROGATE: 7, 0:7}
+
+    smallest_unicode_dec = int("0E01", 16)
+    largest_unicode_dec = int("0E5B", 16)
+    letters_dic = dict()
+    cnt = 0
+    for i in range(smallest_unicode_dec, largest_unicode_dec+1):
+        ch = chr(i)
+        if char_type_to_bucket[Char.charType(ch)] == 1:
+            letters_dic[ch] = cnt
+            cnt += 1
+    # for graph_clust in graph_clust_ratio.keys():
+    #     for ch in graph_clust:
+    #         if not (smallest_unicode_dec <= ord(ch) <= largest_unicode_dec) and\
+    #                 char_type_to_bucket[Char.charType(ch)] == 1:
+    #             letters_dic[ch] = cnt
+    #             cnt += 1
+    num_letters = len(letters_dic)
+
     # Finding word breakpoints
     # Note that it is possible that input is segmented manually instead of icu, but for this function, we set that as
     # icu and set `man_segmented = None`, so the function works for both icu and manually segmented strings.
@@ -653,12 +672,10 @@ def get_trainable_data(input_line, graph_clust_ids, embedding_type, language):
     if embedding_type in ["grapheme_clusters_tf", "grapheme_clusters_man"]:
         x_data = np.zeros(shape=[line_len, 1])
     if embedding_type == "generalized_vectors":
-        if language == "Thai":
-            smallest_unicode_dec = int("0E01", 16)
-            largest_unicode_dec = int("0E5B", 16)
-        x_data = np.zeros(shape=[line_len, largest_unicode_dec - smallest_unicode_dec + 2])
+        x_data = np.zeros(shape=[line_len, num_letters + 3])
     y_data = np.zeros(shape=[line_len, 4])
     excess_grapheme_ids = max(graph_clust_ids.values()) + 1
+
     for i in range(line_len):
         char_start = line.char_brkpoints[i]
         char_finish = line.char_brkpoints[i + 1]
@@ -666,15 +683,15 @@ def get_trainable_data(input_line, graph_clust_ids, embedding_type, language):
         if embedding_type in ["grapheme_clusters_tf", "grapheme_clusters_man"]:
             x_data[i, 0] = graph_clust_ids.get(curr_char, excess_grapheme_ids)
         if embedding_type == "generalized_vectors":
-            temp = np.zeros(largest_unicode_dec - smallest_unicode_dec + 2)
+            temp = np.zeros(num_letters + 3)
             for ch in curr_char:
-                if smallest_unicode_dec <= ord(ch) <= largest_unicode_dec:
-                    temp[ord(ch) - smallest_unicode_dec] = 1
-                else:
-                    temp[largest_unicode_dec - smallest_unicode_dec + 1] = 1
+                if char_type_to_bucket[Char.charType(ch)] == 1:
+                    temp[letters_dic.get(ch, num_letters)] = 1
+                if char_type_to_bucket[Char.charType(ch)] in [2, 3, 5, 6]:
+                    temp[num_letters + 1] = 1
+                if char_type_to_bucket[Char.charType(ch)] in [4, 7]:
+                    temp[num_letters + 2] = 1
             x_data[i, :] = temp/np.sum(temp)
-        # print(curr_char)
-        # print(x_data[i, :])
         y_data[i, :] = true_bies[:, i]
     return x_data, y_data
 
@@ -858,6 +875,15 @@ def print_grapheme_clusters(ratios, thrsh):
 
 
 ################################ Classes ################################
+
+class F1:
+    """
+    A class that stores variables required for computing F1 score, and let you update these values and compute F1 score
+    at any given time
+    """
+    def __init__(self):
+        self.segmented_words = 0
+
 
 class Line:
     """
@@ -1174,9 +1200,9 @@ class WordSegmenter:
         # Building the model
         model = Sequential()
         if self.embedding_type == "grapheme_clusters_tf":
-            model.add(Embedding(self.clusters_num, self.embedding_dim, input_length=self.n))
+            model.add(Embedding(input_dim=self.clusters_num, output_dim=self.embedding_dim, input_length=self.n))
         if self.embedding_type == "grapheme_clusters_man":
-            model.add(TimeDistributed(Dense(self.embedding_dim, activation=None, use_bias=False,
+            model.add(TimeDistributed(Dense(input_dim=self.clusters_num, units=self.embedding_dim, use_bias=False,
                                             kernel_initializer='uniform')))
         if self.embedding_type == "generalized_vectors":
             model.add(TimeDistributed(Dense(self.embedding_dim, activation=None, use_bias=False,
@@ -1494,8 +1520,8 @@ for key in graph_clust_ratio.keys():
 
 word_segmenter = WordSegmenter(input_n=50, input_t=100000, input_graph_clust_dic=graph_clust_dic,
                                input_embedding_dim=16, input_hunits=23, input_dropout_rate=0.2, input_output_dim=4,
-                               input_epochs=15, input_training_data="BEST", input_evaluating_data="BEST",
-                               input_language="Thai", input_embedding_type="generalized_vectors")
+                               input_epochs=10, input_training_data="BEST", input_evaluating_data="BEST",
+                               input_language="Thai", input_embedding_type="grapheme_clusters_tf")
 
 # Training and saving the model
 word_segmenter.train_model()
@@ -1513,12 +1539,18 @@ write_model_json(model_name, graph_clust_dic, fitted_model)
 # thai_lower_unicode_decimal = int("0E01", 16)
 # thai_upper_unicode_decimal = int("0E5B", 16)
 #
-# for ch in line:
-#     print(ch)
-#     print(ord(ch))
+# for i in range(thai_lower_unicode_decimal, thai_upper_unicode_decimal + 1):
+#     ch = chr(i)
+#     print("char = {}, type = {}".format(ch, Char.charType(ch)))
+# ch = ' '
+# print("char = {}, type = {}".format(ch, Char.charType(ch)))
+# print(UCharCategory.)
 # x = input()
 
-
+# 12: space
+# 23: ), (,
+# 9: numbers
+# 20: !, .
 # Choose one of the saved models to use
 '''
 # Thai_model1: Bi-directional LSTM (trained on BEST), grid search

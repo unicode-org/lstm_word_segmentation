@@ -133,7 +133,7 @@ class WordSegmenter:
             cnt = 0
             for i in range(smallest_unicode_dec, largest_unicode_dec + 1):
                 ch = chr(i)
-                if constants.CHAR_TYPE_TO_BUCKET[Char.charType(ch)] == 1:
+                if constants.CHAR_TYPE_TO_BUCKET[Char.charType(ch)] in [1, 2, 3]:
                     self.letters_dic[ch] = cnt
                     cnt += 1
         elif self.language == "Burmese":
@@ -143,12 +143,12 @@ class WordSegmenter:
             cnt = 0
             for i in range(smallest_unicode_dec, largest_unicode_dec + 1):
                 ch = chr(i)
-                if constants.CHAR_TYPE_TO_BUCKET[Char.charType(ch)] in [1]:
+                if constants.CHAR_TYPE_TO_BUCKET[Char.charType(ch)] in [1, 2, 3]:
                     self.letters_dic[ch] = cnt
                     cnt += 1
-            print("number of letters slots in generalized_vectors embeddig is {}".format(len(self.letters_dic)))
         else:
             print("Warning: the grapheme_vectors embedding type is not supported for this language")
+        print("number of letters slots in generalized_vectors embedding is {}".format(len(self.letters_dic)))
 
     def _get_trainable_data(self, input_line):
         """
@@ -335,7 +335,7 @@ class WordSegmenter:
             if self.language != "Burmese":
                 print("Warning: the my.text data is in Burmese and you are testing a model in another language")
             file = Path.joinpath(Path(__file__).parent.parent.absolute(), 'Data/my_test_segmented.txt')
-            text_acc = self._test_text_line_by_line(file, line_limit=500)
+            text_acc = self._test_text_line_by_line(file, line_limit=1000)
             accuracy.merge_accuracy(text_acc)
         else:
             print("Warning: no implementation for line by line evaluating this data exists")

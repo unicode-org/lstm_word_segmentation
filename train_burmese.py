@@ -34,7 +34,7 @@ word_segmenter = WordSegmenter(input_name=model_name, input_n=50, input_t=100000
 word_segmenter.train_model()
 word_segmenter.test_model()
 word_segmenter.test_model_line_by_line()
-word_segmenter.save_model()
+# word_segmenter.save_model()
 # '''
 
 # Choose one of the saved models to use

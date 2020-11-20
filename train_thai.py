@@ -4,20 +4,20 @@ from lstm_word_segmentation.lstm_bayesian_optimization import LSTMBayesianOptimi
 from lstm_word_segmentation.word_segmenter import WordSegmenter
 
 # Use Bayesian optimization to decide on values of hunits and embedding_dim
-# '''
+'''
 bayes_optimization = LSTMBayesianOptimization(input_language="Thai", input_epochs=1,
                                               input_embedding_type='grapheme_clusters_tf', input_clusters_num=350,
                                               input_hunits_lower=4, input_hunits_upper=64, input_embedding_dim_lower=4,
                                               input_embedding_dim_upper=64, input_C=0.05, input_iterations=3)
 bayes_optimization.perform_bayesian_optimization()
-# '''
+'''
 
 # Train a new model -- choose name cautiously to not overwrite other models
-'''
-model_name = "Thai_temp"
+# '''
+model_name = "Thai_temp_genvec"
 word_segmenter = WordSegmenter(input_name=model_name, input_n=50, input_t=100000, input_clusters_num=350,
                                input_embedding_dim=16, input_hunits=23, input_dropout_rate=0.2, input_output_dim=4,
-                               input_epochs=3, input_training_data="BEST", input_evaluating_data="BEST",
+                               input_epochs=20, input_training_data="BEST", input_evaluating_data="BEST",
                                input_language="Thai", input_embedding_type="grapheme_clusters_tf")
 
 # Training, testing, and saving the model
@@ -25,10 +25,10 @@ word_segmenter.train_model()
 word_segmenter.test_model()
 word_segmenter.test_model_line_by_line()
 word_segmenter.save_model()
-'''
+# '''
 
 # Choose one of the saved models to use
-# '''
+'''
 # Thai_model1: Bi-directional LSTM (trained on BEST), grid search
 #     thrsh = 350, embedding_dim = 40, hunits = 40
 # Thai_model2: Bi-directional LSTM (trained on BEST), grid search + manual reduction of hunits and embedding_size
@@ -69,4 +69,4 @@ word_segmenter.set_model(model)
 # Testing the model by arbitrary sentences
 line = "แม้จะกะเวลาเอาไว้แม่นยำว่ากว่าเขาจะมาถึงก็คงประมาณหกโมงเย็น"
 word_segmenter.segment_arbitrary_line(line)
-# '''
+'''

@@ -1,2 +1,9 @@
 Data/
 Figure/
+__pycache__/
+.idea/
+Models/Thai_temp/
+Models/Burmese_temp/
+Models/Thai_temp_genvec/
+Models/Burmese_temp_genvec/
+*~

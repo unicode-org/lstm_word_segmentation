@@ -1,7 +1,67 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="31e94b46-051a-40cf-9082-7a7ef31fc707" name="Default Changelist" comment="" />
+    <list default="true" id="31e94b46-051a-40cf-9082-7a7ef31fc707" name="Default Changelist" comment="">
+      <change afterPath="$PROJECT_DIR$/.idea/vcs.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/bin/train_thai.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/lstm_word_segmentation/Models/Burmese_temp/saved_model.pb" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/lstm_word_segmentation/Models/Burmese_temp/variables/variables.data-00000-of-00001" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/lstm_word_segmentation/Models/Burmese_temp/variables/variables.index" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/lstm_word_segmentation/Models/Burmese_temp/weights.json" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/lstm_word_segmentation/Models/Burmese_temp/weights.npy" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/lstm_word_segmentation/Models/Thai_model1/saved_model.pb" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/lstm_word_segmentation/Models/Thai_model1/variables/variables.data-00000-of-00001" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/lstm_word_segmentation/Models/Thai_model1/variables/variables.index" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/lstm_word_segmentation/Models/Thai_model1/weights.json" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/lstm_word_segmentation/Models/Thai_model1/weights.npy" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/lstm_word_segmentation/Models/Thai_model2/saved_model.pb" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/lstm_word_segmentation/Models/Thai_model2/variables/variables.data-00000-of-00001" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/lstm_word_segmentation/Models/Thai_model2/variables/variables.index" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/lstm_word_segmentation/Models/Thai_model2/weights.json" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/lstm_word_segmentation/Models/Thai_model2/weights.npy" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/lstm_word_segmentation/Models/Thai_model3/saved_model.pb" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/lstm_word_segmentation/Models/Thai_model3/variables/variables.data-00000-of-00001" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/lstm_word_segmentation/Models/Thai_model3/variables/variables.index" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/lstm_word_segmentation/Models/Thai_model3/weights.json" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/lstm_word_segmentation/Models/Thai_model3/weights.npy" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/lstm_word_segmentation/Models/Thai_model4/saved_model.pb" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/lstm_word_segmentation/Models/Thai_model4/variables/variables.data-00000-of-00001" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/lstm_word_segmentation/Models/Thai_model4/variables/variables.index" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/lstm_word_segmentation/Models/Thai_model4/weights.json" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/lstm_word_segmentation/Models/Thai_model4/weights.npy" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/lstm_word_segmentation/Models/Thai_model4_heavy/saved_model.pb" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/lstm_word_segmentation/Models/Thai_model4_heavy/variables/variables.data-00000-of-00001" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/lstm_word_segmentation/Models/Thai_model4_heavy/variables/variables.index" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/lstm_word_segmentation/Models/Thai_model4_heavy/weights.json" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/lstm_word_segmentation/Models/Thai_model4_heavy/weights.npy" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/lstm_word_segmentation/Models/Thai_model5/saved_model.pb" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/lstm_word_segmentation/Models/Thai_model5/variables/variables.data-00000-of-00001" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/lstm_word_segmentation/Models/Thai_model5/variables/variables.index" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/lstm_word_segmentation/Models/Thai_model5/weights.json" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/lstm_word_segmentation/Models/Thai_model5/weights.npy" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/lstm_word_segmentation/Models/Thai_temp/saved_model.pb" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/lstm_word_segmentation/Models/Thai_temp/variables/variables.data-00000-of-00001" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/lstm_word_segmentation/Models/Thai_temp/variables/variables.index" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/lstm_word_segmentation/Models/Thai_temp/weights.json" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/lstm_word_segmentation/Models/Thai_temp/weights.npy" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/lstm_word_segmentation/Models/dic1.json" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/lstm_word_segmentation/accuracy.py" beforeDir="false" afterPath="$PROJECT_DIR$/lstm_word_segmentation/accuracy.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lstm_word_segmentation/bayesian_optimization.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/lstm_word_segmentation/bies.py" beforeDir="false" afterPath="$PROJECT_DIR$/lstm_word_segmentation/bies.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lstm_word_segmentation/constants.py" beforeDir="false" afterPath="$PROJECT_DIR$/lstm_word_segmentation/constants.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lstm_word_segmentation/grapheme_cluster.py" beforeDir="false" afterPath="$PROJECT_DIR$/lstm_word_segmentation/grapheme_cluster.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lstm_word_segmentation/helpers.py" beforeDir="false" afterPath="$PROJECT_DIR$/lstm_word_segmentation/helpers.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lstm_word_segmentation/line.py" beforeDir="false" afterPath="$PROJECT_DIR$/lstm_word_segmentation/line.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lstm_word_segmentation/lstm_tutorial.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/lstm_word_segmentation/preprocess.py" beforeDir="false" afterPath="$PROJECT_DIR$/lstm_word_segmentation/preprocess.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lstm_word_segmentation/pure_Visualization.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/lstm_word_segmentation/text_helpers.py" beforeDir="false" afterPath="$PROJECT_DIR$/lstm_word_segmentation/text_helpers.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lstm_word_segmentation/train_burmese.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/lstm_word_segmentation/train_thai.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/lstm_word_segmentation/word_segmentation.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/lstm_word_segmentation/word_segmenter.py" beforeDir="false" afterPath="$PROJECT_DIR$/lstm_word_segmentation/word_segmenter.py" afterDir="false" />
+    </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -9,14 +69,113 @@
     <option name="LAST_RESOLUTION" value="IGNORE" />
   </component>
   <component name="FileEditorManager">
-    <leaf>
+    <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
       <file pinned="false" current-in-tab="true">
-        <entry file="file://$PROJECT_DIR$/PyICU_test.py">
+        <entry file="file://$PROJECT_DIR$/lstm_word_segmentation/accuracy.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="749">
-              <caret line="76" column="48" selection-start-line="76" selection-start-column="48" selection-end-line="76" selection-end-column="48" />
+            <state relative-caret-position="150">
+              <caret line="70" column="27" selection-start-line="70" selection-start-column="27" selection-end-line="70" selection-end-column="27" />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/lstm_word_segmentation/word_segmenter.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="255">
+              <caret line="17" column="34" lean-forward="true" selection-start-line="17" selection-start-column="34" selection-end-line="17" selection-end-column="34" />
               <folding>
-                <element signature="e#24#39#0" expanded="true" />
+                <element signature="e#0#24#0" expanded="true" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/lstm_word_segmentation/bies.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="165">
+              <caret line="11" column="22" selection-start-line="11" selection-start-column="22" selection-end-line="11" selection-end-column="22" />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/lstm_word_segmentation/constants.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="346">
+              <caret line="33" column="91" selection-start-line="33" selection-start-column="91" selection-end-line="33" selection-end-column="91" />
+              <folding>
+                <element signature="e#0#18#0" expanded="true" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/lstm_word_segmentation/line.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="150">
+              <caret line="134" column="30" selection-start-line="134" selection-start-column="30" selection-end-line="134" selection-end-column="30" />
+              <folding>
+                <element signature="e#0#18#0" expanded="true" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/lstm_word_segmentation/text_helpers.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="279">
+              <caret line="242" column="17" lean-forward="true" selection-start-line="242" selection-start-column="17" selection-end-line="242" selection-end-column="17" />
+              <folding>
+                <element signature="e#0#24#0" expanded="true" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/lstm_word_segmentation/lstm_bayesian_optimization.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="135">
+              <caret line="10" column="89" lean-forward="true" selection-start-line="10" selection-start-column="89" selection-end-line="10" selection-end-column="89" />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/lstm_word_segmentation/grapheme_cluster.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="361">
+              <caret line="49" lean-forward="true" selection-start-line="49" selection-end-line="49" />
+              <folding>
+                <element signature="e#0#18#0" expanded="true" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/lstm_word_segmentation/preprocess.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="361">
+              <caret line="86" lean-forward="true" selection-start-line="86" selection-end-line="86" />
+              <folding>
+                <element signature="e#0#24#0" expanded="true" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/lstm_word_segmentation/helpers.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="443">
+              <caret line="31" column="23" selection-start-line="31" selection-start-column="23" selection-end-line="31" selection-end-column="23" />
+              <folding>
+                <element signature="e#0#18#0" expanded="true" />
               </folding>
             </state>
           </provider>
@@ -28,6 +187,30 @@
     <findStrings>
       <find>print_text_range</find>
       <find>printEachBackward</find>
+      <find>combine_lines_of</find>
+      <find>icu_segment_into_one_line</find>
+      <find>print_grapheme_clusters</find>
+      <find>get_whole_file_segmented</find>
+      <find>get_best_data_text</find>
+      <find>KerasBatchGenerator</find>
+      <find>generate</find>
+      <find>generate_once</find>
+      <find>output_dim</find>
+      <find>self.output_dim</find>
+      <find>self.model</find>
+      <find>compute_hc</find>
+      <find>Bay</find>
+      <find>compute_word_brkpoints</find>
+      <find>get_bies</find>
+      <find>CHAR_TYPE_TO_BUCKET</find>
+      <find>Bayesian</find>
+      <find>get_lines_of_text</find>
+      <find>print</find>
+      <find>os</find>
+      <find>np.load</find>
+      <find>np.save</find>
+      <find>x_t = None</find>
+      <find>keras</find>
     </findStrings>
     <replaceStrings>
       <replace>print_all_text_range</replace>
@@ -35,18 +218,38 @@
       <replace>print_backward</replace>
     </replaceStrings>
   </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
   <component name="IdeDocumentHistory">
     <option name="CHANGED_PATHS">
       <list>
         <option value="$PROJECT_DIR$/PyICU_test.py" />
+        <option value="$PROJECT_DIR$/../lstm_word_segmentation_for_Saran/train_thai.py" />
+        <option value="$PROJECT_DIR$/lstm_word_segmentation/helpers.py" />
+        <option value="$PROJECT_DIR$/lstm_word_segmentation/word_segmentation.py" />
+        <option value="$PROJECT_DIR$/lstm_word_segmentation/bayesian_optimization.py" />
+        <option value="$PROJECT_DIR$/lstm_word_segmentation/train_thai.py" />
+        <option value="$PROJECT_DIR$/study_languages.py" />
+        <option value="$PROJECT_DIR$/train_thai.py" />
+        <option value="$PROJECT_DIR$/lstm_word_segmentation/word_segmenter.py" />
+        <option value="$PROJECT_DIR$/lstm_word_segmentation/bies.py" />
+        <option value="$PROJECT_DIR$/lstm_word_segmentation/line.py" />
+        <option value="$PROJECT_DIR$/train_burmese.py" />
+        <option value="$PROJECT_DIR$/lstm_word_segmentation/preprocess.py" />
+        <option value="$PROJECT_DIR$/lstm_word_segmentation/text_helpers.py" />
+        <option value="$PROJECT_DIR$/lstm_word_segmentation/lstm_bayesian_optimization.py" />
+        <option value="$PROJECT_DIR$/lstm_word_segmentation/grapheme_cluster.py" />
+        <option value="$PROJECT_DIR$/lstm_word_segmentation/constants.py" />
+        <option value="$PROJECT_DIR$/lstm_word_segmentation/accuracy.py" />
       </list>
     </option>
   </component>
   <component name="ProjectFrameBounds">
-    <option name="x" value="1542" />
-    <option name="y" value="-1319" />
-    <option name="width" value="1241" />
-    <option name="height" value="2139" />
+    <option name="x" value="17" />
+    <option name="y" value="23" />
+    <option name="width" value="1400" />
+    <option name="height" value="798" />
   </component>
   <component name="ProjectView">
     <navigator proportions="" version="1">
@@ -58,8 +261,13 @@
         <subPane>
           <expand>
             <path>
-              <item name="PyICU_test" type="b2602c69:ProjectViewProjectNode" />
-              <item name="PyICU_test" type="462c0819:PsiDirectoryNode" />
+              <item name="word_segmentation" type="b2602c69:ProjectViewProjectNode" />
+              <item name="word_segmentation" type="462c0819:PsiDirectoryNode" />
+            </path>
+            <path>
+              <item name="word_segmentation" type="b2602c69:ProjectViewProjectNode" />
+              <item name="word_segmentation" type="462c0819:PsiDirectoryNode" />
+              <item name="lstm_word_segmentation" type="462c0819:PsiDirectoryNode" />
             </path>
           </expand>
           <select />
@@ -68,6 +276,7 @@
     </panes>
   </component>
   <component name="PropertiesComponent">
+    <property name="SHARE_PROJECT_CONFIGURATION_FILES" value="true" />
     <property name="WebServerToolWindowFactoryState" value="false" />
     <property name="com.intellij.ide.scratch.LRUPopupBuilder$1/New Scratch File" value="Python" />
     <property name="last_opened_file_path" value="$PROJECT_DIR$" />
@@ -93,8 +302,30 @@
       </list>
     </option>
   </component>
-  <component name="RunManager">
-    <configuration name="PyICU_test" type="PythonConfigurationType" factoryName="Python" temporary="true">
+  <component name="RunManager" selected="Python.train_burmese">
+    <configuration name="constants" type="PythonConfigurationType" factoryName="Python" temporary="true">
+      <module name="PyICU_test" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/lstm_word_segmentation" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/lstm_word_segmentation/constants.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
+    <configuration name="study_languages" type="PythonConfigurationType" factoryName="Python" temporary="true">
       <module name="PyICU_test" />
       <option name="INTERPRETER_OPTIONS" value="" />
       <option name="PARENT_ENVS" value="true" />
@@ -107,7 +338,73 @@
       <option name="ADD_CONTENT_ROOTS" value="true" />
       <option name="ADD_SOURCE_ROOTS" value="true" />
       <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
-      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/PyICU_test.py" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/study_languages.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
+    <configuration name="train_burmese" type="PythonConfigurationType" factoryName="Python" temporary="true">
+      <module name="PyICU_test" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/train_burmese.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
+    <configuration name="train_thai (2)" type="PythonConfigurationType" factoryName="Python" temporary="true">
+      <module name="PyICU_test" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/train_thai.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
+    <configuration name="train_thai" type="PythonConfigurationType" factoryName="Python" temporary="true">
+      <module name="PyICU_test" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/lstm_word_segmentation" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/lstm_word_segmentation/train_thai.py" />
       <option name="PARAMETERS" value="" />
       <option name="SHOW_COMMAND_LINE" value="false" />
       <option name="EMULATE_TERMINAL" value="false" />
@@ -118,7 +415,11 @@
     </configuration>
     <recent_temporary>
       <list>
-        <item itemvalue="Python.PyICU_test" />
+        <item itemvalue="Python.train_burmese" />
+        <item itemvalue="Python.train_thai (2)" />
+        <item itemvalue="Python.study_languages" />
+        <item itemvalue="Python.constants" />
+        <item itemvalue="Python.train_thai" />
       </list>
     </recent_temporary>
   </component>
@@ -133,57 +434,195 @@
       <option name="presentableId" value="Default" />
       <updated>1600958374292</updated>
       <workItem from="1600958375466" duration="12090000" />
+      <workItem from="1605756790687" duration="17272000" />
+      <workItem from="1605834314511" duration="4082000" />
+      <workItem from="1605840955223" duration="4678000" />
+      <workItem from="1605847427473" duration="5218000" />
     </task>
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="12090000" />
+    <option name="totallyTimeSpent" value="43340000" />
   </component>
   <component name="ToolWindowManager">
-    <frame x="1542" y="-1319" width="1241" height="2139" extended-state="0" />
+    <frame x="17" y="23" width="1400" height="798" extended-state="0" />
     <layout>
-      <window_info id="Favorites" side_tool="true" />
-      <window_info content_ui="combo" id="Project" order="0" visible="true" weight="0.28940785" />
+      <window_info active="true" content_ui="combo" id="Project" order="0" visible="true" weight="0.16126657" />
       <window_info id="Structure" order="1" side_tool="true" weight="0.25" />
-      <window_info anchor="bottom" id="Docker" show_stripe_button="false" />
-      <window_info anchor="bottom" id="Database Changes" />
-      <window_info anchor="bottom" id="Version Control" />
-      <window_info anchor="bottom" id="Python Console" />
-      <window_info anchor="bottom" id="Terminal" />
-      <window_info anchor="bottom" id="Event Log" side_tool="true" />
+      <window_info id="Favorites" order="2" side_tool="true" />
       <window_info anchor="bottom" id="Message" order="0" />
       <window_info anchor="bottom" id="Find" order="1" />
-      <window_info anchor="bottom" id="Run" order="2" weight="0.19198827" />
+      <window_info anchor="bottom" id="Run" order="2" visible="true" weight="0.29461756" />
       <window_info anchor="bottom" id="Debug" order="3" weight="0.4" />
       <window_info anchor="bottom" id="Cvs" order="4" weight="0.25" />
       <window_info anchor="bottom" id="Inspection" order="5" weight="0.4" />
       <window_info anchor="bottom" id="TODO" order="6" />
-      <window_info anchor="right" id="Database" />
-      <window_info anchor="right" id="R Packages" />
-      <window_info anchor="right" id="SciView" />
-      <window_info anchor="right" id="R Graphics" />
+      <window_info anchor="bottom" id="Docker" order="7" show_stripe_button="false" />
+      <window_info anchor="bottom" id="Version Control" order="8" weight="0.3286119" />
+      <window_info anchor="bottom" id="Database Changes" order="9" />
+      <window_info anchor="bottom" id="Event Log" order="10" side_tool="true" />
+      <window_info anchor="bottom" id="Terminal" order="11" />
+      <window_info anchor="bottom" id="Python Console" order="12" />
       <window_info anchor="right" id="Commander" internal_type="SLIDING" order="0" type="SLIDING" weight="0.4" />
       <window_info anchor="right" id="Ant Build" order="1" weight="0.25" />
       <window_info anchor="right" content_ui="combo" id="Hierarchy" order="2" weight="0.25" />
+      <window_info anchor="right" id="SciView" order="3" />
+      <window_info anchor="right" id="R Graphics" order="4" />
+      <window_info anchor="right" id="R Packages" order="5" />
+      <window_info anchor="right" id="Database" order="6" />
     </layout>
   </component>
   <component name="TypeScriptGeneratedFilesManager">
     <option name="version" value="1" />
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
+    <SUITE FILE_PATH="coverage/word_segmentation$constants.coverage" NAME="constants Coverage Results" MODIFIED="1605852040495" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/lstm_word_segmentation" />
+    <SUITE FILE_PATH="coverage/word_segmentation$train_thai__2_.coverage" NAME="train_thai (2) Coverage Results" MODIFIED="1605853431429" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+    <SUITE FILE_PATH="coverage/word_segmentation$study_languages.coverage" NAME="study_languages Coverage Results" MODIFIED="1605852357303" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+    <SUITE FILE_PATH="coverage/word_segmentation$PyICU_test.coverage" NAME="PyICU_test Coverage Results" MODIFIED="1605761467911" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+    <SUITE FILE_PATH="coverage/word_segmentation$word_segmentation.coverage" NAME="word_segmentation Coverage Results" MODIFIED="1605803219416" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/lstm_word_segmentation" />
+    <SUITE FILE_PATH="coverage/word_segmentation$train_thai__1_.coverage" NAME="train_thai (1) Coverage Results" MODIFIED="1605799421270" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/../lstm_word_segmentation_for_Saran" />
+    <SUITE FILE_PATH="coverage/word_segmentation$train_thai.coverage" NAME="train_thai Coverage Results" MODIFIED="1605818707378" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/lstm_word_segmentation" />
+    <SUITE FILE_PATH="coverage/word_segmentation$train_burmese.coverage" NAME="train_burmese Coverage Results" MODIFIED="1605853629034" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/PyICU_test$PyICU_test.coverage" NAME="PyICU_test Coverage Results" MODIFIED="1600973171450" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
   </component>
   <component name="editorHistoryManager">
     <entry file="file://$APPLICATION_CONFIG_DIR$/scratches/scratch_4.py">
       <provider selected="true" editor-type-id="text-editor" />
     </entry>
-    <entry file="file://$PROJECT_DIR$/PyICU_test.py">
+    <entry file="file://$PROJECT_DIR$/PyICU_test.py" />
+    <entry file="file://$PROJECT_DIR$/../lstm_word_segmentation_for_Saran/train_thai.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="749">
-          <caret line="76" column="48" selection-start-line="76" selection-start-column="48" selection-end-line="76" selection-end-column="48" />
+        <state relative-caret-position="840">
+          <caret line="63" column="29" lean-forward="true" selection-start-line="63" selection-start-column="29" selection-end-line="63" selection-end-column="29" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/lstm_word_segmentation/word_segmentation.py" />
+    <entry file="file://$PROJECT_DIR$/lstm_word_segmentation/bayesian_optimization.py" />
+    <entry file="file://$PROJECT_DIR$/lstm_word_segmentation/train_burmese.py" />
+    <entry file="file://$PROJECT_DIR$/lstm_word_segmentation/train_thai.py" />
+    <entry file="file://$PROJECT_DIR$/lstm_word_segmentation/Chert2.py">
+      <provider selected="true" editor-type-id="text-editor" />
+    </entry>
+    <entry file="file://$PROJECT_DIR$/study_languages.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="120">
+          <caret line="8" selection-start-line="8" selection-end-line="8" />
           <folding>
-            <element signature="e#24#39#0" expanded="true" />
+            <element signature="e#0#103#0" expanded="true" />
           </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/train_thai.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="120">
+          <caret line="8" column="8" selection-start-line="8" selection-start-column="8" selection-end-line="8" selection-end-column="8" />
+          <folding>
+            <element signature="e#0#24#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/train_burmese.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="225">
+          <caret line="15" column="38" selection-start-line="15" selection-start-column="38" selection-end-line="15" selection-end-column="38" />
+          <folding>
+            <element signature="e#0#24#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/lstm_word_segmentation/word_segmenter.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="255">
+          <caret line="17" column="34" lean-forward="true" selection-start-line="17" selection-start-column="34" selection-end-line="17" selection-end-column="34" />
+          <folding>
+            <element signature="e#0#24#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/lstm_word_segmentation/text_helpers.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="279">
+          <caret line="242" column="17" lean-forward="true" selection-start-line="242" selection-start-column="17" selection-end-line="242" selection-end-column="17" />
+          <folding>
+            <element signature="e#0#24#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/lstm_word_segmentation/preprocess.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="361">
+          <caret line="86" lean-forward="true" selection-start-line="86" selection-end-line="86" />
+          <folding>
+            <element signature="e#0#24#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/lstm_word_segmentation/lstm_bayesian_optimization.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="135">
+          <caret line="10" column="89" lean-forward="true" selection-start-line="10" selection-start-column="89" selection-end-line="10" selection-end-column="89" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/lstm_word_segmentation/line.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="150">
+          <caret line="134" column="30" selection-start-line="134" selection-start-column="30" selection-end-line="134" selection-end-column="30" />
+          <folding>
+            <element signature="e#0#18#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/lstm_word_segmentation/helpers.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="443">
+          <caret line="31" column="23" selection-start-line="31" selection-start-column="23" selection-end-line="31" selection-end-column="23" />
+          <folding>
+            <element signature="e#0#18#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/lstm_word_segmentation/grapheme_cluster.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="361">
+          <caret line="49" lean-forward="true" selection-start-line="49" selection-end-line="49" />
+          <folding>
+            <element signature="e#0#18#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/lstm_word_segmentation/constants.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="346">
+          <caret line="33" column="91" selection-start-line="33" selection-start-column="91" selection-end-line="33" selection-end-column="91" />
+          <folding>
+            <element signature="e#0#18#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/lstm_word_segmentation/bies.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="165">
+          <caret line="11" column="22" selection-start-line="11" selection-start-column="22" selection-end-line="11" selection-end-column="22" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/lstm_word_segmentation/accuracy.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="150">
+          <caret line="70" column="27" selection-start-line="70" selection-start-column="27" selection-end-line="70" selection-end-column="27" />
         </state>
       </provider>
     </entry>

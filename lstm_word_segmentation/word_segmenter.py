@@ -1,84 +1,69 @@
-import os
+from pathlib import Path
 import numpy as np
 import json
 from icu import Char
 from keras.models import Sequential
-from keras.layers import LSTM, Dense, TimeDistributed, Bidirectional, Embedding, Dropout, Flatten
+from keras.layers import LSTM, Dense, TimeDistributed, Bidirectional, Embedding, Dropout
 from tensorflow import keras
-import tensorflow as tf
 
-import constants
-from helpers import sigmoid
-from text_helpers import clean_line, combine_lines_of_file, get_best_data_text
-from accuracy import Accuracy
-from line import Line
-from bies import Bies
-from grapheme_cluster import GraphemeCluster
+from . import constants
+from .helpers import sigmoid
+from .text_helpers import get_whole_file_segmented, get_best_data_text, get_lines_of_text
+from .accuracy import Accuracy
+from .line import Line
+from .bies import Bies
+from .grapheme_cluster import GraphemeCluster
 
 
 class KerasBatchGenerator(object):
     """
-    A batch generator component, which is used to generate batches for training, validation, and evaluation. The current
-    version works only for inputs of dimension 1.
+    A batch generator component, which is used to generate batches for training, validation, and evaluation.
     Args:
-        x_data: The input of the model
-        y_data: The output of the model
+        x_data: A list of GraphemeCluster objects that is the input of the model
+        y_data: A np array that contains output of the model
         n: length of the input and output in each batch
         batch_size: number of batches
-        dim_output: dimension of the output
     """
-    def __init__(self, x_data, y_data, n, batch_size, dim_output):
-        self.x_data = x_data  # A list of GraphemeCluster objects
-        self.y_data = y_data  # dim = times * dim_output
+    def __init__(self, x_data, y_data, n, batch_size):
+        self.x_data = x_data
+        self.y_data = y_data
         self.n = n
         self.batch_size = batch_size
-        self.dim_output = dim_output
-        if len(x_data) < batch_size * n or y_data.shape[0] < batch_size * n:
+        self.dim_output = self.y_data.shape[1]
+        if len(x_data) != y_data.shape[0]:
+            print("Warning: x_data and y_data have not compatible sizes!")
+        if len(x_data) < batch_size * n:
             print("Warning: x_data or y_data is not large enough!")
 
-    # Generating functions for grapheme clusters when the embedding layer is implemented by tf
-    def generate(self, type):
+    def generate(self, embedding_type):
         """
-        generates batches one by one, used for training and validation when the tf embedding layer is used
+        This function generates batches used for training and validation
         """
-        y = np.zeros([self.batch_size, self.n, self.dim_output])
-        if type == "grapheme_clusters_tf":
-            x = np.zeros([self.batch_size, self.n])
-        if type == "grapheme_clusters_man":
-            x = np.zeros([self.batch_size, self.n, self.x_data[0].num_clusters])
-        if type == "generalized_vectors":
-            x = np.zeros([self.batch_size, self.n, self.x_data[0].generalized_vec_length])
+        x, y = self.generate_once(embedding_type)
         while True:
-            for i in range(self.batch_size):
-                for j in range(self.n):
-                    if type == "grapheme_clusters_tf":
-                        x[i, j] = self.x_data[self.n*i + j].graph_clust_id
-                    if type == "grapheme_clusters_man":
-                        x[i, j, :] = self.x_data[self.n*i + j].graph_clust_vec
-                    if type == "generalized_vectors":
-                        x[i, j, :] = self.x_data[self.n*i + j].generalized_vec
-                y[i, :, :] = self.y_data[self.n * i: self.n * (i + 1), :]
             yield x, y
 
-    def generate_all(self, type):
+    def generate_once(self, embedding_type):
         """
-        generates batches one by one, used for training and validation when the tf embedding layer is used
+        This function generates batches only once and is used for testing
         """
         y = np.zeros([self.batch_size, self.n, self.dim_output])
-        if type == "grapheme_clusters_tf":
+        x = None
+        if embedding_type == "grapheme_clusters_tf":
             x = np.zeros([self.batch_size, self.n])
-        if type == "grapheme_clusters_man":
+        elif embedding_type == "grapheme_clusters_man":
             x = np.zeros([self.batch_size, self.n, self.x_data[0].num_clusters])
-        if type == "generalized_vectors":
+        elif embedding_type == "generalized_vectors":
             x = np.zeros([self.batch_size, self.n, self.x_data[0].generalized_vec_length])
-
+        else:
+            print("Warning: the embedding type is not valid")
         for i in range(self.batch_size):
             for j in range(self.n):
-                if type == "grapheme_clusters_tf":
+                if embedding_type == "grapheme_clusters_tf":
                     x[i, j] = self.x_data[self.n*i + j].graph_clust_id
-                if type == "grapheme_clusters_man":
+                if embedding_type == "grapheme_clusters_man":
                     x[i, j, :] = self.x_data[self.n*i + j].graph_clust_vec
-                if type == "generalized_vectors":
+                if embedding_type == "generalized_vectors":
                     x[i, j, :] = self.x_data[self.n*i + j].generalized_vec
             y[i, :, :] = self.y_data[self.n * i: self.n * (i + 1), :]
         return x, y
@@ -86,19 +71,21 @@ class KerasBatchGenerator(object):
 
 class WordSegmenter:
     """
-    A class that let you make a bi-directional LSTM, train it, and test it. It assumes that the number of features is 1.
+    A class that let you make a bi-directional LSTM, train it, and test it.
     Args:
         input_n: Length of the input for LSTM model
         input_t: The total length of data used to train and validate the model. It is equal to number of batches times n
-        input_graph_clust_dic: a dictionary that maps the most frequent grapheme clusters to integers
+        input_clusters_num: number of top grapheme clusters used to train the model
         input_embedding_dim: length of the embedding vectors for each grapheme cluster
-        input_hunits: number of units used in each cell of LSTM
+        input_hunits: number of hidden units used in each cell of LSTM
         input_dropout_rate: dropout rate used in layers after the embedding and after the bidirectional LSTM
         input_output_dim: dimension of the output layer
         input_epochs: number of epochs used to train the model
         input_training_data: name of the data used to train the model
         input_evaluating_data: name of the data used to evaluate the model
-        input_embedding_type: determines what type to be used in LSTM model
+        input_language: shows what is the language used to train the model (e.g. Thai, Burmese, ...)
+        input_embedding_type: determines what type of embedding to be used in the model. Possible values are
+        "grapheme_clusters_tf", "grapheme_clusters_man", and "generalized_vectors"
     """
     def __init__(self, input_name, input_n, input_t, input_clusters_num, input_embedding_dim, input_hunits,
                  input_dropout_rate, input_output_dim, input_epochs, input_training_data, input_evaluating_data,
@@ -117,14 +104,21 @@ class WordSegmenter:
         self.epochs = input_epochs
         self.training_data = input_training_data
         self.evaluating_data = input_evaluating_data
-        self.model = None
         self.language = input_language
         self.embedding_type = input_embedding_type
+        self.model = None
 
         # Constructing the grapheme cluster dictionary
+        ratios = None
+        if self.language == "Thai":
+            ratios = constants.THAI_GRAPH_CLUST_RATIO
+        elif self.language == "Burmese":
+            ratios = constants.BURMESE_GRAPH_CLUST_RATIO
+        else:
+            print("Warning: the input language is not supported")
         cnt = 0
         self.graph_clust_dic = dict()
-        for key in constants.THAI_GRAPH_CLUST_RATIO.keys():
+        for key in ratios.keys():
             if cnt < self.clusters_num - 1:
                 self.graph_clust_dic[key] = cnt
             if cnt == self.clusters_num - 1:
@@ -139,29 +133,30 @@ class WordSegmenter:
             cnt = 0
             for i in range(smallest_unicode_dec, largest_unicode_dec + 1):
                 ch = chr(i)
-                if constants.THAI_CHAR_TYPE_TO_BUCKET[Char.charType(ch)] == 1:
+                if constants.CHAR_TYPE_TO_BUCKET[Char.charType(ch)] == 1:
                     self.letters_dic[ch] = cnt
                     cnt += 1
+        if self.language == "Burmese":
+            self.letters_dic = dict()
+            print("The generalized_vector is not implemented for Burmese for now")
 
     def _get_trainable_data(self, input_line):
         """
-        Given a segmented line, extracts x_data (with respect to a dictionary that maps grapheme clusters to integers)
-        and y_data which is a n*4 matrix that represents BIES where n is the length of the unsegmented line. All grapheme
-        clusters not found in the dictionary are set to the largest value of the dictionary plus 1
+        Given a segmented line, generates a list of input data (with respect to the embedding type) and a n*4 np array
+        that represents BIES where n is the length of the unsegmented line.
         Args:
             input_line: the unsegmented line
         """
-
         # Finding word breakpoints
-        # Note that it is possible that input is segmented manually instead of icu, but for this function, we set that as
-        # icu and set `man_segmented = None`, so the function works for both icu and manually segmented strings.
+        # Note that it is possible that input is segmented manually instead of icu. However, for both cases we set that
+        # input_type equal to "icu_segmented" because that doesn't affect performance of this function. This is done
+        # we won't need unnecessary if/else for "man_segmented" and "icu_segmented" throughout rest of the code.
         line = Line(input_line, "icu_segmented")
         true_bies = line.get_bies("icu")
 
         # Making x_data and y_data
         y_data = true_bies.mat
         line_len = len(line.char_brkpoints) - 1
-
         x_data = []
         for i in range(line_len):
             char_start = line.char_brkpoints[i]
@@ -173,80 +168,58 @@ class WordSegmenter:
 
     def train_model(self):
         """
-        This function trains the model using the dataset specified in the __init__ function. It combine all sentences in
-        the data set with a space between them and then divide this large string into strings of fixed length self.n.
-        Therefore, it may (and probably will) break some words and puts different part of them in different batches.
+        This function trains the model using the dataset specified in the __init__ function. It combine all lines in
+        the data set with a space between them and then divide this large string into batches of fixed length self.n.
+        in reading files, if `pseudo` is True then we use icu segmented text instead of manually segmented texts to
+        train the model.
         """
         # Get training data of length self.t
-        x_data = []
-        y_data = []
+        input_str = None
         if self.training_data == "BEST":
             input_str = get_best_data_text(starting_text=1, ending_text=2, pseudo=False)
-            x_data, y_data = self._get_trainable_data(input_str)
-            if self.t > len(x_data):
-                print("Warning: size of the training data is less than self.t")
-            x_data = x_data[:self.t]
-            y_data = y_data[:self.t, :]
-
         elif self.training_data == "pseudo BEST":
             input_str = get_best_data_text(starting_text=1, ending_text=10, pseudo=True)
-            x_data, y_data = self._get_trainable_data(input_str)
-            if self.t > len(x_data):
-                print("Warning: size of the training data is less than self.t")
-            x_data = x_data[:self.t]
-            y_data = y_data[:self.t, :]
-
         elif self.training_data == "my":
-            input_str = combine_lines_of_file("./Data/my_train.txt", input_type="unsegmented",
-                                                  output_type="icu_segmented")
-            x_data, y_data = self._get_trainable_data(input_str)
-            if self.t > len(x_data):
-                print("Warning: size of the training data is less than self.t")
-            x_data = x_data[:self.t]
-            y_data = y_data[:self.t, :]
+            file = Path.joinpath(Path(__file__).parent.parent.absolute(), 'Data/my_train.txt')
+            input_str = get_whole_file_segmented(file, input_type="unsegmented", output_type="icu_segmented")
         else:
             print("Warning: no implementation for this training data exists!")
-        train_generator = KerasBatchGenerator(x_data, y_data, n=self.n, batch_size=self.batch_size,
-                                              dim_output=self.output_dim)
+        x_data, y_data = self._get_trainable_data(input_str)
+        if self.t > len(x_data):
+            print("Warning: size of the training data is less than self.t")
+        x_data = x_data[:self.t]
+        y_data = y_data[:self.t, :]
+        train_generator = KerasBatchGenerator(x_data, y_data, n=self.n, batch_size=self.batch_size)
 
         # Get validation data of length self.t
         if self.training_data == "BEST":
             input_str = get_best_data_text(starting_text=10, ending_text=12, pseudo=False)
-            x_data, y_data = self._get_trainable_data(input_str)
-            if self.t > len(x_data):
-                print("Warning: size of the validation data is less than self.t")
-            x_data = x_data[:self.t]
-            y_data = y_data[:self.t, :]
         elif self.training_data == "pseudo BEST":
             input_str = get_best_data_text(starting_text=10, ending_text=20, pseudo=True)
-            x_data, y_data = self._get_trainable_data(input_str)
-            if self.t > len(x_data):
-                print("Warning: size of the validation data is less than self.t")
-            x_data = x_data[:self.t]
-            y_data = y_data[:self.t, :]
         elif self.training_data == "my":
-            input_str = combine_lines_of_file("./Data/my_valid.txt", input_type="unsegmented",
-                                                  output_type="icu_segmented")
-            x_data, y_data = self._get_trainable_data(input_str)
-            if self.t > len(x_data):
-                print("Warning: size of the training data is less than self.t")
-            x_data = x_data[:self.t]
-            y_data = y_data[:self.t, :]
+            file = Path.joinpath(Path(__file__).parent.parent.absolute(), 'Data/my_valid.txt')
+            input_str = get_whole_file_segmented(file, input_type="unsegmented", output_type="icu_segmented")
         else:
             print("Warning: no implementation for this validation data exists!")
-        valid_generator = KerasBatchGenerator(x_data, y_data, n=self.n, batch_size=self.batch_size,
-                                              dim_output=self.output_dim)
+        x_data, y_data = self._get_trainable_data(input_str)
+        if self.t > len(x_data):
+            print("Warning: size of the validation data is less than self.t")
+        x_data = x_data[:self.t]
+        y_data = y_data[:self.t, :]
+        valid_generator = KerasBatchGenerator(x_data, y_data, n=self.n, batch_size=self.batch_size)
 
         # Building the model
         model = Sequential()
         if self.embedding_type == "grapheme_clusters_tf":
             model.add(Embedding(input_dim=self.clusters_num, output_dim=self.embedding_dim, input_length=self.n))
-        if self.embedding_type == "grapheme_clusters_man":
+        elif self.embedding_type == "grapheme_clusters_man":
             model.add(TimeDistributed(Dense(input_dim=self.clusters_num, units=self.embedding_dim, use_bias=False,
                                             kernel_initializer='uniform')))
-        if self.embedding_type == "generalized_vectors":
+        elif self.embedding_type == "generalized_vectors":
             model.add(TimeDistributed(Dense(self.embedding_dim, activation=None, use_bias=False,
                                             kernel_initializer='uniform')))
+        else:
+            print("Warning: the embedding_type is not implemented")
         model.add(Dropout(self.dropout_rate))
         model.add(Bidirectional(LSTM(self.hunits, return_sequences=True), input_shape=(self.n, 1)))
         model.add(Dropout(self.dropout_rate))
@@ -256,114 +229,106 @@ class WordSegmenter:
         model.compile(loss='categorical_crossentropy', optimizer=opt, metrics=['accuracy'])
 
         # Fitting the model
-        model.fit(train_generator.generate(type=self.embedding_type), steps_per_epoch=self.t // self.batch_size,
-                  epochs=self.epochs, validation_data=valid_generator.generate(type=self.embedding_type),
+        model.fit(train_generator.generate(embedding_type=self.embedding_type),
+                  steps_per_epoch=self.t // self.batch_size, epochs=self.epochs,
+                  validation_data=valid_generator.generate(embedding_type=self.embedding_type),
                   validation_steps=self.t // self.batch_size)
         self.model = model
 
     def test_model(self):
         """
-        This function tests the model fitted in self.train(). It uses the same format (combining all sentences separated
-         by spaces) to test the model.
+        This function tests the model fitted in self.train(). It first divide the whole test data into big batches each
+        of size self.t, and then break down each big batch intor smaller batches each of size self.n.
         """
-        # Get test data
-        x_data = []
-        y_data = []
+        # Get testing data
+        input_str = None
         if self.evaluating_data == "BEST":
             input_str = get_best_data_text(starting_text=40, ending_text=45, pseudo=False)
-            x_data, y_data = self._get_trainable_data(input_str)
         elif self.evaluating_data == "SAFT":
-            input_str = combine_lines_of_file("./Data/SAFT/test.txt", input_type="man_segmented",
-                                              output_type="man_segmented")
-            x_data, y_data = self._get_trainable_data(input_str)
+            file = Path.joinpath(Path(__file__).parent.parent.absolute(), 'Data/SAFT/test.txt')
+            input_str = get_whole_file_segmented(file, input_type="man_segmented", output_type="man_segmented")
         elif self.evaluating_data == "my":
-            input_str = combine_lines_of_file("./Data/my_test.txt", input_type="unsegmented",
-                                              output_type="icu_segmented")
-            x_data, y_data = self._get_trainable_data(input_str)
+            file = Path.joinpath(Path(__file__).parent.parent.absolute(), 'Data/my_test.txt')
+            input_str = get_whole_file_segmented(file, input_type="unsegmented", output_type="icu_segmented")
         else:
             print("Warning: no implementation for this evaluation data exists!")
+        x_data, y_data = self._get_trainable_data(input_str)
 
         num_big_batches = len(x_data)//self.t
+        if len(x_data) < self.t:
+            print("Warning: length of the test data is smaller than self.t")
         accuracy = Accuracy()
-        for k in range(num_big_batches-1):
+        # Testing each big batch
+        for k in range(num_big_batches):
             curr_x_data = x_data[k*self.t: (k+1)*self.t]
             curr_y_data = y_data[k * self.t: (k + 1) * self.t, :]
-            test_generator = KerasBatchGenerator(curr_x_data, curr_y_data, n=self.n, batch_size=self.batch_size,
-                                                 dim_output=self.output_dim)
+            test_generator = KerasBatchGenerator(curr_x_data, curr_y_data, n=self.n, batch_size=self.batch_size)
 
-            # Testing batch by batch (each batch of length self.n)
-            all_test_input, all_actual_y = test_generator.generate_all(type=self.embedding_type)
+            # Testing each mini batch
+            all_test_input, all_actual_y = test_generator.generate_once(embedding_type=self.embedding_type)
             all_y_hat = self.model.predict(all_test_input, batch_size=self.batch_size)
-
             for i in range(self.batch_size):
                 actual_y = all_actual_y[i, :, :]
-                actual_y = Bies(input=actual_y, input_type="mat")
-                y_hat = Bies(input=all_y_hat[i, :, :], input_type="mat")
+                actual_y = Bies(input_bies=actual_y, input_type="mat")
+                y_hat = Bies(input_bies=all_y_hat[i, :, :], input_type="mat")
                 accuracy.update(true_bies=actual_y.str, est_bies=y_hat.str)
 
         print("The BIES accuracy in test_model function: {}".format(accuracy.get_bies_accuracy()))
         print("The F1 socre in test_model function: {}".format(accuracy.get_f1_score()))
+        return accuracy.get_bies_accuracy()
 
     def _test_text_line_by_line(self, file, line_limit):
         """
-        This function tests the model fitted in self.train() using BEST data set. Unlike test_model() function, this
-        function tests the model line by line. It combines very short lines together before testing.
+        This function tests the model fitted in self.train() using a single file textthat contains segmented lines.
+        Unlike self.test_model(), this function test texts line by line.
         Args:
             file: the address of the file that is going to be tested
             line_limit: number of lines to be tested
         """
-        line_counter = 0
+        lines = get_lines_of_text(file, "man_segmented")
+        if len(lines) < line_limit:
+            print("Warning: not enough lines in the test file")
         accuracy = Accuracy()
-        with open(file) as f:
-            for line in f:
-                if line_counter == line_limit:
-                    break
-                line = clean_line(line)
-                if line == -1:
-                    continue
-                line_counter += 1
+        for line in lines[:line_limit]:
+            x_data, y_data = self._get_trainable_data(line.man_segmented)
 
-                # Get trainable data
-                x_data, y_data = self._get_trainable_data(line)
+            # Using the manual predict function for lines that are not necessarily self.n long
+            y_hat = Bies(input_bies=self._manual_predict(x_data), input_type="mat")
+            y_hat.normalize_bies()
 
-                # Use the manual predict function
-                y_hat = Bies(input=self._manual_predict(x_data), input_type="mat")
-                y_hat.normalize_bies()
-
-                actual_y = Bies(input=y_data, input_type="mat")
-                accuracy.update(true_bies=actual_y.str, est_bies=y_hat.str)
-
-            print("The BIES accuracy (line by line) for file {} : {}".format(file, accuracy.get_bies_accuracy()))
-            print("The F1 score (line by line) for file {} : {}".format(file, accuracy.get_f1_score()))
-            return accuracy
+            # Updating the accuracy using the new line
+            actual_y = Bies(input_bies=y_data, input_type="mat")
+            accuracy.update(true_bies=actual_y.str, est_bies=y_hat.str)
+        print("The BIES accuracy (line by line) for file {} : {}".format(file, accuracy.get_bies_accuracy()))
+        print("The F1 score (line by line) for file {} : {}".format(file, accuracy.get_f1_score()))
+        return accuracy
 
     def test_model_line_by_line(self):
         """
-        This function uses the test_text_line_by_line() to test the model by a range of texts in BEST data set. The
-        final score is the average of scores computed for each individual text.
+        This function uses the evaluating data to test the model line by line.
         """
         accuracy = Accuracy()
         if self.evaluating_data == "BEST":
+            if self.language != "Thai":
+                print("Warning: the Best data is in Thai and you are testing a model in another language")
             category = ["news", "encyclopedia", "article", "novel"]
             for text_num in range(40, 45):
                 print("testing text {}".format(text_num))
                 for cat in category:
                     text_num_str = "{}".format(text_num).zfill(5)
-                    file = "./Data/Best/{}/{}_".format(cat, cat) + text_num_str + ".txt"
+                    file = Path.joinpath(Path(__file__).parent.parent.absolute(), "Data/Best/{}/{}_".format(cat, cat)
+                                         + text_num_str + ".txt")
                     text_acc = self._test_text_line_by_line(file, line_limit=-1)
                     accuracy.merge_accuracy(text_acc)
 
         elif self.evaluating_data == "my":
-            file = "./Data/my_test_segmented.txt"
-            num_lines = sum(1 for _line in open(file))
-            line_limit = 2000
-            if line_limit > num_lines:
-                print("Warning: number of lines you are using is larger than the total number of lines in " + file)
-            text_acc = self._test_text_line_by_line(file, line_limit=line_limit)
+            if self.language != "Burmese":
+                print("Warning: the my.text data is in Burmese and you are testing a model in another language")
+            file = Path.joinpath(Path(__file__).parent.parent.absolute(), 'Data/my_test_segmented.txt')
+            text_acc = self._test_text_line_by_line(file, line_limit=500)
             accuracy.merge_accuracy(text_acc)
-
         else:
-            print("Warning: no implementation for this evaluation data exists!")
+            print("Warning: no implementation for line by line evaluating this data exists")
         print("The BIES accuracy by test_model_line_by_line function: {}".format(accuracy.get_bies_accuracy()))
         print("The F1 score by test_model_line_by_line function: {}".format(accuracy.get_f1_score()))
 
@@ -382,16 +347,19 @@ class WordSegmenter:
         h_fw = np.zeros([1, self.hunits])
         all_h_fw = np.zeros([len(test_input), self.hunits])
         for i in range(len(test_input)):
+            x_t = None
             if self.embedding_type == "grapheme_clusters_tf":
                 input_graph_id = test_input[i].graph_clust_id
                 x_t = embedarr[input_graph_id, :]
                 x_t = x_t.reshape(1, x_t.shape[0])
-            if self.embedding_type == "grapheme_clusters_man":
+            elif self.embedding_type == "grapheme_clusters_man":
                 input_graph_vec = test_input[i].graph_clust_vec
                 x_t = input_graph_vec.dot(embedarr)
-            if self.embedding_type == "generalized_vectors":
+            elif self.embedding_type == "generalized_vectors":
                 input_generalized_vec = test_input[i].generalized_vec
                 x_t = input_generalized_vec.dot(embedarr)
+            else:
+                print("Warning: this embedding type is not implemented")
             h_fw, c_fw = self._compute_hc(weightLSTM, x_t, h_fw, c_fw)
             all_h_fw[i, :] = h_fw
 
@@ -403,16 +371,19 @@ class WordSegmenter:
         h_bw = np.zeros([1, self.hunits])
         all_h_bw = np.zeros([len(test_input), self.hunits])
         for i in range(len(test_input) - 1, -1, -1):
+            x_t = None
             if self.embedding_type == "grapheme_clusters_tf":
                 input_graph_id = test_input[i].graph_clust_id
                 x_t = embedarr[input_graph_id, :]
                 x_t = x_t.reshape(1, x_t.shape[0])
-            if self.embedding_type == "grapheme_clusters_man":
+            elif self.embedding_type == "grapheme_clusters_man":
                 input_graph_vec = test_input[i].graph_clust_vec
                 x_t = input_graph_vec.dot(embedarr)
-            if self.embedding_type == "generalized_vectors":
+            elif self.embedding_type == "generalized_vectors":
                 input_generalized_vec = test_input[i].generalized_vec
                 x_t = input_generalized_vec.dot(embedarr)
+            else:
+                print("Warning: this embedding type is not implemented")
             h_bw, c_bw = self._compute_hc(weightLSTM, x_t, h_bw, c_bw)
             all_h_bw[i, :] = h_bw
 
@@ -433,11 +404,13 @@ class WordSegmenter:
 
     def _compute_hc(self, weight, x_t, h_tm1, c_tm1):
         """
-        Given weights of a LSTM model, the input at time t, and values for h and c at time t-1, compute the values of h and
-        c for time t.
+        Given weights of a LSTM model, the input at time t, and values for h and c at time t-1, this function compute
+        the values of h and c at time t.
         Args:
             weight: a list of three matrices, which are W (from input to cell), U (from h to cell), and b (bias) respectively.
-            Dimensions: warr.shape = (embedding_dim, hunits*4), uarr.shape = (hunits, hunits*4), barr.shape = (hunits*4,)
+            x_t: the input at time t
+            h_tm1: value of h for time t-1
+            c_tm1: value of c for time t-1
         """
         warr, uarr, barr = weight
         warr = warr.numpy()
@@ -457,32 +430,53 @@ class WordSegmenter:
 
     def segment_arbitrary_line(self, input_line):
         """
-        This function uses the lstm model to segmenent an unsegmented line. It is intended to be used to analyze errors.
+        This function uses the LSTM model to segment an unsegmented line.
         Args:
             input_line: the unsegmented input line
         """
         line = Line(input_line, "unsegmented")
         line_len = len(line.char_brkpoints) - 1
+
+        # Making the input to and the output from the lstm model
         x_data = []
-        excess_grapheme_ids = max(self.graph_clust_dic.values()) + 1
         for i in range(line_len):
             char_start = line.char_brkpoints[i]
             char_finish = line.char_brkpoints[i + 1]
             curr_char = line.unsegmented[char_start: char_finish]
             x_data.append(GraphemeCluster(curr_char, self.graph_clust_dic, self.letters_dic))
-        y_hat = Bies(input=self._manual_predict(x_data), input_type="mat")
+        y_hat = Bies(input_bies=self._manual_predict(x_data), input_type="mat")
         y_hat.normalize_bies()
 
-        y_hat = Bies(input=self._manual_predict(x_data), input_type="mat")
-        y_hat.normalize_bies()
+        # Making a pretty version of the output of the LSTM, where bars shown the boundary of segmented words
+        y_hat_pretty = ""
+        for i in range(line_len):
+            char_start = line.char_brkpoints[i]
+            char_finish = line.char_brkpoints[i + 1]
+            curr_char = line.unsegmented[char_start: char_finish]
+            if y_hat.str[i] in ['b', 's']:
+                y_hat_pretty += "|"
+            y_hat_pretty += curr_char
+        y_hat_pretty += "|"
+
+        # Showing the output
         print("Input line     : {}".format(line.unsegmented))
         print("ICU segmented  : {}".format(line.icu_segmented))
-        print("LSTM segmented : {}".format(y_hat.str))
+        print("LSTM segmented : {}".format(y_hat_pretty))
 
     def save_model(self):
-        self.model.save("./Models/" + self.name)
-        np.save(os.getcwd() + "/Models/" + self.name + "/" + "weights", self.model.weights)
-        with open(os.getcwd() + "/Models/" + self.name + "/" + "weights.json", 'w') as wfile:
+        """
+        This function saves the current trained model of this word_segmenter instance.
+        """
+        # Save the model using Keras
+        file = Path.joinpath(Path(__file__).parent.parent.absolute(), 'Data/my_test.txt')
+        self.model.save(Path.joinpath(Path(__file__).parent.parent.absolute(), "Models/" + self.name))
+        # Save one np array that holds all weights
+        file = Path.joinpath(Path(__file__).parent.parent.absolute(), "Models/" + self.name + "/weights")
+        np.save(str(file), self.model.weights)
+
+        # Save the model in json format, that has both weights and grapheme clusters dictionary
+        json_file = Path.joinpath(Path(__file__).parent.parent.absolute(), "Models/" + self.name + "/weights.json")
+        with open(str(json_file), 'w') as wfile:
             output = dict()
             output["model"] = self.name
             output["dic"] = self.graph_clust_dic
@@ -503,4 +497,8 @@ class WordSegmenter:
             json.dump(output, wfile)
 
     def set_model(self, input_model):
+        """
+        This function set the current model to an input model
+        input_model: the input model
+        """
         self.model = input_model

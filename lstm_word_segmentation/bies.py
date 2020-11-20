@@ -1,15 +1,30 @@
 import numpy as np
 
+
 class Bies:
-    def __init__(self, input, input_type):
+    """
+    A class that stores a bies sequence in it.
+    """
+    def __init__(self, input_bies, input_type):
+        """
+        The __init__ function creates a new instance of the class.
+        Args:
+            input_bies: the input to initialize the instance
+            input_type: determines what is the type of the input. It can be "mat" or "str"
+        """
         if input_type == "mat":
-            self.mat = input   # n * 4
+            self.mat = input_bies
             self.compute_str_from_mat()
-        if input_type == "str":
-            self.str = input
+        elif input_type == "str":
+            self.str = input_bies
             self.mat = None
+        else:
+            print("Warning: this input_type is not known for BIES")
 
     def compute_str_from_mat(self):
+        """
+        This function uses the matrix format of the bies sequence to generate a string version.
+        """
         self.str = ""
         for i in range(self.mat.shape[0]):
             max_ind = np.argmax(self.mat[i, :])
@@ -24,10 +39,8 @@ class Bies:
 
     def normalize_bies(self):
         """
-        This function normalizes the input bies string to generate a bies string that makes sense. For example the output
-        won't have substring such as "biiis", "biese" or "siie"
-        Args:
-            bies_str: The input bies string
+        This function normalizes the BIES sequence to generate a string that makes sense. For example the output
+        won't have substring such as "biiis", "biese" or "siie". Note that it doesn't change the self.mat
         """
         if len(self.str) == 0:
             return 's'

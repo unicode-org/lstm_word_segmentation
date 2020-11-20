@@ -1,7 +1,5 @@
 import numpy as np
-from line import Line
-
-import constants
+from . import constants
 
 
 def is_ascii(input_str):
@@ -40,7 +38,8 @@ def print_grapheme_clusters(thrsh, language):
     provides a histogram that shows frequency of grapheme clusters
     ratios: a dictionary that holds the ratio of text that is represented by each grapheme cluster
     Args:
-        thrsh: shows what percent of the text we want to cover
+        thrsh: shows what percent of the text we want to be covered by grapheme clusters
+        language: shows the language that we are working with
     """
     ratios = None
     if language == "Thai":
@@ -48,7 +47,7 @@ def print_grapheme_clusters(thrsh, language):
     if language == "Burmese":
         ratios = constants.BURMESE_GRAPH_CLUST_RATIO
     if ratios is None:
-        print("The input language is not supported")
+        print("No grapheme cluster dictionary has been computed for the input language")
         return
     cum_sum = 0
     cnt = 0
@@ -57,5 +56,5 @@ def print_grapheme_clusters(thrsh, language):
         cnt += 1
         if cum_sum > thrsh:
             break
-    print("number of different grapheme clusters = {}".format(len(ratios.keys())))
+    print("number of different grapheme clusters in {} = {}".format(language, len(ratios.keys())))
     print("{} grapheme clusters form {} of the text".format(cnt, thrsh))

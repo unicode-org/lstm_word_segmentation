@@ -136,9 +136,19 @@ class WordSegmenter:
                 if constants.CHAR_TYPE_TO_BUCKET[Char.charType(ch)] == 1:
                     self.letters_dic[ch] = cnt
                     cnt += 1
-        if self.language == "Burmese":
+        elif self.language == "Burmese":
+            smallest_unicode_dec = int("1000", 16)
+            largest_unicode_dec = int("109F", 16)
             self.letters_dic = dict()
-            print("The generalized_vector is not implemented for Burmese for now")
+            cnt = 0
+            for i in range(smallest_unicode_dec, largest_unicode_dec + 1):
+                ch = chr(i)
+                if constants.CHAR_TYPE_TO_BUCKET[Char.charType(ch)] in [1]:
+                    self.letters_dic[ch] = cnt
+                    cnt += 1
+            print("number of letters slots in generalized_vectors embeddig is {}".format(len(self.letters_dic)))
+        else:
+            print("Warning: the grapheme_vectors embedding type is not supported for this language")
 
     def _get_trainable_data(self, input_line):
         """

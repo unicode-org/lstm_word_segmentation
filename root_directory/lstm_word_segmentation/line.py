@@ -18,17 +18,9 @@ class Line:
         """
         if input_type == "unsegmented":
             self.unsegmented = input_line
-            # print(self.unsegmented)
-            # print(1)
             self._compute_char_brkpoints()
-            # print(self.char_brkpoints)
-            # print(2)
             self._compute_icu_segmented()
-            # print(self.icu_segmented)
-            # print(3)
             self.icu_word_brkpoints = self._compute_word_brkpoints(input_type="icu_segmented")
-            # print(self.icu_word_brkpoints)
-            # print(4)
             self.man_segmented = None
             self.man_word_brkpoints = None
 
@@ -110,7 +102,7 @@ class Line:
         elif segmentation_type == "man":
             word_brkpoints = self.man_word_brkpoints
         else:
-            print("Warning! No segmentation exist for the given type.")
+            print("Warning: No segmentation exist for the given type")
         bies_mat = np.zeros(shape=[len(self.char_brkpoints) - 1, 4])
         word_ind = 0
         for i in range(len(self.char_brkpoints) - 1):

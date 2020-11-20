@@ -192,8 +192,6 @@ def get_whole_file_segmented(filename, input_type, output_type):
         input_type: determines if the input is unsegmented, manually segmented, or ICU segmented
         output_type: determines if the output is manually segmented or ICU segmented
     """
-    # print(filename)
-    # x = input()
     lines = get_lines_of_text(filename, input_type)
     all_file_line = ""
     if output_type == "man_segmented":
@@ -207,11 +205,7 @@ def get_whole_file_segmented(filename, input_type, output_type):
             all_file_line += lines[i].unsegmented
             if i != len(lines)-1:
                 all_file_line += " "
-        # print(all_file_line)
-        # print(len(all_file_line))
-        # x = input()
         all_file_line = Line(all_file_line, "unsegmented")
-        # print("after")
         return all_file_line.icu_segmented
 
 

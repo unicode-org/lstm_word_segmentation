@@ -23,7 +23,7 @@ class Accuracy:
             est_bies: a string that indicates the estimated BIES sequence
         """
         if len(true_bies) != len(est_bies):
-            print("Warning! length of true_bies and est_bies are different!")
+            print("Warning: length of true_bies and est_bies are different")
         self.bies_length += len(true_bies)
         self.bies_mismatch += diff_strings(true_bies, est_bies)
 

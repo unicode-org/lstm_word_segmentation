@@ -27,7 +27,7 @@ bayes_optimization.perform_bayesian_optimization()
 model_name = "Burmese_temp_genvec"
 word_segmenter = WordSegmenter(input_name=model_name, input_n=50, input_t=100000, input_clusters_num=350,
                                input_embedding_dim=33, input_hunits=20, input_dropout_rate=0.2, input_output_dim=4,
-                               input_epochs=15, input_training_data="my", input_evaluating_data="my",
+                               input_epochs=20, input_training_data="my", input_evaluating_data="my",
                                input_language="Burmese", input_embedding_type="generalized_vectors")
 
 # Training, testing, and saving the model

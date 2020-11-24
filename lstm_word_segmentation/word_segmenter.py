@@ -143,7 +143,7 @@ class WordSegmenter:
             cnt = 0
             for i in range(smallest_unicode_dec, largest_unicode_dec + 1):
                 ch = chr(i)
-                if constants.CHAR_TYPE_TO_BUCKET[Char.charType(ch)] in [1, 2, 3]:
+                if constants.CHAR_TYPE_TO_BUCKET[Char.charType(ch)] in [1, 2]:
                     self.letters_dic[ch] = cnt
                     cnt += 1
         else:

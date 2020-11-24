@@ -53,6 +53,9 @@ input_hunits = model.weights[1].shape[1]//4
 if "heavy" in model_name:
     input_n = 200
     input_t = 600000
+if "heavy" in model_name:
+    input_n = 200
+    input_t = 2000000
 else:
     input_n = 50
     input_t = 100000
@@ -64,11 +67,11 @@ word_segmenter = WordSegmenter(input_name=model_name, input_n=input_n, input_t=i
                                input_embedding_type="grapheme_clusters_tf")
 word_segmenter.set_model(model)
 # word_segmenter.test_model()
-word_segmenter.test_model_line_by_line()
+# word_segmenter.test_model_line_by_line()
 
 # Testing the model by arbitrary sentences
 # line = "แม้จะกะเวลาเอาไว้แม่นยำว่ากว่าเขาจะมาถึงก็คงประมาณหกโมงเย็น"
-# line = "ทำสิ่งต่างๆ ได้มากขึ้นขณะที่อุปกรณ์ล็อกและชาร์จอยู่ด้วยโหมดแอมเบียนท์"
-line = "เกี่ยวกับนอมินีหรือการถือหุ้นแทนกันในบริษัทต่างๆที่เกี่ยวข้องกับการซื้อหุ้น"
+line = "ทำสิ่งต่างๆ ได้มากขึ้นขณะที่อุปกรณ์ล็อกและชาร์จอยู่ด้วยโหมดแอมเบียนท์"
+# line = "เกี่ยวกับนอมินีหรือการถือหุ้นแทนกันในบริษัทต่างๆที่เกี่ยวข้องกับการซื้อหุ้น"
 word_segmenter.segment_arbitrary_line(line)
 # '''

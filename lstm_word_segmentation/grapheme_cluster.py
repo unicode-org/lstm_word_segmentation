@@ -28,7 +28,7 @@ class GraphemeCluster:
 
         # Making the generalized vectors representation
         self.num_letters = len(letters_dic)
-        self.generalized_vec_length = self.num_letters + 4
+        self.generalized_vec_length = self.num_letters + 5
         self.generalized_vec = np.zeros(self.generalized_vec_length)
         for ch in self.graph_clust:
             if ch in letters_dic:
@@ -37,10 +37,12 @@ class GraphemeCluster:
                 self.generalized_vec[self.num_letters] += 1
             elif constants.CHAR_TYPE_TO_BUCKET[Char.charType(ch)] in [2, 5, 6]:
                 self.generalized_vec[self.num_letters + 1] += 1
-            elif constants.CHAR_TYPE_TO_BUCKET[Char.charType(ch)] == 3:
+            elif constants.CHAR_TYPE_TO_BUCKET[Char.charType(ch)] == 3 and ord(ch) not in [4160, 4240]:
                 self.generalized_vec[self.num_letters + 2] += 1
-            elif constants.CHAR_TYPE_TO_BUCKET[Char.charType(ch)] in [4, 7]:
+            elif constants.CHAR_TYPE_TO_BUCKET[Char.charType(ch)] == 3 and ord(ch) in [4160, 4240]:
                 self.generalized_vec[self.num_letters + 3] += 1
+            elif constants.CHAR_TYPE_TO_BUCKET[Char.charType(ch)] in [4, 7]:
+                self.generalized_vec[self.num_letters + 4] += 1
         self.generalized_vec = self.generalized_vec/np.sum(self.generalized_vec)
 
     def display(self):

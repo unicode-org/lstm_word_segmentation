@@ -11,16 +11,18 @@ def evaluate_existing_algorithms():
     # add_additional_bars(raw_path, not_raw_path)
 
     # Use SAFT data set
+    '''
     saft_icu_acc = compute_accuracy(not_raw_path, "icu")
     saft_deepcut_acc = compute_accuracy(not_raw_path, "deep")
     print("ICU accuracy on SAFT data     : BIES accuracy = {}, F1-score = {}".format(saft_icu_acc.get_bies_accuracy(),
                                                                                 saft_icu_acc.get_f1_score()))
     print("Deepcut accuracy on SAFT data : BIES accuracy = {}, F1-score = {}".format(saft_deepcut_acc.get_bies_accuracy(),
                                                                                 saft_deepcut_acc.get_f1_score()))
+    '''
 
     # Use BEST data set
-    best_icu_acc = compute_accuracy_best(starting_text=1, ending_text=20, algorithm="icu")
-    best_deepcut_acc = compute_accuracy_best(starting_text=1, ending_text=20, algorithm="deep")
+    best_icu_acc = compute_accuracy_best(starting_text=40, ending_text=45, algorithm="icu")
+    best_deepcut_acc = compute_accuracy_best(starting_text=40, ending_text=45, algorithm="deep")
     print("ICU accuracy on BEST data     : BIES accuracy = {}, F1-score = {}".format(best_icu_acc.get_bies_accuracy(),
                                                                                 best_icu_acc.get_f1_score()))
     print("Deepcut accuracy on BEST data : BIES accuracy = {}, F1-score = {}".format(best_deepcut_acc.get_bies_accuracy(),

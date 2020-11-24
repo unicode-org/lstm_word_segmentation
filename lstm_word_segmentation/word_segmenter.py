@@ -337,6 +337,12 @@ class WordSegmenter:
             file = Path.joinpath(Path(__file__).parent.parent.absolute(), 'Data/my_test_segmented.txt')
             text_acc = self._test_text_line_by_line(file, line_limit=1000)
             accuracy.merge_accuracy(text_acc)
+        elif self.evaluating_data == "SAFT":
+            if self.language != "Thai":
+                print("Warning: the current SAFT data is in Thai and you are testing a model in another language")
+            file = Path.joinpath(Path(__file__).parent.parent.absolute(), 'Data/SAFT/test.txt')
+            text_acc = self._test_text_line_by_line(file, line_limit=-1)
+            accuracy.merge_accuracy(text_acc)
         else:
             print("Warning: no implementation for line by line evaluating this data exists")
         print("The BIES accuracy by test_model_line_by_line function: {}".format(accuracy.get_bies_accuracy()))
@@ -440,7 +446,7 @@ class WordSegmenter:
 
     def segment_arbitrary_line(self, input_line):
         """
-        This function uses the LSTM model to segment an unsegmented line.
+        This function uses the LSTM model to segment an unsegmented line and compare it to ICU and deepcut.
         Args:
             input_line: the unsegmented input line
         """
@@ -469,16 +475,16 @@ class WordSegmenter:
         y_hat_pretty += "|"
 
         # Showing the output
-        print("Input line     : {}".format(line.unsegmented))
-        print("ICU segmented  : {}".format(line.icu_segmented))
-        print("LSTM segmented : {}".format(y_hat_pretty))
+        print("Input line        : {}".format(line.unsegmented))
+        print("ICU segmented     : {}".format(line.icu_segmented))
+        print("LSTM segmented    : {}".format(y_hat_pretty))
+        print("Deepcut segmented : {}".format(line.get_deepcut_segmented()))
 
     def save_model(self):
         """
         This function saves the current trained model of this word_segmenter instance.
         """
         # Save the model using Keras
-        file = Path.joinpath(Path(__file__).parent.parent.absolute(), 'Data/my_test.txt')
         self.model.save(Path.joinpath(Path(__file__).parent.parent.absolute(), "Models/" + self.name))
         # Save one np array that holds all weights
         file = Path.joinpath(Path(__file__).parent.parent.absolute(), "Models/" + self.name + "/weights")

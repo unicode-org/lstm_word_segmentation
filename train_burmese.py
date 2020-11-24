@@ -15,10 +15,10 @@ divide_train_test_data(input_text=Path.joinpath(Path(__file__).parent.absolute()
 
 # Use Bayesian optimization to decide on values of hunits and embedding_dim
 '''
-bayes_optimization = LSTMBayesianOptimization(input_language="Burmese", input_epochs=1,
-                                              input_embedding_type='grapheme_clusters_tf', input_clusters_num=350,
+bayes_optimization = LSTMBayesianOptimization(input_language="Burmese", input_epochs=3,
+                                              input_embedding_type='generalized_vectors', input_clusters_num=350,
                                               input_hunits_lower=4, input_hunits_upper=64, input_embedding_dim_lower=4,
-                                              input_embedding_dim_upper=64, input_C=0.05, input_iterations=3)
+                                              input_embedding_dim_upper=64, input_C=0.05, input_iterations=10)
 bayes_optimization.perform_bayesian_optimization()
 '''
 
@@ -26,8 +26,8 @@ bayes_optimization.perform_bayesian_optimization()
 # '''
 model_name = "Burmese_temp_genvec"
 word_segmenter = WordSegmenter(input_name=model_name, input_n=50, input_t=100000, input_clusters_num=350,
-                               input_embedding_dim=16, input_hunits=23, input_dropout_rate=0.2, input_output_dim=4,
-                               input_epochs=10, input_training_data="my", input_evaluating_data="my",
+                               input_embedding_dim=33, input_hunits=20, input_dropout_rate=0.2, input_output_dim=4,
+                               input_epochs=15, input_training_data="my", input_evaluating_data="my",
                                input_language="Burmese", input_embedding_type="generalized_vectors")
 
 # Training, testing, and saving the model

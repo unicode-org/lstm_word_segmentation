@@ -2,15 +2,29 @@ from pathlib import Path
 import numpy as np
 from .accuracy import Accuracy
 from collections import Counter
-from .text_helpers import get_lines_of_text, compute_icu_accuracy, add_additional_bars
+from .text_helpers import get_lines_of_text, compute_accuracy, add_additional_bars, compute_accuracy_best
 
 
-def preprocess_saft_data():
-    raw_path = Path.joinpath(Path(__file__).parent.parent.absolute(), 'Data/SAFT/test_raw.txt')
+def evaluate_existing_algorithms():
+    # raw_path = Path.joinpath(Path(__file__).parent.parent.absolute(), 'Data/SAFT/test_raw.txt')
     not_raw_path = Path.joinpath(Path(__file__).parent.parent.absolute(), 'Data/SAFT/test.txt')
-    add_additional_bars(raw_path, not_raw_path)
-    print("ICU BIES accuracy on SAFT data is {}".format(compute_icu_accuracy(not_raw_path).get_bies_accuracy()))
-    print("ICU F1 accuracy on SAFT data is {}".format(compute_icu_accuracy(not_raw_path).get_f1_score()))
+    # add_additional_bars(raw_path, not_raw_path)
+
+    # Use SAFT data set
+    saft_icu_acc = compute_accuracy(not_raw_path, "icu")
+    saft_deepcut_acc = compute_accuracy(not_raw_path, "deep")
+    print("ICU accuracy on SAFT data     : BIES accuracy = {}, F1-score = {}".format(saft_icu_acc.get_bies_accuracy(),
+                                                                                saft_icu_acc.get_f1_score()))
+    print("Deepcut accuracy on SAFT data : BIES accuracy = {}, F1-score = {}".format(saft_deepcut_acc.get_bies_accuracy(),
+                                                                                saft_deepcut_acc.get_f1_score()))
+
+    # Use BEST data set
+    best_icu_acc = compute_accuracy_best(starting_text=1, ending_text=20, algorithm="icu")
+    best_deepcut_acc = compute_accuracy_best(starting_text=1, ending_text=20, algorithm="deep")
+    print("ICU accuracy on BEST data     : BIES accuracy = {}, F1-score = {}".format(best_icu_acc.get_bies_accuracy(),
+                                                                                best_icu_acc.get_f1_score()))
+    print("Deepcut accuracy on BEST data : BIES accuracy = {}, F1-score = {}".format(best_deepcut_acc.get_bies_accuracy(),
+                                                                                best_deepcut_acc.get_f1_score()))
 
 
 def preprocess_thai(verbose):

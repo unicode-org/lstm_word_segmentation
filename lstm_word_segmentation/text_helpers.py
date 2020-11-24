@@ -2,6 +2,7 @@ from pathlib import Path
 from .line import Line
 from .accuracy import Accuracy
 from .helpers import is_ascii
+import deepcut
 
 
 def remove_tags(line, st_tag, fn_tag):
@@ -239,16 +240,37 @@ def get_best_data_text(starting_text, ending_text, pseudo):
     return out_str
 
 
-def compute_icu_accuracy(filename):
+def compute_accuracy(file, segmentation_type):
     """
-    This function uses a file with segmented lines to compute the accuracy of icu word breakIterator
+    This function uses a file with manually segmented lines to compute the accuracy of icu word breakIterator
     Args:
-        filename: The path of the file
+        file: A list of path of files that have manually segmented line
+        segmentation_type: Indicates what algorithm we want to test. For now, it can be "icu" or "deep".
     """
     accuracy = Accuracy()
-    lines = get_lines_of_text(filename, "man_segmented")
+    lines = get_lines_of_text(file, "man_segmented")
     for line in lines:
         true_bies = line.get_bies(segmentation_type="man")
-        icu_bies = line.get_bies(segmentation_type="icu")
-        accuracy.update(true_bies=true_bies.str, est_bies=icu_bies.str)
+        algo_bies = line.get_bies(segmentation_type=segmentation_type)
+        accuracy.update(true_bies=true_bies.str, est_bies=algo_bies.str)
+    return accuracy
+
+
+def compute_accuracy_best(starting_text, ending_text, algorithm):
+    """
+    This funciton computes accuracy of an algorithm on Best data set.
+    Args:
+        starting_text: number or the smallest text
+        ending_text: number or the largest text + 1
+        algorithm: the algorithm to be tested. It can be "icu" or "deep" for now.
+    """
+    category = ["news", "encyclopedia", "article", "novel"]
+    accuracy = Accuracy()
+    for text_num in range(starting_text, ending_text):
+        print(text_num)
+        for cat in category:
+            text_num_str = "{}".format(text_num).zfill(5)
+            file = Path.joinpath(Path(__file__).parent.parent.absolute(), "Data/Best/{}/{}_".format(cat, cat) +
+                                 text_num_str + ".txt")
+            accuracy.merge_accuracy(compute_accuracy(file, segmentation_type=algorithm))
     return accuracy

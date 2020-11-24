@@ -2,7 +2,7 @@ import numpy as np
 from icu import BreakIterator, Locale
 from .bies import Bies
 from collections import Counter
-
+import deepcut
 
 class Line:
     """
@@ -43,6 +43,8 @@ class Line:
         else:
             print("Warning: this input_type is not implemented")
 
+        self.deepcut = None
+
     def _compute_icu_segmented(self):
         """
         This function computes the ICU segmented version of the line using the unsegmented version. Therefore, in order
@@ -69,6 +71,8 @@ class Line:
             input_line = self.icu_segmented
         elif input_type == "man_segmented":
             input_line = self.man_segmented
+        elif input_type == "deepcut_segmented":
+            input_line = self.get_deepcut_segmented()
         else:
             print("Warning: the _compute_word_breakpoints function is not defined for this input type")
 
@@ -90,19 +94,32 @@ class Line:
         for brkpoint in chars_break_iterator:
             self.char_brkpoints.append(brkpoint)
 
+    def get_deepcut_segmented(self):
+        """
+        This function returns a clean string that is the output of applying deepcut on unsegmented version of line
+        """
+        deepcut_out = deepcut.tokenize(self.unsegmented)
+        out_line = "|"
+        for word in deepcut_out:
+            out_line += word + "|"
+        return out_line
+
     def get_bies(self, segmentation_type):
         """
         This function computes the BIES matrix that represents the line in this instance.
         Args:
-            segmentation_type: this can be "icu" or "man" which indicates which segmentation we want to be used
+            segmentation_type: this can be "icu", "man", or "deep" which indicates which segmentation we want to be used
         """
         word_brkpoints = None
         if segmentation_type == "icu":
             word_brkpoints = self.icu_word_brkpoints
         elif segmentation_type == "man":
             word_brkpoints = self.man_word_brkpoints
+        elif segmentation_type == "deep":
+            word_brkpoints = self._compute_word_brkpoints(input_type="deepcut_segmented")
         else:
             print("Warning: No segmentation exist for the given type")
+
         bies_mat = np.zeros(shape=[len(self.char_brkpoints) - 1, 4])
         word_ind = 0
         for i in range(len(self.char_brkpoints) - 1):

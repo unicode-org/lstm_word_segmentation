@@ -21,7 +21,8 @@ Figure 1 illustrates our bi-directional model structure. Below we explain what a
 
 * **Droput Layers**: We have two dropout layers in our model: one right after the embedding layer and one right before the output layer.
 
-![Figure 1. The model structure for a bi-directional LSTM.](Figures/model_structure.png){width=50%}
+
+![Figure 1. The model structure for a bi-directional LSTM.](Figures/model_structure.png)
 
 ### Estimating hyperparameters of the model
 There are many hyperparameters in the model that need to be estimated before using it. Among different hyper parameters, two affect the model size and performance more significantly: *hunits* and *embedding size*. We first use stepwise grid-search to decide on all hyper parameters except these two such as *learning rate*, *batch size*, *dropout rate*, etc. After that, we use [Bayesian optimization](https://github.com/fmfn/BayesianOptimization) to decide on *hunits* and *embedding size*.
@@ -32,7 +33,7 @@ For some languages, there are manually annotated data sets that can be used to t
 * **Thai**: We use [NECTEC BEST data set](https://thailang.nectec.or.th/downloadcenter/index4c74.html?option=com_docman&task=cat_view&gid=42&Itemid=61) to train our model. The text files in this dataset use UTF-8 encoding and are manually segmented. There are four different genre of texts in this data set: novel, news, encyclopedia, and article. For testing the model, we use both NECTEC BEST data set and Google SAFT data set.
 * **Burmese**: For Burmese, we use the [Google corpus crawler](https://github.com/google/corpuscrawler) to collect unsegmented texts, and then use ICU to generate a pseudo segmented data set to be used for training. For testing, we use both such pseudo segmented texts and SAFT data.
 
-![Figure 2. The framework for training and testing the model.](Figures/framework.png){width=50%}
+![Figure 2. The framework for training and testing the model.](Figures/framework.png)
 
 ### Performance summary
 * **Thai**: The following table summarizes the performance of our algorithm alongside with that of the state of the art algorithm [Deepcut](https://github.com/rkcosmos/deepcut) and current ICU algorithm for Thai. We have different versions of our algorithm, where some of them are designed as parsimonious as possible, and some of them are larger models but potentially with a better performance in terms of word segmentation accuracy. Based on this table, LSTM model 4 is much lighter and faster than the Deepcut, and hence is more appropriate for applications where size of the model matters, such as ????. Deepcut outperforms this model by a considerable margin on the BEST data, but for other data sets such as SAFT data, which are not the data used to train this model, this margind drops significantly. LSTM model 1 is a model of larger size, which ..... LSTM model 5 is the most parsimonious model presented in the following table, with ...

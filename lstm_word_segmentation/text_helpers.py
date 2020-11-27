@@ -2,7 +2,6 @@ from pathlib import Path
 from .line import Line
 from .accuracy import Accuracy
 from .helpers import is_ascii
-import deepcut
 
 
 def remove_tags(line, st_tag, fn_tag):

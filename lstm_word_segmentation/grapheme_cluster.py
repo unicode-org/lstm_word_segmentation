@@ -41,6 +41,8 @@ class GraphemeCluster:
                 self.generalized_vec[self.num_letters + 2] += 1
             elif constants.CHAR_TYPE_TO_BUCKET[Char.charType(ch)] == 3 and ord(ch) in [4160, 4240]:
                 self.generalized_vec[self.num_letters + 3] += 1
+            # elif constants.CHAR_TYPE_TO_BUCKET[Char.charType(ch)] == 3:
+            #     self.generalized_vec[self.num_letters + 2] += 1
             elif constants.CHAR_TYPE_TO_BUCKET[Char.charType(ch)] in [4, 7]:
                 self.generalized_vec[self.num_letters + 4] += 1
         self.generalized_vec = self.generalized_vec/np.sum(self.generalized_vec)

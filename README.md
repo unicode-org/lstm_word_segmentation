@@ -2,7 +2,46 @@
 
 In this project we develop a bi-directional LSTM model for word segmentation. For now, this model is implemented for Thai and Burmese.
 
-### The model structure
+### Quick start
+* **Use a pre-trained model:** To segment an arbitrary line go to file `train_language.py` where `language` is the language you want to use. For example, if your line is in *Thai*, you should use file `train_thai.py`. Over there, find comment `# Choose one of the saved models to use`. Everything before this line is for training a new model and can be commented for now. After this comment, you can use variable `model_name`to specify which already fitted model you want to use. List of all fitted models can be found under folder *Models* in this repository. After choosing your model, you can specify the type of embedding to be used when you create an instance of `WordSegmenter` that stores the fitted model:
+  ```python
+  word_segmenter = WordSegmenter(input_name=model_name, input_n=input_n, input_t=input_t,
+                               input_clusters_num=input_clusters_num, input_embedding_dim=input_embedding_dim,
+                               input_hunits=input_hunits, input_dropout_rate=0.2, input_output_dim=4, input_epochs=15,
+                               input_training_data="BEST", input_evaluating_data="BEST", input_language="Thai",
+                               input_embedding_type="grapheme_clusters_tf")
+  word_segmenter.set_model(model)
+  # word_segmenter.test_model()
+  # word_segmenter.test_model_line_by_line()
+  ```
+The commented lines test the picked model using large data sets, and are not needed for segmenting an arbitrary line. Next, you can use the following lines of the `train_language.py` file to specify your input and segmentt it:
+  ```python
+  line = "ทำสิ่งต่างๆ ได้มากขึ้นขณะที่อุปกรณ์ล็อกและชาร์จอยู่ด้วยโหมดแอมเบียนท์"
+  word_segmenter.segment_arbitrary_line(line)
+  ```
+By running these two lines of code, you get a segmentation using ICU, the LSTM algorithm you picked, and Deepcut algorithm. 
+
+* **Train a new model:** In order to train a new model you need to use the file `train_language.py` where 'language' is the language you want to use. For example, if your line is in *Thai*, you should use file `train_thai.py`. Over there, you need to use the code below comment `# Train a new model -- choose name cautiously to not overwrite other models` and above comment `# Choose one of the saved models to use`. You need to specify a name for your new model using the variable `model_name`, and then you can specify hyperparameters of your model, embedding type, and data sets to be used for training, validation, and test by making an instance of `WordSegmenter`:
+  ```python
+  # Train a new model -- choose name cautiously to not overwrite other models
+  model_name = "Thai_temp_genvec"
+word_segmenter = WordSegmenter(input_name=model_name, input_n=50, input_t=100000, input_clusters_num=350,
+                               input_embedding_dim=16, input_hunits=23, input_dropout_rate=0.2, input_output_dim=4,
+                               input_epochs=20, input_training_data="BEST", input_evaluating_data="BEST",
+                               input_language="Thai", input_embedding_type="grapheme_clusters_tf")
+
+  ```
+Next, you will use `word_segmenter.train_model()` to train your model, `word_segmenter.test_model_line_by_line()` to test your model, and `word_segmenter.save_model()` to save the trained model:
+  ```python
+  word_segmenter.train_model()
+  # word_segmenter.test_model()
+  word_segmenter.test_model_line_by_line()
+  word_segmenter.save_model()
+  ```  
+As you can see line `word_segmenter.test_model()` is commented above, because this is a funciton that tests the model in a slightly different way and was used mostly for debugging. We don't recommend using it for testing performance of your model.
+
+
+### Model structure
 Figure 1 illustrates our bi-directional model structure. Below we explain what are different layers:
 
 * **Input Layer**: We set [extended grapheme clusters](https://unicode.org/reports/tr29/) as the smallest units in a word. Therefore, the input layer is a sequence of extended grapheme clusters, where each one of these grapheme clusters can have few code points in it. We expect a word segmentation algorithm to not put a word boundary in the middle of a grapheme cluster, and hence by using grapheme clusters as the smallest units of a word, this can be guaranteed. We use [ICU](https://unicode-org.github.io/icu-docs/apidoc/released/icu4c/classicu_1_1BreakIterator.html) to extract grapheme clusters of a given word.
@@ -36,18 +75,25 @@ For some languages, there are manually annotated data sets that can be used to t
 ![Figure 2. The framework for training and testing the model.](Figures/framework.png)
 
 ### Performance summary
-* **Thai**: The following table summarizes the performance of our algorithm alongside with that of the state of the art algorithm [Deepcut](https://github.com/rkcosmos/deepcut) and current ICU algorithm for Thai. We have different versions of our algorithm, where some of them are designed as parsimonious as possible, and some of them are larger models but potentially with a better performance in terms of word segmentation accuracy. Based on this table, LSTM model 4 is much lighter and faster than the Deepcut, and hence is more appropriate for applications where size of the model matters, such as ????. Deepcut outperforms this model by a considerable margin on the BEST data, but for other data sets such as SAFT data, which are not the data used to train this model, this margind drops significantly. LSTM model 1 is a model of larger size, which ..... LSTM model 5 is the most parsimonious model presented in the following table, with ...
+* **Thai**: The following table summarizes the performance of our algorithm alongside with that of the state of the art algorithm [Deepcut](https://github.com/rkcosmos/deepcut) and current ICU algorithm for Thai. We have different versions of our algorithm, where some of them are designed as parsimonious as possible, and some of them are larger models but potentially with a better performance in terms of word segmentation accuracy. Based on this table, LSTM model 4 is much lighter and faster than the Deepcut, and hence is more appropriate for applications where size of the model matters, such as mobile applications and IoT devices. Deepcut outperforms this model by a considerable margin on the BEST data, but for other data sets such as SAFT data, which are not the data used to train this model, this margind drops significantly. LSTM model 1 is a model of larger size, which ..... LSTM model 5 is the most parsimonious model presented in the following table, with ...
+
+| Algorithm | BIES accuracy (BEST) | F1-score (BEST) | BIES accuracy (SAFT) | F1-score (SAFT) | Model size | Run time |
+| :---:     |         :----:       |      :---:      |         :----:       |      :---:      | :---:  |   :---:  |
+| LSTM (model1)  |  96  | 92.4 | 92 | 84.9 | 180 KB | ??? |
+| LSTM (model4)  | 95.2 | 90.8 | 91.5 | 83.9 | 57 KB | ??? |
+| LSTM (model5)  | ???? | ???? | ???? | ???? | ?? KB | ??? |
+| Deepcut         | 97.8 | 95.7 | 92.6 | 86  | 2.2 MB | ??? |
+| ICU             | 91.9 | 85 | 90.3 | 81.9 | 126 KB | ??? |
+
+* **Burmese**: 
+The following table summarizes the performance of our algorithm and current ICU algorithm for Burmese. We have different versions of our algorithm, where some of them are designed as parsimonious as possible, and some of them are larger models but potentially with a better performance in terms of word segmentation accuracy. Based on this table, 
 
 | Algorithm | BIES accuracy (BEST) | F1-score (BEST) | BIES accuracy (SAFT) | F1-score (SAFT) | Model size | Run time |
 | :---:     |         :----:       |      :---:      |         :----:       |      :---:      | :---:  |   :---:  |
 | LSTM (model1)  | ???? | ???? | ???? | ???? | ?? KB | ??? |
-| LSTM (model4)  | 95.2 | 90.8 | 91.5 | 83.9 | 57 KB | ??? |
+| LSTM (model4)  | ???? | ???? | ???? | ???? | ?? KB | ??? |
 | LSTM (model5)  | ???? | ???? | ???? | ???? | ?? KB | ??? |
-| Deepcut         | 97.8 | 95.7 | 92.6 | 836  | 2.2 MB | ??? |
-| ICU             | 91.9 | 85 | 90.3 | 81.9 | 126 KB | ??? |
-
-* **Burmese**: 
-
+| ICU            | ???? | ???? | ???? | ???? | ?? KB | ??? |
 
 
 

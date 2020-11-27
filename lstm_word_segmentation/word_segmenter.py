@@ -133,7 +133,7 @@ class WordSegmenter:
             cnt = 0
             for i in range(smallest_unicode_dec, largest_unicode_dec + 1):
                 ch = chr(i)
-                if constants.CHAR_TYPE_TO_BUCKET[Char.charType(ch)] in [1, 2, 3]:
+                if constants.CHAR_TYPE_TO_BUCKET[Char.charType(ch)] in [1, 2]:
                     self.letters_dic[ch] = cnt
                     cnt += 1
         elif self.language == "Burmese":
@@ -143,6 +143,7 @@ class WordSegmenter:
             cnt = 0
             for i in range(smallest_unicode_dec, largest_unicode_dec + 1):
                 ch = chr(i)
+                # if constants.CHAR_TYPE_TO_BUCKET[Char.charType(ch)] in [1, 2, 3]:
                 if constants.CHAR_TYPE_TO_BUCKET[Char.charType(ch)] in [1, 2]:
                     self.letters_dic[ch] = cnt
                     cnt += 1
@@ -186,7 +187,7 @@ class WordSegmenter:
         # Get training data of length self.t
         input_str = None
         if self.training_data == "BEST":
-            input_str = get_best_data_text(starting_text=1, ending_text=2, pseudo=False)
+            input_str = get_best_data_text(starting_text=1, ending_text=10, pseudo=False)
         elif self.training_data == "pseudo BEST":
             input_str = get_best_data_text(starting_text=1, ending_text=10, pseudo=True)
         elif self.training_data == "my":
@@ -203,7 +204,7 @@ class WordSegmenter:
 
         # Get validation data of length self.t
         if self.training_data == "BEST":
-            input_str = get_best_data_text(starting_text=10, ending_text=12, pseudo=False)
+            input_str = get_best_data_text(starting_text=10, ending_text=20, pseudo=False)
         elif self.training_data == "pseudo BEST":
             input_str = get_best_data_text(starting_text=10, ending_text=20, pseudo=True)
         elif self.training_data == "my":
@@ -475,10 +476,10 @@ class WordSegmenter:
         y_hat_pretty += "|"
 
         # Showing the output
-        print("Input line        : {}".format(line.unsegmented))
-        print("ICU segmented     : {}".format(line.icu_segmented))
+        # print("Input line        : {}".format(line.unsegmented))
+        # print("ICU segmented     : {}".format(line.icu_segmented))
         print("LSTM segmented    : {}".format(y_hat_pretty))
-        print("Deepcut segmented : {}".format(line.get_deepcut_segmented()))
+        # print("Deepcut segmented : {}".format(line.get_deepcut_segmented()))
 
     def save_model(self):
         """

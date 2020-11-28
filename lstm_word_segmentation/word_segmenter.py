@@ -125,31 +125,50 @@ class WordSegmenter:
                 break
             cnt += 1
 
-        # Constructing the letters dictionary to be used for generalized vectors
-        if self.language == "Thai":
-            smallest_unicode_dec = int("0E01", 16)
-            largest_unicode_dec = int("0E5B", 16)
+        # Constructing the letters dictionary to be used for generalized vectors w.r.t. the embedding type
+        if self.language in ["Thai", "Burmese"]:
+            smallest_unicode_dec = None
+            largest_unicode_dec = None
+
+            # Defining the Unicode box for model's language
+            if self.language == "Thai":
+                smallest_unicode_dec = int("0E01", 16)
+                largest_unicode_dec = int("0E5B", 16)
+            elif self.language == "Burmese":
+                smallest_unicode_dec = int("1000", 16)
+                largest_unicode_dec = int("109F", 16)
+
+            # Defining the character buckets that will get their own individual embedding vector
+            separate_slot_buckets = []
+            separate_codepoints = []
+            if self.embedding_type == "generalized_vectors_123":
+                separate_slot_buckets = [1, 2, 3]
+            elif self.embedding_type == "generalized_vectors_12d0":
+                separate_slot_buckets = [1, 2]
+                separate_codepoints = [4160, 4240]
+            elif self.embedding_type == "generalized_vectors_125":
+                separate_slot_buckets = [1, 2, 5]
+            elif self.embedding_type == "generalized_vectors_1235":
+                separate_slot_buckets = [1, 2, 3, 5]
+
+            if "generalized_vectors" in self.embedding_type:
+                self.embedding_type = "generalized_vectors"
+
+            # Constructing the letters dictionary
             self.letters_dic = dict()
             cnt = 0
             for i in range(smallest_unicode_dec, largest_unicode_dec + 1):
                 ch = chr(i)
-                if constants.CHAR_TYPE_TO_BUCKET[Char.charType(ch)] in [1, 2]:
+                if constants.CHAR_TYPE_TO_BUCKET[Char.charType(ch)] in separate_slot_buckets:
                     self.letters_dic[ch] = cnt
-                    cnt += 1
-        elif self.language == "Burmese":
-            smallest_unicode_dec = int("1000", 16)
-            largest_unicode_dec = int("109F", 16)
-            self.letters_dic = dict()
-            cnt = 0
-            for i in range(smallest_unicode_dec, largest_unicode_dec + 1):
-                ch = chr(i)
-                # if constants.CHAR_TYPE_TO_BUCKET[Char.charType(ch)] in [1, 2, 3]:
-                if constants.CHAR_TYPE_TO_BUCKET[Char.charType(ch)] in [1, 2]:
-                    self.letters_dic[ch] = cnt
-                    cnt += 1
+                cnt += 1
+            for unicode_dec in separate_codepoints:
+                ch = chr(unicode_dec)
+                self.letters_dic[ch] = cnt
+                cnt += 1
+            print("number of elements in the letters_dic is {}".format(len(self.letters_dic)))
         else:
-            print("Warning: the grapheme_vectors embedding type is not supported for this language")
-        print("number of letters slots in generalized_vectors embedding is {}".format(len(self.letters_dic)))
+            print("Warning: the generalized_vectros embedding type is not supported for this language")
 
     def _get_trainable_data(self, input_line):
         """

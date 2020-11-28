@@ -13,7 +13,7 @@ bayes_optimization.perform_bayesian_optimization()
 '''
 
 # Train a new model -- choose name cautiously to not overwrite other models
-# '''
+'''
 model_name = "Thai_model2_genvec"
 word_segmenter = WordSegmenter(input_name=model_name, input_n=50, input_t=100000, input_clusters_num=350,
                                input_embedding_dim=33, input_hunits=20, input_dropout_rate=0.2, input_output_dim=4,
@@ -25,10 +25,10 @@ word_segmenter.train_model()
 # word_segmenter.test_model()
 word_segmenter.test_model_line_by_line()
 word_segmenter.save_model()
-# '''
+'''
 
 # Choose one of the saved models to use
-'''
+# '''
 # Thai_model1: Bi-directional LSTM (trained on BEST), grid search
 #     thrsh = 350, embedding_dim = 40, hunits = 40
 # Thai_model2: Bi-directional LSTM (trained on BEST), grid search + manual reduction of hunits and embedding_size
@@ -74,4 +74,4 @@ word_segmenter.set_model(model)
 line = "ทำสิ่งต่างๆ ได้มากขึ้นขณะที่อุปกรณ์ล็อกและชาร์จอยู่ด้วยโหมดแอมเบียนท์"
 # line = "เกี่ยวกับนอมินีหรือการถือหุ้นแทนกันในบริษัทต่างๆที่เกี่ยวข้องกับการซื้อหุ้น"
 word_segmenter.segment_arbitrary_line(line)
-'''
+# '''

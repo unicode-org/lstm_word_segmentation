@@ -60,7 +60,7 @@ class LSTMBayesianOptimization:
                                        input_evaluating_data=self.training_data, input_language=self.language,
                                        input_embedding_type=self.embedding_type)
         word_segmenter.train_model()
-        return word_segmenter.test_model() - self.C * self.lam * word_segmenter.model.count_params()
+        return word_segmenter.test_model_line_by_line() - self.C * self.lam * word_segmenter.model.count_params()
 
     def perform_bayesian_optimization(self):
         """

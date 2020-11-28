@@ -19,6 +19,7 @@ class GraphemeCluster:
             graph_clust_dic: the dictionary that stores all top graph clusters in a language
             letters_dic: a dictionary that determines how different code points are mapped to different slots of
             generalized_vec.
+            genvec_type: determines the version of the generalized vectors. It can be 123, 12d0, 125, or 1235
         """
         self.graph_clust = grapheme_cluster
         self.num_clusters = len(graph_clust_dic)+1
@@ -26,25 +27,21 @@ class GraphemeCluster:
         self.graph_clust_vec = np.zeros(self.num_clusters)
         self.graph_clust_vec[self.graph_clust_id] = 1
 
-        # Making the generalized vectors representation
+        # Making the generalized vectors representation with respect to the letters_dic
         self.num_letters = len(letters_dic)
-        self.generalized_vec_length = self.num_letters + 5
+        self.generalized_vec_length = self.num_letters + 4
         self.generalized_vec = np.zeros(self.generalized_vec_length)
         for ch in self.graph_clust:
             if ch in letters_dic:
                 self.generalized_vec[letters_dic.get(ch)] += 1
-            elif constants.CHAR_TYPE_TO_BUCKET[Char.charType(ch)] in [1]:
+            elif constants.CHAR_TYPE_TO_BUCKET[Char.charType(ch)] == 1:
                 self.generalized_vec[self.num_letters] += 1
             elif constants.CHAR_TYPE_TO_BUCKET[Char.charType(ch)] in [2, 5, 6]:
                 self.generalized_vec[self.num_letters + 1] += 1
-            elif constants.CHAR_TYPE_TO_BUCKET[Char.charType(ch)] == 3 and ord(ch) not in [4160, 4240]:
+            elif constants.CHAR_TYPE_TO_BUCKET[Char.charType(ch)] == 3:
                 self.generalized_vec[self.num_letters + 2] += 1
-            elif constants.CHAR_TYPE_TO_BUCKET[Char.charType(ch)] == 3 and ord(ch) in [4160, 4240]:
-                self.generalized_vec[self.num_letters + 3] += 1
-            # elif constants.CHAR_TYPE_TO_BUCKET[Char.charType(ch)] == 3:
-            #     self.generalized_vec[self.num_letters + 2] += 1
             elif constants.CHAR_TYPE_TO_BUCKET[Char.charType(ch)] in [4, 7]:
-                self.generalized_vec[self.num_letters + 4] += 1
+                self.generalized_vec[self.num_letters + 3] += 1
         self.generalized_vec = self.generalized_vec/np.sum(self.generalized_vec)
 
     def display(self):

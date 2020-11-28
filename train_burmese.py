@@ -1,12 +1,13 @@
 from pathlib import Path
 from lstm_word_segmentation.lstm_bayesian_optimization import LSTMBayesianOptimization
 from tensorflow import keras
-from lstm_word_segmentation.text_helpers import divide_train_test_data
+from lstm_word_segmentation.text_helpers import divide_train_test_data, permute_lines_of_text
 from lstm_word_segmentation.word_segmenter import WordSegmenter
 
 # Dividing the my.txt data to train, validation, and test data sets.
 '''
-divide_train_test_data(input_text=Path.joinpath(Path(__file__).parent.absolute(), 'Data/my.txt'),
+permute_lines_of_text('Data/my.txt', 'Data/my_permutated.txt')
+divide_train_test_data(input_text=Path.joinpath(Path(__file__).parent.absolute(), 'Data/my_permutated.txt'),
                        train_text=Path.joinpath(Path(__file__).parent.absolute(), 'Data/my_train.txt'),
                        valid_text=Path.joinpath(Path(__file__).parent.absolute(), 'Data/my_valid.txt'),
                        test_text=Path.joinpath(Path(__file__).parent.absolute(), 'Data/my_test.txt'),

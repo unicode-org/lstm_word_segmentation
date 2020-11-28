@@ -1,3 +1,4 @@
+import numpy as np
 from pathlib import Path
 from .line import Line
 from .accuracy import Accuracy
@@ -121,6 +122,24 @@ def add_additional_bars(read_filename, write_filename):
             new_line += "\n"
             wfile.write(new_line)
 
+
+def permute_lines_of_text(filename, permutated_filename):
+    """
+    This function first divides line of an input file into buckets where each bucket is a fixed number of successive
+    lines in the file, and then write down these buckets of lines into a new file randomely (without repetition).
+    Args:
+        filename: the input file
+        permutated_filename: the output file
+    """
+    num_lines = sum(1 for _line in open(filename))
+    bucket_size = 20
+    permutated_buckets = np.random.permutation(num_lines//bucket_size)
+    new_file = open(permutated_filename, 'w')
+    lines_list = [line for line in open(filename)]
+    for bucket_id in permutated_buckets:
+        for line in lines_list[bucket_id: bucket_id+bucket_size]:
+            new_file.write(line)
+    new_num_lines = sum(1 for _line in open(permutated_filename))
 
 def divide_train_test_data(input_text, train_text, valid_text, test_text, line_limit):
     """

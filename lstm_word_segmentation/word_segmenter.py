@@ -166,7 +166,7 @@ class WordSegmenter:
                 ch = chr(unicode_dec)
                 self.letters_dic[ch] = cnt
                 cnt += 1
-            print("number of elements in the letters_dic is {}".format(len(self.letters_dic)))
+            print("number of elements in letters_dic is {}".format(len(self.letters_dic)))
         else:
             print("Warning: the generalized_vectros embedding type is not supported for this language")
 

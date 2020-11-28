@@ -11,7 +11,7 @@ divide_train_test_data(input_text=Path.joinpath(Path(__file__).parent.absolute()
                        train_text=Path.joinpath(Path(__file__).parent.absolute(), 'Data/my_train.txt'),
                        valid_text=Path.joinpath(Path(__file__).parent.absolute(), 'Data/my_valid.txt'),
                        test_text=Path.joinpath(Path(__file__).parent.absolute(), 'Data/my_test.txt'),
-                       line_limit=12000)
+                       line_limit=21000)
 '''
 
 # Use Bayesian optimization to decide on values of hunits and embedding_dim
@@ -24,8 +24,8 @@ bayes_optimization.perform_bayesian_optimization()
 '''
 
 # Train a new model -- choose name cautiously to not overwrite other models
-# '''
-model_name = "Burmese_genvec_123"
+'''
+model_name = "Burmese_temp"
 word_segmenter = WordSegmenter(input_name=model_name, input_n=50, input_t=100000, input_clusters_num=350,
                                input_embedding_dim=33, input_hunits=20, input_dropout_rate=0.2, input_output_dim=4,
                                input_epochs=20, input_training_data="my", input_evaluating_data="my",
@@ -36,11 +36,12 @@ word_segmenter.train_model()
 # word_segmenter.test_model()
 # word_segmenter.test_model_line_by_line()
 word_segmenter.save_model()
-# '''
+'''
 
 # Choose one of the saved models to use
-'''
-model_name = "Burmese_genvec_12d0"
+# '''
+model_name = "Burmese_model1_temp"
+input_embedding_type = "grapheme_clusters_tf"
 file = Path.joinpath(Path(__file__).parent.absolute(), 'Models/' + model_name)
 model = keras.models.load_model(file)
 input_clusters_num = model.weights[0].shape[0]
@@ -57,9 +58,8 @@ word_segmenter = WordSegmenter(input_name=model_name, input_n=input_n, input_t=i
                                input_clusters_num=input_clusters_num, input_embedding_dim=input_embedding_dim,
                                input_hunits=input_hunits, input_dropout_rate=0.2, input_output_dim=4, input_epochs=15,
                                input_training_data="my", input_evaluating_data="my", input_language="Burmese",
-                               input_embedding_type="grapheme_clusters_tf")
+                               input_embedding_type=input_embedding_type)
 word_segmenter.set_model(model)
-
-word_segmenter.test_model()
+# word_segmenter.test_model()
 word_segmenter.test_model_line_by_line()
-'''
+# '''

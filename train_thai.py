@@ -13,22 +13,22 @@ bayes_optimization.perform_bayesian_optimization()
 '''
 
 # Train a new model -- choose name cautiously to not overwrite other models
-'''
-model_name = "Thai_model2_genvec"
+# '''
+model_name = "Thai_temp"
 word_segmenter = WordSegmenter(input_name=model_name, input_n=50, input_t=100000, input_clusters_num=350,
-                               input_embedding_dim=33, input_hunits=20, input_dropout_rate=0.2, input_output_dim=4,
-                               input_epochs=20, input_training_data="BEST", input_evaluating_data="BEST",
-                               input_language="Thai", input_embedding_type="generalized_vectors")
+                               input_embedding_dim=14, input_hunits=20, input_dropout_rate=0.2, input_output_dim=4,
+                               input_epochs=15, input_training_data="BEST", input_evaluating_data="BEST",
+                               input_language="Thai", input_embedding_type="grapheme_clusters_tf")
 
 # Training, testing, and saving the model
 word_segmenter.train_model()
 # word_segmenter.test_model()
 word_segmenter.test_model_line_by_line()
 word_segmenter.save_model()
-'''
+# '''
 
 # Choose one of the saved models to use
-# '''
+'''
 # Thai_model1: Bi-directional LSTM (trained on BEST), grid search
 #     thrsh = 350, embedding_dim = 40, hunits = 40
 # Thai_model2: Bi-directional LSTM (trained on BEST), grid search + manual reduction of hunits and embedding_size
@@ -44,7 +44,8 @@ word_segmenter.save_model()
 # For some models the heavy trained versions can be used by adding "_heavy" to the end of the model name. Such as
 # Thai_model4_heavy. In training these models n and t are set to 200 and 600000 respectively.
 
-model_name = "Thai_model1_heavy"
+model_name = "Thai_temp"
+input_embedding_type = "grapheme_clusters_tf"
 file = Path.joinpath(Path(__file__).parent.absolute(), 'Models/' + model_name)
 model = keras.models.load_model(file)
 input_clusters_num = model.weights[0].shape[0]
@@ -60,18 +61,22 @@ else:
     input_n = 50
     input_t = 100000
 
+print(input_embedding_dim)
+print(input_hunits)
+
 word_segmenter = WordSegmenter(input_name=model_name, input_n=input_n, input_t=input_t,
                                input_clusters_num=input_clusters_num, input_embedding_dim=input_embedding_dim,
                                input_hunits=input_hunits, input_dropout_rate=0.2, input_output_dim=4, input_epochs=15,
                                input_training_data="BEST", input_evaluating_data="BEST", input_language="Thai",
-                               input_embedding_type="grapheme_clusters_tf")
+                               input_embedding_type=input_embedding_type)
 word_segmenter.set_model(model)
+print(word_segmenter.model.weights)
 # word_segmenter.test_model()
-# word_segmenter.test_model_line_by_line()
+word_segmenter.test_model_line_by_line()
 
 # Testing the model by arbitrary sentences
 # line = "แม้จะกะเวลาเอาไว้แม่นยำว่ากว่าเขาจะมาถึงก็คงประมาณหกโมงเย็น"
 line = "ทำสิ่งต่างๆ ได้มากขึ้นขณะที่อุปกรณ์ล็อกและชาร์จอยู่ด้วยโหมดแอมเบียนท์"
 # line = "เกี่ยวกับนอมินีหรือการถือหุ้นแทนกันในบริษัทต่างๆที่เกี่ยวข้องกับการซื้อหุ้น"
 word_segmenter.segment_arbitrary_line(line)
-# '''
+'''

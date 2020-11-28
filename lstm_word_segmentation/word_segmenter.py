@@ -145,7 +145,10 @@ class WordSegmenter:
                 separate_slot_buckets = [1, 2, 3]
             elif self.embedding_type == "generalized_vectors_12d0":
                 separate_slot_buckets = [1, 2]
-                separate_codepoints = [4160, 4240]
+                if self.language == "Burmese":
+                    separate_codepoints = [4160, 4240]
+                if self.langauge == "Thai":
+                    separate_codepoints = [3664]
             elif self.embedding_type == "generalized_vectors_125":
                 separate_slot_buckets = [1, 2, 5]
             elif self.embedding_type == "generalized_vectors_1235":
@@ -329,8 +332,8 @@ class WordSegmenter:
             # Updating the accuracy using the new line
             actual_y = Bies(input_bies=y_data, input_type="mat")
             accuracy.update(true_bies=actual_y.str, est_bies=y_hat.str)
-        print("The BIES accuracy (line by line) for file {} : {}".format(file, accuracy.get_bies_accuracy()))
-        print("The F1 score (line by line) for file {} : {}".format(file, accuracy.get_f1_score()))
+        print("The BIES accuracy (line by line) for file {} : {:.3f}".format(file, accuracy.get_bies_accuracy()))
+        print("The F1 score (line by line) for file {} : {:.3f}".format(file, accuracy.get_f1_score()))
         return accuracy
 
     def test_model_line_by_line(self):
@@ -365,8 +368,8 @@ class WordSegmenter:
             accuracy.merge_accuracy(text_acc)
         else:
             print("Warning: no implementation for line by line evaluating this data exists")
-        print("The BIES accuracy by test_model_line_by_line function: {}".format(accuracy.get_bies_accuracy()))
-        print("The F1 score by test_model_line_by_line function: {}".format(accuracy.get_f1_score()))
+        print("The BIES accuracy by test_model_line_by_line function: {:.3f}".format(accuracy.get_bies_accuracy()))
+        print("The F1 score by test_model_line_by_line function: {:.3f}".format(accuracy.get_f1_score()))
 
     def _manual_predict(self, test_input):
         """

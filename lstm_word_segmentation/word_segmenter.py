@@ -143,11 +143,13 @@ class WordSegmenter:
             separate_codepoints = []
             if self.embedding_type == "generalized_vectors_123":
                 separate_slot_buckets = [1, 2, 3]
+            elif self.embedding_type == "generalized_vectors_12":
+                separate_slot_buckets = [1, 2]
             elif self.embedding_type == "generalized_vectors_12d0":
                 separate_slot_buckets = [1, 2]
                 if self.language == "Burmese":
                     separate_codepoints = [4160, 4240]
-                if self.langauge == "Thai":
+                if self.language == "Thai":
                     separate_codepoints = [3664]
             elif self.embedding_type == "generalized_vectors_125":
                 separate_slot_buckets = [1, 2, 5]

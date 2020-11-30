@@ -1,7 +1,7 @@
 import numpy as np
 from pathlib import Path
 from icu import UCharCategory
-
+from collections import Counter
 
 # The dictionary that stores different grapheme clusters of Thai and the ratio that each appear in Thai texts. It is
 # computed using BEST dataset
@@ -14,6 +14,19 @@ THAI_GRAPH_CLUST_RATIO = np.load(str(path), allow_pickle=True).item()
 # The dictionary that stores different grapheme clusters of Burmese and the ratio that each appear in Burmese texts. It
 path = Path.joinpath(Path(__file__).parent.parent.absolute(), 'Data/Burmese_graph_clust_ratio.npy')
 BURMESE_GRAPH_CLUST_RATIO = np.load(str(path), allow_pickle=True).item()
+
+# Making a grapheme clusters dictionary for both Thai and Burmese
+new_dic = Counter()
+for ch in THAI_GRAPH_CLUST_RATIO.keys():
+     new_dic[ch] += THAI_GRAPH_CLUST_RATIO[ch]
+for ch in BURMESE_GRAPH_CLUST_RATIO.keys():
+     new_dic[ch] += BURMESE_GRAPH_CLUST_RATIO[ch]
+new_dic = dict(new_dic)
+THAI_BURMESE_GRAPH_CLUST_RATIO = {k: v for k, v in sorted(new_dic.items(), key=lambda item: item[1], reverse=True)}
+total = sum(THAI_BURMESE_GRAPH_CLUST_RATIO.values(), 0.0)
+graph_clust_ratio = {k: v / total for k, v in THAI_BURMESE_GRAPH_CLUST_RATIO.items()}
+print(THAI_BURMESE_GRAPH_CLUST_RATIO)
+
 
 # A dictionary that determines how different types of code points are grouped together. This dictionary will be used
 # when generalized vectors are used for embedding.

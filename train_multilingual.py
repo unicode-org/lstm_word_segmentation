@@ -5,7 +5,7 @@ from lstm_word_segmentation.word_segmenter import WordSegmenter
 from lstm_word_segmentation.text_helpers import break_lines_based_on_spaces
 
 
-# Making a version of BEST data where each line is divided according to spaces
+# Making a dataset that has both Thai and Burmese in it
 '''
 input_texts = []
 category = ["news", "encyclopedia", "article", "novel"]
@@ -19,18 +19,10 @@ output_text = file = Path.joinpath(Path(__file__).parent.absolute(), "Data/Best_
 break_lines_based_on_spaces(input_texts=input_texts, output_text=output_text)
 '''
 
-# Use Bayesian optimization to decide on values of hunits and embedding_dim
-'''
-bayes_optimization = LSTMBayesianOptimization(input_language="Thai", input_epochs=1,
-                                              input_embedding_type='grapheme_clusters_tf', input_clusters_num=350,
-                                              input_hunits_lower=4, input_hunits_upper=64, input_embedding_dim_lower=4,
-                                              input_embedding_dim_upper=64, input_C=0.05, input_iterations=3)
-bayes_optimization.perform_bayesian_optimization()
-'''
 
 # Train a new model -- choose name cautiously to not overwrite other models
 '''
-model_name = "Thai_temp"
+model_name = "Thai_Burmese_temp"
 word_segmenter = WordSegmenter(input_name=model_name, input_n=50, input_t=100000, input_clusters_num=350,
                                input_embedding_dim=16, input_hunits=23, input_dropout_rate=0.2, input_output_dim=4,
                                input_epochs=15, input_training_data="BEST spaced", input_evaluating_data="BEST spaced",

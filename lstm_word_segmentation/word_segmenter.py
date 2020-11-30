@@ -220,6 +220,9 @@ class WordSegmenter:
         elif self.training_data == "my":
             file = Path.joinpath(Path(__file__).parent.parent.absolute(), 'Data/my_train.txt')
             input_str = get_whole_file_segmented(file, input_type="unsegmented", output_type="icu_segmented")
+        elif self.training_data == "SAFT_Burmese":
+            file = Path.joinpath(Path(__file__).parent.parent.absolute(), 'Data/SAFT_burmese_train.txt')
+            input_str = get_whole_file_segmented(file, input_type="man_segmented", output_type="man_segmented")
         else:
             print("Warning: no implementation for this training data exists!")
         x_data, y_data = self._get_trainable_data(input_str)
@@ -240,6 +243,9 @@ class WordSegmenter:
         elif self.training_data == "my":
             file = Path.joinpath(Path(__file__).parent.parent.absolute(), 'Data/my_valid.txt')
             input_str = get_whole_file_segmented(file, input_type="unsegmented", output_type="icu_segmented")
+        elif self.training_data == "SAFT_Burmese":
+            file = Path.joinpath(Path(__file__).parent.parent.absolute(), 'Data/SAFT_burmese_test.txt')
+            input_str = get_whole_file_segmented(file, input_type="man_segmented", output_type="man_segmented")
         else:
             print("Warning: no implementation for this validation data exists!")
         x_data, y_data = self._get_trainable_data(input_str)

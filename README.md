@@ -75,15 +75,15 @@ For some languages, there are manually annotated data sets that can be used to t
 ![Figure 2. The framework for training and testing the model.](Figures/framework.png)
 
 ### Performance summary
-* **Thai**: The following table summarizes the performance of our algorithm alongside with that of the state of the art algorithm [Deepcut](https://github.com/rkcosmos/deepcut) and current ICU algorithm for Thai. We have different versions of our algorithm, where LSTM model 7 and LSTM model 5 are respectively the most accurate and the most parsimonious LSTM-based models. LSTM model 4 lies somewhere between these two models, and provides a high accuracy while still has a small data size. Based on the following table, Deepcut is by far the largest and slowest model which makes applications of it limited. The LSTM models (particularly models 14 and 5) are substantially smaller, and thereofe are more appropriate for applications where size of the model matters such as mobile applications and IoT devices. Deepcut outperforms all other methods by a considerable margin on the BEST data. However, for other data sets such as SAFT data, which are not used to train this model, this margin drops significantly.
+* **Thai**: The following table summarizes the performance of our algorithm alongside with that of the state of the art algorithm [Deepcut](https://github.com/rkcosmos/deepcut) and current ICU algorithm for Thai. We have different versions of our algorithm, where LSTM model 7 and LSTM model 5 are respectively the most accurate and the most parsimonious LSTM-based models. LSTM model 4 lies somewhere between these two models, and provides a high accuracy while still has a small data size. Based on the following table, Deepcut is by far the largest and slowest model which makes applications of it limited. The LSTM models (particularly models 4 and 5) are substantially smaller, and thereofe are more appropriate for applications where size of the model matters such as mobile applications and IoT devices. Deepcut outperforms all other methods by a considerable margin on the BEST data. However, for other data sets such as SAFT data, which are not used to train this model, this margin drops significantly.
 
 | Algorithm | BIES accuracy (BEST) | F1-score (BEST) | BIES accuracy (SAFT) | F1-score (SAFT) | Model size | Run time |
 | :---:     |         :----:       |      :---:      |         :----:       |      :---:      | :---:  |   :---:  |
 | LSTM (model4)  | 95.1 | 90.8 | 91.5 | 83.9 | 57 KB | ??? |
-| LSTM (model5) -- change for heavily trained | 90.5 | 82.8 | 86.9 | 76.2 | 25 KB | ??? |
+| LSTM (model5)  | 92.4 | 85.9 | 88.9 | 79.6 | 25 KB | ??? |
 | LSTM (model7)  |  96  | 92.4 | 92 | 84.9 | 180 KB | ??? |
-| Deepcut         | 97.8 | 95.7 | 92.6 | 86  | 2.2 MB | ??? |
-| ICU             | 91.9 | 85 | 90.3 | 81.9 | 126 KB | ??? |
+| Deepcut        | 97.8 | 95.7 | 92.6 | 86  | 2.2 MB | ??? |
+| ICU            | 91.9 | 85 | 90.3 | 81.9 | 126 KB | ??? |
 
 * **Burmese**: 
 The following table summarizes the performance of our algorithm and current ICU algorithm for Burmese. Just like Thai, we have different versions of our LSTM-based algorithm, where LSTM model 7 and LSTM model 5 are respectively the most accurate and the most parsimonious LSTM-based models. LSTM model 4 lies somewhere between these two models, and provides a high accuracy while still has a small data size. Based on this table, 
@@ -91,7 +91,7 @@ The following table summarizes the performance of our algorithm and current ICU 
 | Algorithm | BIES accuracy (ICU segmented) | F1-score (ICU segmented) | BIES accuracy (SAFT) | F1-score (SAFT) | Model size | Run time |
 | :---:     |         :----:                |      :---:               |     :---:  |   :---: | :---: |   :---:  |
 | LSTM (model4) | 94.7 | 92.9 | 91.7 | 90.5 | 61 KB  | ??? |
-| LSTM (model5) -- change for heavily trained | 92.2 | 89.5 | 91.1 | 89.8 | 28 KB | ??? |
+| LSTM (model5) | 93.4 | 81.1 | 91.4 | 90.1 | 28 KB | ??? |
 | LSTM (model7) | 96.2 | 94.9 | 92.3 | 91.1 | 254 KB | ??? |
 | ICU            | 1 | 1 | 93.1 | 92.4 | 474 KB | ??? |
 

@@ -46,6 +46,8 @@ def print_grapheme_clusters(thrsh, language):
         ratios = constants.THAI_GRAPH_CLUST_RATIO
     if language == "Burmese":
         ratios = constants.BURMESE_GRAPH_CLUST_RATIO
+    if language == "Thai-Burmese":
+        ratios = constants.THAI_BURMESE_GRAPH_CLUST_RATIO
     if ratios is None:
         print("No grapheme cluster dictionary has been computed for the input language")
         return

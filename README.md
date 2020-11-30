@@ -75,25 +75,25 @@ For some languages, there are manually annotated data sets that can be used to t
 ![Figure 2. The framework for training and testing the model.](Figures/framework.png)
 
 ### Performance summary
-* **Thai**: The following table summarizes the performance of our algorithm alongside with that of the state of the art algorithm [Deepcut](https://github.com/rkcosmos/deepcut) and current ICU algorithm for Thai. We have different versions of our algorithm, where some of them are designed as parsimonious as possible, and some of them are larger models but potentially with a better performance in terms of word segmentation accuracy. Based on this table, LSTM model 4 is much lighter and faster than the Deepcut, and hence is more appropriate for applications where size of the model matters, such as mobile applications and IoT devices. Deepcut outperforms this model by a considerable margin on the BEST data, but for other data sets such as SAFT data, which are not the data used to train this model, this margind drops significantly. LSTM model 1 is a model of larger size, which ..... LSTM model 5 is the most parsimonious model presented in the following table, with ...
+* **Thai**: The following table summarizes the performance of our algorithm alongside with that of the state of the art algorithm [Deepcut](https://github.com/rkcosmos/deepcut) and current ICU algorithm for Thai. We have different versions of our algorithm, where LSTM model 7 and LSTM model 5 are respectively the most accurate and the most parsimonious LSTM-based models. LSTM model 4 lies somewhere between these two models, and provides a high accuracy while still has a small data size. Based on the following table, Deepcut is by far the largest and slowest model which makes applications of it limited. The LSTM models (particularly models 14 and 5) are substantially smaller, and thereofe are more appropriate for applications where size of the model matters such as mobile applications and IoT devices. Deepcut outperforms all other methods by a considerable margin on the BEST data. However, for other data sets such as SAFT data, which are not used to train this model, this margin drops significantly.
 
 | Algorithm | BIES accuracy (BEST) | F1-score (BEST) | BIES accuracy (SAFT) | F1-score (SAFT) | Model size | Run time |
 | :---:     |         :----:       |      :---:      |         :----:       |      :---:      | :---:  |   :---:  |
-| LSTM (model1)  |  96  | 92.4 | 92 | 84.9 | 180 KB | ??? |
-| LSTM (model4)  | 95.2 | 90.8 | 91.5 | 83.9 | 57 KB | ??? |
-| LSTM (model5)  | ???? | ???? | ???? | ???? | ?? KB | ??? |
+| LSTM (model4)  | 95.1 | 90.8 | 91.5 | 83.9 | 57 KB | ??? |
+| LSTM (model5) -- change for heavily trained | 90.5 | 82.8 | 86.9 | 76.2 | 25 KB | ??? |
+| LSTM (model7)  |  96  | 92.4 | 92 | 84.9 | 180 KB | ??? |
 | Deepcut         | 97.8 | 95.7 | 92.6 | 86  | 2.2 MB | ??? |
 | ICU             | 91.9 | 85 | 90.3 | 81.9 | 126 KB | ??? |
 
 * **Burmese**: 
-The following table summarizes the performance of our algorithm and current ICU algorithm for Burmese. We have different versions of our algorithm, where some of them are designed as parsimonious as possible, and some of them are larger models but potentially with a better performance in terms of word segmentation accuracy. Based on this table, 
+The following table summarizes the performance of our algorithm and current ICU algorithm for Burmese. Just like Thai, we have different versions of our LSTM-based algorithm, where LSTM model 7 and LSTM model 5 are respectively the most accurate and the most parsimonious LSTM-based models. LSTM model 4 lies somewhere between these two models, and provides a high accuracy while still has a small data size. Based on this table, 
 
-| Algorithm | BIES accuracy (BEST) | F1-score (BEST) | BIES accuracy (SAFT) | F1-score (SAFT) | Model size | Run time |
+| Algorithm | BIES accuracy (ICU segmented) | F1-score (ICU segmented) | Model size | Run time |
 | :---:     |         :----:       |      :---:      |         :----:       |      :---:      | :---:  |   :---:  |
-| LSTM (model1)  | ???? | ???? | ???? | ???? | ?? KB | ??? |
-| LSTM (model4)  | ???? | ???? | ???? | ???? | ?? KB | ??? |
-| LSTM (model5)  | ???? | ???? | ???? | ???? | ?? KB | ??? |
-| ICU            | ???? | ???? | ???? | ???? | ?? KB | ??? |
+| LSTM (model4) -- change for heavily trained | 93.4 | 91.1 | 61 KB | ??? |
+| LSTM (model5) -- change for heavily trained | ???? | ???? | ?? KB | ??? |
+| LSTM (model7) -- change for heavily trained | 94 | 91.8 | 221 KB | ??? |
+| ICU            | 1 | 1 | 474 KB | ??? |
 
 
 

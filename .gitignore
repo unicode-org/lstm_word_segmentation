@@ -2,8 +2,10 @@ Data/
 Figure/
 __pycache__/
 .idea/
+README.html
 Models/Thai_temp/
 Models/Burmese_temp/
 Models/Thai_temp_genvec/
 Models/Burmese_temp_genvec/
+Models/Burmese_model4_version2/
 *~

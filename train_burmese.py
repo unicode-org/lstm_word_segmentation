@@ -40,7 +40,7 @@ word_segmenter.save_model()
 
 # Choose one of the saved models to use
 # '''
-model_name = "Burmese_model1_temp"
+model_name = "Burmese_model7"
 input_embedding_type = "grapheme_clusters_tf"
 file = Path.joinpath(Path(__file__).parent.absolute(), 'Models/' + model_name)
 model = keras.models.load_model(file)

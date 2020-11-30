@@ -370,6 +370,7 @@ class WordSegmenter:
             print("Warning: no implementation for line by line evaluating this data exists")
         print("The BIES accuracy by test_model_line_by_line function: {:.3f}".format(accuracy.get_bies_accuracy()))
         print("The F1 score by test_model_line_by_line function: {:.3f}".format(accuracy.get_f1_score()))
+        return accuracy.get_bies_accuracy()
 
     def _manual_predict(self, test_input):
         """

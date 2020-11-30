@@ -141,6 +141,7 @@ def permute_lines_of_text(filename, permutated_filename):
             new_file.write(line)
     new_num_lines = sum(1 for _line in open(permutated_filename))
 
+
 def divide_train_test_data(input_text, train_text, valid_text, test_text, line_limit):
     """
     This function divides a file into three new files, that contain train data, validation data, and test data
@@ -262,7 +263,7 @@ def compute_accuracy(file, segmentation_type):
     """
     This function uses a file with manually segmented lines to compute the accuracy of icu word breakIterator
     Args:
-        file: A list of path of files that have manually segmented line
+        file: The file to be used for computing accuracy
         segmentation_type: Indicates what algorithm we want to test. For now, it can be "icu" or "deep".
     """
     accuracy = Accuracy()
@@ -270,6 +271,12 @@ def compute_accuracy(file, segmentation_type):
     for line in lines:
         true_bies = line.get_bies(segmentation_type="man")
         algo_bies = line.get_bies(segmentation_type=segmentation_type)
+        print(line.unsegmented)
+        print(line.icu_segmented)
+        print(line.man_segmented)
+        print(true_bies.str)
+        print(algo_bies.str)
+        x = input()
         accuracy.update(true_bies=true_bies.str, est_bies=algo_bies.str)
     return accuracy
 

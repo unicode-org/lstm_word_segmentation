@@ -35,11 +35,11 @@ class LSTMBayesianOptimization:
         if self.language == "Thai":
             self.training_data = "BEST"
             self.evaluating_data = "BEST"
-            self.lam = 1/88964  # 88964 is the number of parameters in the largest model trained
+            self.lam = 1/43832  # This is the number of parameters in the most accurate trained model
         elif self.language == "Burmese":
             self.training_data = "my"
             self.evaluating_data = "my"
-            self.lam = 1/88964  # 88964 is the number of parameters in the largest model trained
+            self.lam = 1/54104  # This is the number of parameters in the most accurate trained model
         else:
             print("Warning: the input language is not supported")
 

@@ -359,3 +359,40 @@ def normalize_string(in_str, allowed_scripts):
             # copy directly to the output
             output += ch
     return output
+
+
+def merge_two_texts(input_texts1, input_texts2, output_text, line_limit):
+    """
+    This function merges two texts into one new text. Every line of text 1 appears before every line of text 2.
+    Args:
+        input_texts1: list of address of the first group of the input files
+        input_texts2: list of address of the second group of the input files
+        output_text: address of the resulting file
+        line_limit: number of lines to be included from each group of input texts
+    """
+    output_file = open(output_text, 'w')
+    line_counter = 0
+    for input_text in input_texts1:
+        if line_counter >= line_limit:
+            break
+        with open(input_text) as f:
+            for line in f:
+                if line_counter >= line_limit:
+                    break
+                output_file.write(line)
+                line_counter += 1
+
+    line_counter = 0
+    for input_text in input_texts2:
+        if line_counter >= line_limit:
+            break
+        with open(input_text) as f:
+            for line in f:
+                if line_counter >= line_limit:
+                    break
+                output_file.write(line)
+                line_counter += 1
+
+
+
+

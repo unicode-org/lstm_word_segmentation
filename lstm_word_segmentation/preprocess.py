@@ -3,7 +3,7 @@ import numpy as np
 from .accuracy import Accuracy
 from collections import Counter
 from .text_helpers import get_lines_of_text, compute_accuracy, add_additional_bars, compute_accuracy_best
-
+from . import constants
 
 def evaluate_existing_algorithms():
     # raw_path = Path.joinpath(Path(__file__).parent.parent.absolute(), 'Data/SAFT/test_raw.txt')
@@ -99,4 +99,18 @@ def preprocess_burmese(verbose):
     graph_clust_ratio = {k: v / total for k, v in graph_clust_ratio.items()}
 
     save_file = Path.joinpath(Path(__file__).parent.parent.absolute(), "Data/Burmese_graph_clust_ratio.npy")
+    np.save(str(save_file), graph_clust_ratio)
+
+
+def make_thai_burmese_dictionary():
+    new_dic = Counter()
+    for ch in constants.THAI_GRAPH_CLUST_RATIO.keys():
+        new_dic[ch] += constants.THAI_GRAPH_CLUST_RATIO[ch]
+    for ch in constants.BURMESE_GRAPH_CLUST_RATIO.keys():
+        new_dic[ch] += constants.BURMESE_GRAPH_CLUST_RATIO[ch]
+    new_dic = dict(new_dic)
+    new_dic = {k: v for k, v in sorted(new_dic.items(), key=lambda item: item[1], reverse=True)}
+    total = sum(new_dic.values(), 0.0)
+    graph_clust_ratio = {k: v / total for k, v in new_dic.items()}
+    save_file = Path.joinpath(Path(__file__).parent.parent.absolute(), "Data/Thai_Burmese_graph_clust_ratio.npy")
     np.save(str(save_file), graph_clust_ratio)

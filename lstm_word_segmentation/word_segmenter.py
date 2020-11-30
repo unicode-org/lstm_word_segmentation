@@ -114,6 +114,8 @@ class WordSegmenter:
             ratios = constants.THAI_GRAPH_CLUST_RATIO
         elif self.language == "Burmese":
             ratios = constants.BURMESE_GRAPH_CLUST_RATIO
+        elif self.language == "Thai_Burmese":
+            ratios = constants.THAI_BURMESE_GRAPH_CLUST_RATIO
         else:
             print("Warning: the input language is not supported")
         cnt = 0
@@ -126,6 +128,7 @@ class WordSegmenter:
             cnt += 1
 
         # Constructing the letters dictionary to be used for generalized vectors w.r.t. the embedding type
+        self.letters_dic = dict()
         if self.language in ["Thai", "Burmese"]:
             smallest_unicode_dec = None
             largest_unicode_dec = None
@@ -160,7 +163,6 @@ class WordSegmenter:
                 self.embedding_type = "generalized_vectors"
 
             # Constructing the letters dictionary
-            self.letters_dic = dict()
             cnt = 0
             for i in range(smallest_unicode_dec, largest_unicode_dec + 1):
                 ch = chr(i)
@@ -223,9 +225,13 @@ class WordSegmenter:
         elif self.training_data == "SAFT_Burmese":
             file = Path.joinpath(Path(__file__).parent.parent.absolute(), 'Data/SAFT_burmese_train.txt')
             input_str = get_whole_file_segmented(file, input_type="man_segmented", output_type="man_segmented")
+        elif self.training_data == "BEST_my":
+            file = Path.joinpath(Path(__file__).parent.parent.absolute(), 'Data/Best_my_train.txt')
+            input_str = get_whole_file_segmented(file, input_type="man_segmented", output_type="man_segmented")
         else:
             print("Warning: no implementation for this training data exists!")
         x_data, y_data = self._get_trainable_data(input_str)
+        print(len(x_data))
         if self.t > len(x_data):
             print("Warning: size of the training data is less than self.t")
         x_data = x_data[:self.t]
@@ -246,9 +252,14 @@ class WordSegmenter:
         elif self.training_data == "SAFT_Burmese":
             file = Path.joinpath(Path(__file__).parent.parent.absolute(), 'Data/SAFT_burmese_test.txt')
             input_str = get_whole_file_segmented(file, input_type="man_segmented", output_type="man_segmented")
+        elif self.training_data == "BEST_my":
+            file = Path.joinpath(Path(__file__).parent.parent.absolute(), 'Data/Best_my_valid.txt')
+            input_str = get_whole_file_segmented(file, input_type="man_segmented", output_type="man_segmented")
         else:
             print("Warning: no implementation for this validation data exists!")
         x_data, y_data = self._get_trainable_data(input_str)
+        print(len(x_data))
+
         if self.t > len(x_data):
             print("Warning: size of the validation data is less than self.t")
         x_data = x_data[:self.t]
@@ -391,6 +402,29 @@ class WordSegmenter:
             file = Path.joinpath(Path(__file__).parent.parent.absolute(), 'Data/SAFT/test.txt')
             text_acc = self._test_text_line_by_line(file, line_limit=-1)
             accuracy.merge_accuracy(text_acc)
+        elif self.evaluating_data == "BEST_my":
+            if self.language != "Thai_Burmese":
+                print("Warning: the current data should be used only for Thai_Burmese multilingual models")
+            # Testing for BEST
+            acc1 = Accuracy()
+            category = ["news", "encyclopedia", "article", "novel"]
+            for text_num in range(40, 45):
+                print("testing text {}".format(text_num))
+                for cat in category:
+                    text_num_str = "{}".format(text_num).zfill(5)
+                    file = Path.joinpath(Path(__file__).parent.parent.absolute(), "Data/Best/{}/{}_".format(cat, cat)
+                                         + text_num_str + ".txt")
+                    text_acc = self._test_text_line_by_line(file, line_limit=-1)
+                    acc1.merge_accuracy(text_acc)
+            print("The BIES accuracy by test_model_line_by_line function (Thai): {:.3f}".format(acc1.get_bies_accuracy()))
+            print("The F1 score by test_model_line_by_line function (Thai): {:.3f}".format(acc1.get_f1_score()))
+            # Testing for my
+            file = Path.joinpath(Path(__file__).parent.parent.absolute(), 'Data/my_test_segmented.txt')
+            acc2 = self._test_text_line_by_line(file, line_limit=1000)
+            print("The BIES accuracy by test_model_line_by_line function (Burmese): {:.3f}".format(acc2.get_bies_accuracy()))
+            print("The F1 score by test_model_line_by_line function (Burmese): {:.3f}".format(acc2.get_f1_score()))
+            accuracy.merge_accuracy(acc1)
+            accuracy.merge_accuracy(acc2)
         else:
             print("Warning: no implementation for line by line evaluating this data exists")
         print("The BIES accuracy by test_model_line_by_line function: {:.3f}".format(accuracy.get_bies_accuracy()))

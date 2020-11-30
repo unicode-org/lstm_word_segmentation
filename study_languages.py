@@ -1,5 +1,6 @@
 from pathlib import Path
-from lstm_word_segmentation.preprocess import evaluate_existing_algorithms, preprocess_thai, preprocess_burmese
+from lstm_word_segmentation.preprocess import evaluate_existing_algorithms, preprocess_thai, preprocess_burmese, \
+                                              make_thai_burmese_dictionary
 from lstm_word_segmentation.helpers import print_grapheme_clusters
 from lstm_word_segmentation.text_helpers import compute_accuracy
 
@@ -21,6 +22,7 @@ preprocess_thai(verbose=False)
 print_grapheme_clusters(thrsh=0.99, language="Thai")
 preprocess_burmese(verbose=False)
 print_grapheme_clusters(thrsh=0.99, language="Burmese")
+make_thai_burmese_dictionary()
+print_grapheme_clusters(thrsh=0.99, language="Thai-Burmese")
 '''
 
-print_grapheme_clusters(thrsh=0.99, language="Thai-Burmese")

@@ -89,7 +89,7 @@ For some languages, there are manually annotated data sets that can be used to t
 The following table summarizes the performance of our algorithm and current ICU algorithm for Burmese. Just like Thai, we have different versions of our LSTM-based algorithm, where LSTM model 7 and LSTM model 5 are respectively the most accurate and the most parsimonious LSTM-based models. LSTM model 4 lies somewhere between these two models, and provides a high accuracy while still has a small data size. Based on this table, 
 
 | Algorithm | BIES accuracy (ICU segmented) | F1-score (ICU segmented) | Model size | Run time |
-| :---:     |         :----:       |      :---:      |         :----:       |      :---:      | :---:  |   :---:  |
+| :---:     |         :----:                |      :---:               |     :---:  |   :---:  |
 | LSTM (model4) -- change for heavily trained | 93.4 | 91.1 | 61 KB | ??? |
 | LSTM (model5) -- change for heavily trained | ???? | ???? | ?? KB | ??? |
 | LSTM (model7) -- change for heavily trained | 94 | 91.8 | 221 KB | ??? |

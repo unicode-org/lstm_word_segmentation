@@ -299,3 +299,23 @@ def compute_accuracy_best(starting_text, ending_text, algorithm):
                                  text_num_str + ".txt")
             accuracy.merge_accuracy(compute_accuracy(file, segmentation_type=algorithm))
     return accuracy
+
+
+def break_lines_based_on_spaces(input_texts, output_text):
+    """
+    This function uses every space in the text to form a new line.
+    Args:
+        input_texts: list of address of a group of the input files
+        output_text: address of the new file
+    """
+    output_file = open(output_text, 'w')
+    for input_text in input_texts:
+        print(input_text)
+        with open(input_text) as f:
+            for line in f:
+                line = clean_line(line)
+                if line == -1:
+                    continue
+                new_lines = line.split(" ")
+                for new_line in new_lines:
+                    output_file.write(new_line + "\n")

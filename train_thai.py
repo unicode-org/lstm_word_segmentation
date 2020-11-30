@@ -2,6 +2,22 @@ from pathlib import Path
 from tensorflow import keras
 from lstm_word_segmentation.lstm_bayesian_optimization import LSTMBayesianOptimization
 from lstm_word_segmentation.word_segmenter import WordSegmenter
+from lstm_word_segmentation.text_helpers import break_lines_based_on_spaces
+
+
+# Making a version of BEST data where each line is divided according to spaces
+'''
+input_texts = []
+category = ["news", "encyclopedia", "article", "novel"]
+for text_num in range(1, 6):
+    for cat in category:
+        text_num_str = "{}".format(text_num).zfill(5)
+        file = Path.joinpath(Path(__file__).parent.absolute(), "Data/Best/{}/{}_".format(cat, cat) +
+                             text_num_str + ".txt")
+        input_texts.append(file)
+output_text = file = Path.joinpath(Path(__file__).parent.absolute(), "Data/Best_spaced.txt")
+break_lines_based_on_spaces(input_texts=input_texts, output_text=output_text)
+'''
 
 # Use Bayesian optimization to decide on values of hunits and embedding_dim
 '''
@@ -44,7 +60,7 @@ word_segmenter.save_model()
 # For some models the heavy trained versions can be used by adding "_heavy" to the end of the model name. Such as
 # Thai_model4_heavy. In training these models n and t are set to 200 and 600000 respectively.
 
-model_name = "Thai_model5"
+model_name = "Thai_model4_heavy"
 input_embedding_type = "grapheme_clusters_tf"
 file = Path.joinpath(Path(__file__).parent.absolute(), 'Models/' + model_name)
 model = keras.models.load_model(file)
@@ -67,7 +83,7 @@ print(input_hunits)
 word_segmenter = WordSegmenter(input_name=model_name, input_n=input_n, input_t=input_t,
                                input_clusters_num=input_clusters_num, input_embedding_dim=input_embedding_dim,
                                input_hunits=input_hunits, input_dropout_rate=0.2, input_output_dim=4, input_epochs=15,
-                               input_training_data="BEST", input_evaluating_data="BEST", input_language="Thai",
+                               input_training_data="BEST", input_evaluating_data="BEST_spaced", input_language="Thai",
                                input_embedding_type=input_embedding_type)
 word_segmenter.set_model(model)
 # word_segmenter.test_model()

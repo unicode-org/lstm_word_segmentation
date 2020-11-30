@@ -354,6 +354,13 @@ class WordSegmenter:
                     text_acc = self._test_text_line_by_line(file, line_limit=-1)
                     accuracy.merge_accuracy(text_acc)
 
+        elif self.evaluating_data == "BEST_spaced":
+            if self.language != "Thai":
+                print("Warning: the Best data is in Thai and you are testing a model in another language")
+            file = Path.joinpath(Path(__file__).parent.parent.absolute(), 'Data/BEST_spaced.txt')
+            text_acc = self._test_text_line_by_line(file, line_limit=-1)
+            accuracy.merge_accuracy(text_acc)
+
         elif self.evaluating_data == "my":
             if self.language != "Burmese":
                 print("Warning: the my.text data is in Burmese and you are testing a model in another language")

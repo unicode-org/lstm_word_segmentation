@@ -92,7 +92,7 @@ The following table summarizes the performance of our algorithm and current ICU 
 | :---:     |         :----:                |      :---:               |     :---:  |   :---:  |
 | LSTM (model4) -- change for heavily trained | 93.4 | 91.1 | 61 KB | ??? |
 | LSTM (model5) -- change for heavily trained | ???? | ???? | ?? KB | ??? |
-| LSTM (model7) -- change for heavily trained | 94 | 91.8 | 221 KB | ??? |
+| LSTM (model7) | 96.2 | 94.9 | 254 KB | ??? |
 | ICU            | 1 | 1 | 474 KB | ??? |
 
 

@@ -359,21 +359,25 @@ class WordSegmenter:
                                          + text_num_str + ".txt")
                     text_acc = self._test_text_line_by_line(file, line_limit=-1)
                     accuracy.merge_accuracy(text_acc)
-
         elif self.evaluating_data == "BEST spaced":
             if self.language != "Thai":
                 print("Warning: the Best data is in Thai and you are testing a model in another language")
             file = Path.joinpath(Path(__file__).parent.parent.absolute(), 'Data/BEST_spaced_test.txt')
             text_acc = self._test_text_line_by_line(file, line_limit=-1)
             accuracy.merge_accuracy(text_acc)
-
         elif self.evaluating_data == "my":
             if self.language != "Burmese":
                 print("Warning: the my.text data is in Burmese and you are testing a model in another language")
             file = Path.joinpath(Path(__file__).parent.parent.absolute(), 'Data/my_test_segmented.txt')
             text_acc = self._test_text_line_by_line(file, line_limit=1000)
             accuracy.merge_accuracy(text_acc)
-        elif self.evaluating_data == "SAFT":
+        elif self.evaluating_data == "SAFT_Burmese":
+            if self.language != "Burmese":
+                print("Warning: the my.text data is in Burmese and you are testing a model in another language")
+            file = Path.joinpath(Path(__file__).parent.parent.absolute(), 'Data/SAFT_burmese_test.txt')
+            text_acc = self._test_text_line_by_line(file, line_limit=1000)
+            accuracy.merge_accuracy(text_acc)
+        elif self.evaluating_data == "SAFT_Thai":
             if self.language != "Thai":
                 print("Warning: the current SAFT data is in Thai and you are testing a model in another language")
             file = Path.joinpath(Path(__file__).parent.parent.absolute(), 'Data/SAFT/test.txt')

@@ -91,7 +91,7 @@ The following table summarizes the performance of our algorithm and current ICU 
 | Algorithm | BIES accuracy (ICU segmented) | F1-score (ICU segmented) | Model size | Run time |
 | :---:     |         :----:                |      :---:               |     :---:  |   :---:  |
 | LSTM (model4) | 94.7 | 92.9 | 61 KB | ??? |
-| LSTM (model5) -- change for heavily trained | ???? | ???? | ?? KB | ??? |
+| LSTM (model5) -- change for heavily trained | 92.2 | 89.5 | 28 KB | ??? |
 | LSTM (model7) | 96.2 | 94.9 | 254 KB | ??? |
 | ICU            | 1 | 1 | 474 KB | ??? |
 

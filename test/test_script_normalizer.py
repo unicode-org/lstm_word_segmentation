@@ -1,6 +1,6 @@
 from collections import namedtuple
 import unittest
-from lstm_word_segmentation.helpers import normalize_string
+from lstm_word_segmentation.text_helpers import normalize_string
 
 
 class TestScriptNormalizer(unittest.TestCase):

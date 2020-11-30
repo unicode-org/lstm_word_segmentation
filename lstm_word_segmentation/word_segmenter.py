@@ -212,6 +212,9 @@ class WordSegmenter:
             input_str = get_best_data_text(starting_text=1, ending_text=10, pseudo=False)
         elif self.training_data == "pseudo BEST":
             input_str = get_best_data_text(starting_text=1, ending_text=10, pseudo=True)
+        elif self.training_data == "BEST spaced":
+            file = Path.joinpath(Path(__file__).parent.parent.absolute(), 'Data/BEST_spaced_train.txt')
+            input_str = get_whole_file_segmented(file, input_type="man_segmented", output_type="man_segmented")
         elif self.training_data == "my":
             file = Path.joinpath(Path(__file__).parent.parent.absolute(), 'Data/my_train.txt')
             input_str = get_whole_file_segmented(file, input_type="unsegmented", output_type="icu_segmented")
@@ -229,6 +232,9 @@ class WordSegmenter:
             input_str = get_best_data_text(starting_text=10, ending_text=20, pseudo=False)
         elif self.training_data == "pseudo BEST":
             input_str = get_best_data_text(starting_text=10, ending_text=20, pseudo=True)
+        elif self.training_data == "BEST spaced":
+            file = Path.joinpath(Path(__file__).parent.parent.absolute(), 'Data/BEST_spaced_valid.txt')
+            input_str = get_whole_file_segmented(file, input_type="man_segmented", output_type="man_segmented")
         elif self.training_data == "my":
             file = Path.joinpath(Path(__file__).parent.parent.absolute(), 'Data/my_valid.txt')
             input_str = get_whole_file_segmented(file, input_type="unsegmented", output_type="icu_segmented")
@@ -354,10 +360,10 @@ class WordSegmenter:
                     text_acc = self._test_text_line_by_line(file, line_limit=-1)
                     accuracy.merge_accuracy(text_acc)
 
-        elif self.evaluating_data == "BEST_spaced":
+        elif self.evaluating_data == "BEST spaced":
             if self.language != "Thai":
                 print("Warning: the Best data is in Thai and you are testing a model in another language")
-            file = Path.joinpath(Path(__file__).parent.parent.absolute(), 'Data/BEST_spaced.txt')
+            file = Path.joinpath(Path(__file__).parent.parent.absolute(), 'Data/BEST_spaced_test.txt')
             text_acc = self._test_text_line_by_line(file, line_limit=-1)
             accuracy.merge_accuracy(text_acc)
 

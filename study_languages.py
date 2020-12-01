@@ -16,6 +16,13 @@ print(acc.get_f1_score())
 # Evaluate ICU and Deepcut for Thai
 # evaluate_existing_algorithms()
 
+# Evaluate ICU on spaced BEST data for for Thai
+file = Path.joinpath(Path(__file__).parent.absolute(), 'Data/Best_spaced_test.txt')
+acc = compute_accuracy(file=file, segmentation_type="icu")
+print(acc.get_bies_accuracy())
+print(acc.get_f1_score())
+x = input()
+
 # Preprocessing Thai and Burmese and making the grapheme clusters dictionaries
 '''
 preprocess_thai(verbose=False)

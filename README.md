@@ -21,7 +21,7 @@ The commented lines test the picked model using large data sets, and are not nee
   ```
 By running these two lines of code, you get a segmentation using ICU, the LSTM algorithm you picked, and Deepcut algorithm. 
 
-* **Train a new model:** In order to train a new model you need to use the file `train_language.py` where 'language' is the language you want to use. For example, if your line is in *Thai*, you should use file `train_thai.py`. Over there, you need to use the code below comment `# Train a new model -- choose name cautiously to not overwrite other models` and above comment `# Choose one of the saved models to use`. You need to specify a name for your new model using the variable `model_name`, and then you can specify hyperparameters of your model, embedding type, and data sets to be used for training, validation, and test by making an instance of `WordSegmenter`:
+* **Train a new model:** In order to train a new model you need to use the file `train_language.py` where `language` is the language you want to use. For example, if your line is in *Thai*, you should use file `train_thai.py`. Over there, you need to use the code below comment `# Train a new model -- choose name cautiously to not overwrite other models` and above comment `# Choose one of the saved models to use`. You need to specify a name for your new model using the variable `model_name`, and then you can specify hyperparameters of your model, embedding type, and data sets to be used for training, validation, and test by making an instance of `WordSegmenter`:
   ```python
   # Train a new model -- choose name cautiously to not overwrite other models
   model_name = "Thai_temp_genvec"
@@ -93,7 +93,7 @@ The following table summarizes the performance of our algorithm and current ICU 
 | LSTM (model4) | 94.7 | 92.9 | 91.7 | 90.5 | 61 KB  | ??? |
 | LSTM (model5) | 93.4 | 81.1 | 91.4 | 90.1 | 28 KB | ??? |
 | LSTM (model7) | 96.2 | 94.9 | 92.3 | 91.1 | 254 KB | ??? |
-| ICU            | 1 | 1 | 93.1 | 92.4 | 474 KB | ??? |
+| ICU            | 1 | 1 | 93.1 | 92.4 | 254 KB | ??? |
 
 
 

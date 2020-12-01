@@ -272,12 +272,12 @@ def compute_accuracy(file, segmentation_type):
     for line in lines:
         true_bies = line.get_bies(segmentation_type="man")
         algo_bies = line.get_bies(segmentation_type=segmentation_type)
-        print(line.unsegmented)
-        print(line.icu_segmented)
-        print(line.man_segmented)
-        print(true_bies.str)
-        print(algo_bies.str)
-        x = input()
+        # print(line.unsegmented)
+        # print(line.icu_segmented)
+        # print(line.man_segmented)
+        # print(true_bies.str)
+        # print(algo_bies.str)
+        # x = input()
         accuracy.update(true_bies=true_bies.str, est_bies=algo_bies.str)
     return accuracy
 

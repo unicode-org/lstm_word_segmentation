@@ -5,6 +5,8 @@ from .accuracy import Accuracy
 from .helpers import is_ascii
 from icu import Char, Script, UCharCategory
 from . import constants
+from icu import UnicodeSet
+
 
 def remove_tags(line, st_tag, fn_tag):
     """
@@ -23,9 +25,7 @@ def remove_tags(line, st_tag, fn_tag):
     new_line = ""
     st_ind = 0
     while st_ind < len(line):
-        curr_is_tag = False
         if line[st_ind: st_ind+len(st_tag)] == st_tag:
-            curr_is_tag = True
             fn_ind = st_ind
             while fn_ind < len(line):
                 if line[fn_ind: fn_ind+len(fn_tag)] == fn_tag:
@@ -37,9 +37,8 @@ def remove_tags(line, st_tag, fn_tag):
                     break
                 else:
                     fn_ind += 1
-        if st_ind < len(line):
+        if st_ind < len(line) and line[st_ind: st_ind+len(st_tag)] != st_tag:
             new_line += line[st_ind]
-        if not curr_is_tag:
             st_ind += 1
     return new_line
 
@@ -230,7 +229,7 @@ def get_whole_file_segmented(filename, input_type, output_type):
         return all_file_line.icu_segmented
 
 
-def get_best_data_text(starting_text, ending_text, pseudo):
+def get_best_data_text(starting_text, ending_text, pseudo, exclusive):
     """
     Gives a long string, that contains all lines (separated by a single space) from BEST data with numbers in a range
     This function uses data from all sources (news, encyclopedia, article, and novel)
@@ -241,14 +240,20 @@ def get_best_data_text(starting_text, ending_text, pseudo):
         starting_text: number or the smallest text
         ending_text: number or the largest text + 1
         pseudo: if True, it means we use pseudo segmented data, if False, we use BEST manually segmentation
+        exclusive: determines if we want use original BEST data set or exclusive BEST data set where any non-thai code
+        point is excluded from texts
     """
     out_str = ""
     category = ["news", "encyclopedia", "article", "novel"]
     for text_num in range(starting_text, ending_text):
         for cat in category:
             text_num_str = "{}".format(text_num).zfill(5)
-            file = Path.joinpath(Path(__file__).parent.parent.absolute(), "Data/Best/{}/{}_".format(cat, cat) +
-                                 text_num_str + ".txt")
+            if exclusive:
+                file = Path.joinpath(Path(__file__).parent.parent.absolute(), "Data/exclusive_Best/{}/{}_".
+                                     format(cat, cat) + text_num_str + ".txt")
+            else:
+                file = Path.joinpath(Path(__file__).parent.parent.absolute(), "Data/Best/{}/{}_".format(cat, cat) +
+                                     text_num_str + ".txt")
             output_type = "man_segmented"
             if pseudo:
                 output_type = "icu_segmented"
@@ -282,13 +287,14 @@ def compute_accuracy(file, segmentation_type):
     return accuracy
 
 
-def compute_accuracy_best(starting_text, ending_text, algorithm):
+def compute_accuracy_best(starting_text, ending_text, algorithm, exclusive):
     """
     This funciton computes accuracy of an algorithm on Best data set.
     Args:
         starting_text: number or the smallest text
         ending_text: number or the largest text + 1
         algorithm: the algorithm to be tested. It can be "icu" or "deep" for now.
+        exclusive: identifies to use BEST data or exclusive BEST data
     """
     category = ["news", "encyclopedia", "article", "novel"]
     accuracy = Accuracy()
@@ -298,6 +304,9 @@ def compute_accuracy_best(starting_text, ending_text, algorithm):
             text_num_str = "{}".format(text_num).zfill(5)
             file = Path.joinpath(Path(__file__).parent.parent.absolute(), "Data/Best/{}/{}_".format(cat, cat) +
                                  text_num_str + ".txt")
+            if exclusive:
+                file = Path.joinpath(Path(__file__).parent.parent.absolute(), "Data/exclusive_Best/{}/{}_".format(cat, cat) +
+                                     text_num_str + ".txt")
             accuracy.merge_accuracy(compute_accuracy(file, segmentation_type=algorithm))
     return accuracy
 
@@ -394,5 +403,58 @@ def merge_two_texts(input_texts1, input_texts2, output_text, line_limit):
                 line_counter += 1
 
 
+def only_one_script_text(input_text, output_text, language):
+    """
+    This function uses lines of an input text and exclude any code point that is not in a specific langauge. The result
+    is written in a file where each line has no space. This is the type of input that current ICU language engines
+    accept
+    input_text: the path to the input text
+    output_text: the path to the output text
+    language: the specific language
+    """
+    accepted_code_points = []
+    if language == "Thai":
+        accepted_code_points = UnicodeSet("[[:Thai:]&[:LineBreak=SA:]]")
+    elif language == "Burmese":
+        accepted_code_points = UnicodeSet("[[:Mymr:]&[:LineBreak=SA:]]")
+    else:
+        print("Warning: the input language is not supported")
+    accepted_code_points = list(accepted_code_points)
+    accepted_code_points.append('|')
+    output = open(output_text, 'w')
+    with open(input_text) as f:
+        for line in f:
+            line = clean_line(line)
+            if line == -1:
+                continue
+            new_str = ""
+            for i in range(len(line)):
+                ch = line[i]
+                if ch in accepted_code_points:
+                    new_str += ch
+                    if i == len(line)-1:
+                        if not is_ascii(new_str):
+                            output.write(new_str + "\n")
+                        new_str = ""
+                if ch not in accepted_code_points:
+                    if not is_ascii(new_str):
+                        output.write(new_str + "\n")
+                    new_str = ""
+
+
+def make_thai_specific_best_data():
+    """
+    This function makes a copy of BEST data with only those code points that are identified by ICU for Thai
+    """
+    category = ["news", "encyclopedia", "article", "novel"]
+    for text_num in range(1, 96):
+        for cat in category:
+            text_num_str = "{}".format(text_num).zfill(5)
+            print(text_num)
+            input_text = Path.joinpath(Path(__file__).parent.parent.absolute(), "Data/Best/{}/{}_".format(cat, cat) +
+                                 text_num_str + ".txt")
+            output_text = Path.joinpath(Path(__file__).parent.parent.absolute(), "Data/exclusive_Best/{}/{}_".
+                                        format(cat, cat) + text_num_str + ".txt")
+            only_one_script_text(input_text=input_text, output_text=output_text, language="Thai")
 
 

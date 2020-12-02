@@ -112,8 +112,12 @@ class WordSegmenter:
         ratios = None
         if self.language == "Thai":
             ratios = constants.THAI_GRAPH_CLUST_RATIO
+        elif self.language == "exclusive Thai":
+            ratios = constants.THAI_EXCLUSIVE_GRAPH_CLUST_RATIO
         elif self.language == "Burmese":
             ratios = constants.BURMESE_GRAPH_CLUST_RATIO
+        # elif self.language == "exclusive Burmese":
+        #     ratios = constants.BURMESE_EXCLUSIVE_GRAPH_CLUST_RATIO
         elif self.language == "Thai_Burmese":
             ratios = constants.THAI_BURMESE_GRAPH_CLUST_RATIO
         else:
@@ -129,7 +133,7 @@ class WordSegmenter:
 
         # Constructing the letters dictionary to be used for generalized vectors w.r.t. the embedding type
         self.letters_dic = dict()
-        if self.language in ["Thai", "Burmese"]:
+        if self.language in ["Thai", "Burmese", "exclusive Burmese"]:
             smallest_unicode_dec = None
             largest_unicode_dec = None
 
@@ -213,9 +217,11 @@ class WordSegmenter:
         # Get training data of length self.t
         input_str = None
         if self.training_data == "BEST":
-            input_str = get_best_data_text(starting_text=1, ending_text=10, pseudo=False)
+            input_str = get_best_data_text(starting_text=1, ending_text=10, pseudo=False, exclusive=False)
+        elif self.training_data == "exclusive BEST":
+            input_str = get_best_data_text(starting_text=1, ending_text=10, pseudo=False, exclusive=True)
         elif self.training_data == "pseudo BEST":
-            input_str = get_best_data_text(starting_text=1, ending_text=10, pseudo=True)
+            input_str = get_best_data_text(starting_text=1, ending_text=10, pseudo=True, exclusive=False)
         elif self.training_data == "BEST spaced":
             file = Path.joinpath(Path(__file__).parent.parent.absolute(), 'Data/BEST_spaced_train.txt')
             input_str = get_whole_file_segmented(file, input_type="man_segmented", output_type="man_segmented")
@@ -232,6 +238,7 @@ class WordSegmenter:
             print("Warning: no implementation for this training data exists!")
         x_data, y_data = self._get_trainable_data(input_str)
         print(len(x_data))
+
         if self.t > len(x_data):
             print("Warning: size of the training data is less than self.t")
         x_data = x_data[:self.t]
@@ -240,9 +247,11 @@ class WordSegmenter:
 
         # Get validation data of length self.t
         if self.training_data == "BEST":
-            input_str = get_best_data_text(starting_text=10, ending_text=20, pseudo=False)
+            input_str = get_best_data_text(starting_text=10, ending_text=20, pseudo=False, exclusive=False)
+        elif self.training_data == "exclusive BEST":
+            input_str = get_best_data_text(starting_text=10, ending_text=20, pseudo=False, exclusive=True)
         elif self.training_data == "pseudo BEST":
-            input_str = get_best_data_text(starting_text=10, ending_text=20, pseudo=True)
+            input_str = get_best_data_text(starting_text=10, ending_text=20, pseudo=True, exclusive=False)
         elif self.training_data == "BEST spaced":
             file = Path.joinpath(Path(__file__).parent.parent.absolute(), 'Data/BEST_spaced_valid.txt')
             input_str = get_whole_file_segmented(file, input_type="man_segmented", output_type="man_segmented")
@@ -301,7 +310,9 @@ class WordSegmenter:
         # Get testing data
         input_str = None
         if self.evaluating_data == "BEST":
-            input_str = get_best_data_text(starting_text=40, ending_text=45, pseudo=False)
+            input_str = get_best_data_text(starting_text=40, ending_text=45, pseudo=False, exclusive=False)
+        elif self.evaluating_data == "exclusive BEST":
+            input_str = get_best_data_text(starting_text=40, ending_text=45, pseudo=False, exclusive=True)
         elif self.evaluating_data == "SAFT":
             file = Path.joinpath(Path(__file__).parent.parent.absolute(), 'Data/SAFT/test.txt')
             input_str = get_whole_file_segmented(file, input_type="man_segmented", output_type="man_segmented")
@@ -366,7 +377,7 @@ class WordSegmenter:
         This function uses the evaluating data to test the model line by line.
         """
         accuracy = Accuracy()
-        if self.evaluating_data == "BEST":
+        if self.evaluating_data in ["BEST", "exclusive BEST"]:
             if self.language != "Thai":
                 print("Warning: the Best data is in Thai and you are testing a model in another language")
             category = ["news", "encyclopedia", "article", "novel"]
@@ -374,8 +385,12 @@ class WordSegmenter:
                 print("testing text {}".format(text_num))
                 for cat in category:
                     text_num_str = "{}".format(text_num).zfill(5)
-                    file = Path.joinpath(Path(__file__).parent.parent.absolute(), "Data/Best/{}/{}_".format(cat, cat)
-                                         + text_num_str + ".txt")
+                    if self.evaluating_data == "BEST":
+                        file = Path.joinpath(Path(__file__).parent.parent.absolute(),
+                                             "Data/Best/{}/{}_".format(cat, cat) + text_num_str + ".txt")
+                    elif self.evaluating_data == "exclusive BEST":
+                        file = Path.joinpath(Path(__file__).parent.parent.absolute(),
+                                             "Data/exclusive_Best/{}/{}_".format(cat, cat) + text_num_str + ".txt")
                     text_acc = self._test_text_line_by_line(file, line_limit=-1)
                     accuracy.merge_accuracy(text_acc)
         elif self.evaluating_data == "BEST spaced":

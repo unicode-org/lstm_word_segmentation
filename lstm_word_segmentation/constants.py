@@ -11,6 +11,9 @@ from collections import Counter
 path = Path.joinpath(Path(__file__).parent.parent.absolute(), 'Data/Thai_graph_clust_ratio.npy')
 THAI_GRAPH_CLUST_RATIO = np.load(str(path), allow_pickle=True).item()
 
+path = Path.joinpath(Path(__file__).parent.parent.absolute(), 'Data/Thai_graph_clust_ratio.npy')
+THAI_EXCLUSIVE_GRAPH_CLUST_RATIO = np.load(str(path), allow_pickle=True).item()
+
 # The dictionary that stores different grapheme clusters of Burmese and the ratio that each appear in Burmese texts.
 path = Path.joinpath(Path(__file__).parent.parent.absolute(), 'Data/Burmese_graph_clust_ratio.npy')
 BURMESE_GRAPH_CLUST_RATIO = np.load(str(path), allow_pickle=True).item()
@@ -32,7 +35,7 @@ CHAR_TYPE_TO_BUCKET = {
      UCharCategory.ENCLOSING_MARK: 2,
      UCharCategory.COMBINING_SPACING_MARK: 2,
      UCharCategory.DECIMAL_DIGIT_NUMBER: 3,
-       # LETTER_NUMBER and OTHER_NUMBER are more like symbols than digits
+     # LETTER_NUMBER and OTHER_NUMBER are more like symbols than digits
      UCharCategory.LETTER_NUMBER: 6,
      UCharCategory.OTHER_NUMBER: 6,
      UCharCategory.SPACE_SEPARATOR: 4,

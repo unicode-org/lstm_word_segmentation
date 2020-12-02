@@ -93,7 +93,7 @@ The following table summarizes the performance of our algorithm and current ICU 
 | LSTM (model4) | 94.7 | 92.9 | 91.7 | 90.5 | 61 KB  | ??? |
 | LSTM (model5) | 93.4 | 81.1 | 91.4 | 90.1 | 28 KB | ??? |
 | LSTM (model7) | 96.2 | 94.9 | 92.3 | 91.1 | 254 KB | ??? |
-| ICU            | 1 | 1 | 93.1 | 92.4 | 254 KB | ??? |
+| ICU           | 100  | 100  | 93.1 | 92.4 | 254 KB | ??? |
 
 
 

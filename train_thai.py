@@ -2,8 +2,11 @@ from pathlib import Path
 from tensorflow import keras
 from lstm_word_segmentation.lstm_bayesian_optimization import LSTMBayesianOptimization
 from lstm_word_segmentation.word_segmenter import WordSegmenter
-from lstm_word_segmentation.text_helpers import break_lines_based_on_spaces
+from lstm_word_segmentation.text_helpers import break_lines_based_on_spaces, make_thai_specific_best_data
 
+
+# Making a version of BEST data that has only Thai code points
+# make_thai_specific_best_data()
 
 # Making a version of BEST data where each line is divided according to spaces
 '''
@@ -29,38 +32,24 @@ bayes_optimization.perform_bayesian_optimization()
 '''
 
 # Train a new model -- choose name cautiously to not overwrite other models
-'''
-model_name = "Thai_temp"
+# '''
+model_name = "Thai_temp2"
 word_segmenter = WordSegmenter(input_name=model_name, input_n=50, input_t=100000, input_clusters_num=350,
                                input_embedding_dim=16, input_hunits=23, input_dropout_rate=0.2, input_output_dim=4,
-                               input_epochs=15, input_training_data="BEST spaced", input_evaluating_data="BEST spaced",
-                               input_language="Thai", input_embedding_type="grapheme_clusters_tf")
+                               input_epochs=15, input_training_data="exclusive BEST",
+                               input_evaluating_data="exclusive BEST", input_language="exclusive Thai",
+                               input_embedding_type="grapheme_clusters_tf")
 
 # Training, testing, and saving the model
 word_segmenter.train_model()
 # word_segmenter.test_model()
 word_segmenter.test_model_line_by_line()
 word_segmenter.save_model()
-'''
+# '''
 
 # Choose one of the saved models to use
 # '''
-# Thai_model1: Bi-directional LSTM (trained on BEST), grid search
-#     thrsh = 350, embedding_dim = 40, hunits = 40
-# Thai_model2: Bi-directional LSTM (trained on BEST), grid search + manual reduction of hunits and embedding_size
-#     thrsh = 350, embedding_dim = 20, hunits = 20
-# Thai_model3: Bi-directional LSTM (trained on BEST), grid search + extreme man reduction of hunits and embedding_size
-#     thrsh = 350, embedding_dim = 15, hunits = 15
-# Thai_model4: Bi-directional LSTM (trained on BEST), short BayesOpt choice for hunits and embedding_size
-#     thrsh = 350, embedding_dim = 16, hunits = 23
-# Thai_model5: Bi-directional LSTM (trained on BEST), A very parsimonious model
-#     thrsh = 250, embedding_dim = 10, hunits = 10
-# Thai_temp: a temporary model, it should be used for storing new models
-
-# For some models the heavy trained versions can be used by adding "_heavy" to the end of the model name. Such as
-# Thai_model4_heavy. In training these models n and t are set to 200 and 600000 respectively.
-
-model_name = "Thai_model5_heavy"
+model_name = "Thai_temp"
 input_embedding_type = "grapheme_clusters_tf"
 file = Path.joinpath(Path(__file__).parent.absolute(), 'Models/' + model_name)
 model = keras.models.load_model(file)
@@ -83,19 +72,15 @@ print(input_hunits)
 word_segmenter = WordSegmenter(input_name=model_name, input_n=input_n, input_t=input_t,
                                input_clusters_num=input_clusters_num, input_embedding_dim=input_embedding_dim,
                                input_hunits=input_hunits, input_dropout_rate=0.2, input_output_dim=4, input_epochs=15,
-                               input_training_data="BEST", input_evaluating_data="SAFT_Thai", input_language="Thai",
-                               input_embedding_type=input_embedding_type)
+                               input_training_data="exclusive BEST", input_evaluating_data="BEST",
+                               input_language="Thai", input_embedding_type=input_embedding_type)
 word_segmenter.set_model(model)
 # word_segmenter.test_model()
 word_segmenter.test_model_line_by_line()
 
 # Testing the model by arbitrary sentences
 # line = "แม้จะกะเวลาเอาไว้แม่นยำว่ากว่าเขาจะมาถึงก็คงประมาณหกโมงเย็น"
-line = "ทำสิ่งต่างๆ ได้มากขึ้นขณะที่อุปกรณ์ล็อกและชาร์จอยู่ด้วยโหมดแอมเบียนท์"
+# line = "ทำสิ่งต่างๆ ได้มากขึ้นขณะที่อุปกรณ์ล็อกและชาร์จอยู่ด้วยโหมดแอมเบียนท์"
 # line = "เกี่ยวกับนอมินีหรือการถือหุ้นแทนกันในบริษัทต่างๆที่เกี่ยวข้องกับการซื้อหุ้น"
-word_segmenter.segment_arbitrary_line(line)
+# word_segmenter.segment_arbitrary_line(line)
 # '''
-
-
-
-พี

@@ -58,5 +58,6 @@ def print_grapheme_clusters(thrsh, language):
         cnt += 1
         if cum_sum > thrsh:
             break
+    print(ratios)
     print("number of different grapheme clusters in {} = {}".format(language, len(ratios.keys())))
     print("{} grapheme clusters form {} of the text".format(cnt, thrsh))

@@ -13,6 +13,7 @@ from .accuracy import Accuracy
 from .line import Line
 from .bies import Bies
 from .grapheme_cluster import GraphemeCluster
+from .code_point import CodePoint
 
 
 class KerasBatchGenerator(object):
@@ -55,6 +56,8 @@ class KerasBatchGenerator(object):
             x = np.zeros([self.batch_size, self.n, self.x_data[0].num_clusters])
         elif embedding_type == "generalized_vectors":
             x = np.zeros([self.batch_size, self.n, self.x_data[0].generalized_vec_length])
+        elif embedding_type == "codepoints":
+            x = np.zeros([self.batch_size, self.n])
         else:
             print("Warning: the embedding type is not valid")
         for i in range(self.batch_size):
@@ -65,6 +68,8 @@ class KerasBatchGenerator(object):
                     x[i, j, :] = self.x_data[self.n*i + j].graph_clust_vec
                 if embedding_type == "generalized_vectors":
                     x[i, j, :] = self.x_data[self.n*i + j].generalized_vec
+                if embedding_type == "codepoints":
+                    x[i, j] = self.x_data[self.n * i + j].codepoint_id
             y[i, :, :] = self.y_data[self.n * i: self.n * (i + 1), :]
         return x, y
 
@@ -131,6 +136,13 @@ class WordSegmenter:
                 break
             cnt += 1
 
+        # Constructing the code points dictionary
+        if self.language in ["Thai", "exclusive Thai"]:
+            self.codepoint_dic = constants.THAI_CODE_POINT_DICTIONARY
+        if self.language in ["Burmese", "exclusive Burmese"]:
+            self.codepoint_dic = constants.BURMESE_CODE_POINT_DICTIONARY
+        self.codepoints_num = len(self.codepoint_dic)+1
+
         # Constructing the letters dictionary to be used for generalized vectors w.r.t. the embedding type
         self.letters_dic = dict()
         if self.language in ["Thai", "Burmese", "exclusive Burmese"]:
@@ -191,19 +203,35 @@ class WordSegmenter:
         # Finding word breakpoints
         # Note that it is possible that input is segmented manually instead of icu. However, for both cases we set that
         # input_type equal to "icu_segmented" because that doesn't affect performance of this function. This is done
-        # we won't need unnecessary if/else for "man_segmented" and "icu_segmented" throughout rest of the code.
+        # we won't need unnecessary if/else for "man_segmented" and "icu_segmented" throughout rest of this function.
         line = Line(input_line, "icu_segmented")
-        true_bies = line.get_bies("icu")
 
-        # Making x_data and y_data
-        y_data = true_bies.mat
-        line_len = len(line.char_brkpoints) - 1
-        x_data = []
-        for i in range(line_len):
-            char_start = line.char_brkpoints[i]
-            char_finish = line.char_brkpoints[i + 1]
-            curr_char = line.unsegmented[char_start: char_finish]
-            x_data.append(GraphemeCluster(curr_char, self.graph_clust_dic, self.letters_dic))
+        if self.embedding_type == "codepoints":
+            true_bies = line.get_bies_codepoints("icu")
+
+            # Making x_data and y_data
+            y_data = true_bies.mat
+            line_len = len(line.char_brkpoints) - 1
+            line_len = len(line.unsegmented)
+            x_data = []
+
+            for i in range(line_len):
+                x_data.append(CodePoint(line.unsegmented[i], self.codepoint_dic))
+
+        else:
+            true_bies = line.get_bies("icu")
+
+            # Making x_data and y_data
+            y_data = true_bies.mat
+            line_len = len(line.char_brkpoints) - 1
+            x_data = []
+
+            for i in range(line_len):
+                char_start = line.char_brkpoints[i]
+                char_finish = line.char_brkpoints[i + 1]
+                curr_char = line.unsegmented[char_start: char_finish]
+                if self.embedding_type != "codepoints":
+                    x_data.append(GraphemeCluster(curr_char, self.graph_clust_dic, self.letters_dic))
 
         return x_data, y_data
 
@@ -237,7 +265,6 @@ class WordSegmenter:
         else:
             print("Warning: no implementation for this training data exists!")
         x_data, y_data = self._get_trainable_data(input_str)
-        print(len(x_data))
 
         if self.t > len(x_data):
             print("Warning: size of the training data is less than self.t")
@@ -285,6 +312,8 @@ class WordSegmenter:
         elif self.embedding_type == "generalized_vectors":
             model.add(TimeDistributed(Dense(self.embedding_dim, activation=None, use_bias=False,
                                             kernel_initializer='uniform')))
+        elif self.embedding_type == "codepoints":
+            model.add(Embedding(input_dim=self.codepoints_num, output_dim=self.embedding_dim, input_length=self.n))
         else:
             print("Warning: the embedding_type is not implemented")
         model.add(Dropout(self.dropout_rate))
@@ -472,6 +501,10 @@ class WordSegmenter:
             elif self.embedding_type == "generalized_vectors":
                 input_generalized_vec = test_input[i].generalized_vec
                 x_t = input_generalized_vec.dot(embedarr)
+            elif self.embedding_type == "codepoints":
+                input_codepoint_id = test_input[i].codepoint_id
+                x_t = embedarr[input_codepoint_id, :]
+                x_t = x_t.reshape(1, x_t.shape[0])
             else:
                 print("Warning: this embedding type is not implemented")
             h_fw, c_fw = self._compute_hc(weightLSTM, x_t, h_fw, c_fw)
@@ -496,6 +529,10 @@ class WordSegmenter:
             elif self.embedding_type == "generalized_vectors":
                 input_generalized_vec = test_input[i].generalized_vec
                 x_t = input_generalized_vec.dot(embedarr)
+            elif self.embedding_type == "codepoints":
+                input_codepoint_id = test_input[i].codepoint_id
+                x_t = embedarr[input_codepoint_id, :]
+                x_t = x_t.reshape(1, x_t.shape[0])
             else:
                 print("Warning: this embedding type is not implemented")
             h_bw, c_bw = self._compute_hc(weightLSTM, x_t, h_bw, c_bw)

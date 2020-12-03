@@ -57,6 +57,7 @@ def preprocess_thai(verbose, exclusive):
             for line in lines:
                 # Storing the grapheme clusters and their frequency in the dictionary
                 grapheme_clusters_dic += line.get_grapheme_clusters()
+
                 # Adding spaces manually once for each line, so they be identified as a major grapheme cluster
                 if exclusive:
                     grapheme_clusters_dic += Counter({' ': 1})

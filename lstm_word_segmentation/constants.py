@@ -1,6 +1,6 @@
 import numpy as np
 from pathlib import Path
-from icu import UCharCategory
+from icu import UCharCategory, UnicodeSet
 from collections import Counter
 
 # The dictionary that stores different grapheme clusters of Thai and the ratio that each appear in Thai texts. It is
@@ -21,6 +21,14 @@ BURMESE_GRAPH_CLUST_RATIO = np.load(str(path), allow_pickle=True).item()
 # The dictionary that stores different grapheme clusters of Burmese and Thaiand the ratio that each appear.
 path = Path.joinpath(Path(__file__).parent.parent.absolute(), 'Data/Thai_Burmese_graph_clust_ratio.npy')
 THAI_BURMESE_GRAPH_CLUST_RATIO = np.load(str(path), allow_pickle=True).item()
+
+# The dictionary for Thai code points
+accepted_code_points = UnicodeSet("[[:Thai:]&[:LineBreak=SA:]]")
+THAI_CODE_POINT_DICTIONARY = {accepted_code_points[i]: i for i in range(len(accepted_code_points))}
+
+# The dictionary for Burmese code points
+accepted_code_points = UnicodeSet("[[:Mymr:]&[:LineBreak=SA:]]")
+BURMESE_CODE_POINT_DICTIONARY = {accepted_code_points[i]: i for i in range(len(accepted_code_points))}
 
 
 # A dictionary that determines how different types of code points are grouped together. This dictionary will be used

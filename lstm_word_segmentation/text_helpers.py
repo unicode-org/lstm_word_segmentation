@@ -21,25 +21,34 @@ def remove_tags(line, st_tag, fn_tag):
         st_tag: the first substring
         fn_tag: the secibd substring
     """
-
     new_line = ""
-    st_ind = 0
-    while st_ind < len(line):
-        if line[st_ind: st_ind+len(st_tag)] == st_tag:
-            fn_ind = st_ind
-            while fn_ind < len(line):
-                if line[fn_ind: fn_ind+len(fn_tag)] == fn_tag:
-                    fn_ind = fn_ind+len(fn_tag) + 1
-                    if st_ind - 2 >= 0 and fn_ind+2 <= len(line):
-                        if line[st_ind-2:st_ind] == " |" and line[fn_ind:fn_ind+2] == " |":
-                            fn_ind += 2
-                    st_ind = fn_ind
-                    break
-                else:
-                    fn_ind += 1
-        if st_ind < len(line) and line[st_ind: st_ind+len(st_tag)] != st_tag:
-            new_line += line[st_ind]
-            st_ind += 1
+    last_bar = 0
+    ind = 0
+    while ind < len(line):
+        if line[ind: ind + len(st_tag)] == st_tag:
+            fn_ind = ind
+            while fn_ind + len(fn_tag) <= len(line) and line[fn_ind: fn_ind+len(fn_tag)] != fn_tag:
+                fn_ind += 1
+            new_bar = fn_ind + len(fn_tag)
+            while new_bar < len(line) and line[new_bar] != '|':
+                new_bar += 1
+            if new_bar < len(line):
+                last_bar = new_bar
+            else:
+                if line[last_bar] == '|':
+                    new_line += '|'
+                break
+            ind = new_bar
+        if ind == len(line)-1:
+            for i in range(last_bar, ind+1):
+                new_line += line[i]
+        elif line[ind] == '|':
+            new_bar = ind
+            for i in range(last_bar, new_bar):
+                new_line += line[i]
+            last_bar = new_bar
+        ind += 1
+
     return new_line
 
 
@@ -74,7 +83,7 @@ def clean_line(line):
         line += "|"
 
     # Adding "|" to the start of each line if it is not there
-    if line[0] != '|':
+    if len(line) >= 0 and line[0] != '|':
         line = '|' + line
 
     return line
@@ -139,7 +148,6 @@ def permute_lines_of_text(filename, permutated_filename):
     for bucket_id in permutated_buckets:
         for line in lines_list[bucket_id: bucket_id+bucket_size]:
             new_file.write(line)
-    new_num_lines = sum(1 for _line in open(permutated_filename))
 
 
 def divide_train_test_data(input_text, train_text, valid_text, test_text, line_limit):
@@ -277,12 +285,6 @@ def compute_accuracy(file, segmentation_type):
     for line in lines:
         true_bies = line.get_bies(segmentation_type="man")
         algo_bies = line.get_bies(segmentation_type=segmentation_type)
-        # print(line.unsegmented)
-        # print(line.icu_segmented)
-        # print(line.man_segmented)
-        # print(true_bies.str)
-        # print(algo_bies.str)
-        # x = input()
         accuracy.update(true_bies=true_bies.str, est_bies=algo_bies.str)
     return accuracy
 
@@ -456,5 +458,4 @@ def make_thai_specific_best_data():
             output_text = Path.joinpath(Path(__file__).parent.parent.absolute(), "Data/exclusive_Best/{}/{}_".
                                         format(cat, cat) + text_num_str + ".txt")
             only_one_script_text(input_text=input_text, output_text=output_text, language="Thai")
-
 

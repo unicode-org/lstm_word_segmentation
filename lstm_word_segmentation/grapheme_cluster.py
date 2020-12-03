@@ -5,7 +5,7 @@ from icu import Char
 
 class GraphemeCluster:
     """
-    A class that to store a grapheme cluster. It supports three versions of a grapheme cluster:
+    A class to store a grapheme cluster. It supports three versions of a grapheme cluster:
         1) graph_clust_id: an integer that is computed with respect to a dictionary of top grapheme clusters
         2) graph_clust_vec: a vector that has only one at the slot associated with graph_clust_id
         3) generalized_vec: a vector of a fixed size that has 1/m for each code point found in the grapheme cluster,
@@ -46,7 +46,7 @@ class GraphemeCluster:
 
     def display(self):
         """
-        A function that displayes different versions of the current grapheme_cluster
+        A function that displays different versions of the current grapheme_cluster
         """
         print("Grapheme cluster: \n{}".format(self.graph_clust))
         print("Grapheme cluster id: \n{}".format(self.graph_clust_id))

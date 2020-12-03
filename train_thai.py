@@ -3,7 +3,8 @@ from tensorflow import keras
 from lstm_word_segmentation.lstm_bayesian_optimization import LSTMBayesianOptimization
 from lstm_word_segmentation.word_segmenter import WordSegmenter
 from lstm_word_segmentation.text_helpers import break_lines_based_on_spaces, make_thai_specific_best_data
-
+from lstm_word_segmentation.line import Line
+from lstm_word_segmentation.text_helpers import remove_tags
 
 # Making a version of BEST data that has only Thai code points
 # make_thai_specific_best_data()
@@ -31,14 +32,26 @@ bayes_optimization = LSTMBayesianOptimization(input_language="Thai", input_epoch
 bayes_optimization.perform_bayesian_optimization()
 '''
 
+
+
+# input_line = "|ข|สภาพ|เก่า|"
+# line = Line(input_line, "icu_segmented")
+#
+# print(line.icu_segmented)
+# print(line.unsegmented)
+# print(line.get_bies(segmentation_type="icu").str)
+# print(line.get_bies_codepoints(segmentation_type="icu").str)
+# x = input("analyzing")
+
+
 # Train a new model -- choose name cautiously to not overwrite other models
 # '''
-model_name = "Thai_temp2"
+model_name = "Thai_temp"
 word_segmenter = WordSegmenter(input_name=model_name, input_n=50, input_t=100000, input_clusters_num=350,
                                input_embedding_dim=16, input_hunits=23, input_dropout_rate=0.2, input_output_dim=4,
                                input_epochs=15, input_training_data="exclusive BEST",
                                input_evaluating_data="exclusive BEST", input_language="exclusive Thai",
-                               input_embedding_type="grapheme_clusters_tf")
+                               input_embedding_type="graphem_clusters_tf")
 
 # Training, testing, and saving the model
 word_segmenter.train_model()
@@ -48,7 +61,7 @@ word_segmenter.save_model()
 # '''
 
 # Choose one of the saved models to use
-# '''
+'''
 model_name = "Thai_temp"
 input_embedding_type = "grapheme_clusters_tf"
 file = Path.joinpath(Path(__file__).parent.absolute(), 'Models/' + model_name)
@@ -83,4 +96,4 @@ word_segmenter.test_model_line_by_line()
 # line = "ทำสิ่งต่างๆ ได้มากขึ้นขณะที่อุปกรณ์ล็อกและชาร์จอยู่ด้วยโหมดแอมเบียนท์"
 # line = "เกี่ยวกับนอมินีหรือการถือหุ้นแทนกันในบริษัทต่างๆที่เกี่ยวข้องกับการซื้อหุ้น"
 # word_segmenter.segment_arbitrary_line(line)
-# '''
+'''

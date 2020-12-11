@@ -1,91 +1,85 @@
 from pathlib import Path
-from tensorflow import keras
-from lstm_word_segmentation.lstm_bayesian_optimization import LSTMBayesianOptimization
-from lstm_word_segmentation.word_segmenter import WordSegmenter
+from lstm_word_segmentation.word_segmenter import pick_lstm_model
 from lstm_word_segmentation.text_helpers import get_lines_of_text
 from lstm_word_segmentation.line import Line
-
-# Choose one of the saved models to use
-# '''
-# Thai_model1: Bi-directional LSTM (trained on BEST), grid search
-#     thrsh = 350, embedding_dim = 40, hunits = 40
-# Thai_model2: Bi-directional LSTM (trained on BEST), grid search + manual reduction of hunits and embedding_size
-#     thrsh = 350, embedding_dim = 20, hunits = 20
-# Thai_model3: Bi-directional LSTM (trained on BEST), grid search + extreme man reduction of hunits and embedding_size
-#     thrsh = 350, embedding_dim = 15, hunits = 15
-# Thai_model4: Bi-directional LSTM (trained on BEST), short BayesOpt choice for hunits and embedding_size
-#     thrsh = 350, embedding_dim = 16, hunits = 23
-# Thai_model5: Bi-directional LSTM (trained on BEST), A very parsimonious model
-#     thrsh = 250, embedding_dim = 10, hunits = 10
-# Thai_temp: a temporary model, it should be used for storing new models
-
-# For some models the heavy trained versions can be used by adding "_heavy" to the end of the model name. Such as
-# Thai_model4_heavy. In training these models n and t are set to 200 and 600000 respectively.
-
-# '''
-model_name = "Thai_model4"
-input_embedding_type = "grapheme_clusters_tf"
-file = Path.joinpath(Path(__file__).parent.absolute(), 'Models/' + model_name)
-model = keras.models.load_model(file)
-input_clusters_num = model.weights[0].shape[0]
-input_embedding_dim = model.weights[0].shape[1]
-input_hunits = model.weights[1].shape[1]//4
-if "heavy" in model_name:
-    input_n = 200
-    input_t = 600000
-elif "heavier" in model_name:
-    input_n = 200
-    input_t = 2000000
-else:
-    input_n = 50
-    input_t = 100000
-
-word_segmenter1 = WordSegmenter(input_name=model_name, input_n=input_n, input_t=input_t,
-                                input_clusters_num=input_clusters_num, input_embedding_dim=input_embedding_dim,
-                                input_hunits=input_hunits, input_dropout_rate=0.2, input_output_dim=4, input_epochs=15,
-                                input_training_data="BEST", input_evaluating_data="BEST", input_language="Thai",
-                                input_embedding_type=input_embedding_type)
-word_segmenter1.set_model(model)
-# word_segmenter.test_model()
-# word_segmenter1.test_model_line_by_line()
-# '''
+import deepcut
+import timeit
 
 
-# '''
-model_name = "Thai_genvec_123"
-input_embedding_type = "generalized_vectors_123"
-file = Path.joinpath(Path(__file__).parent.absolute(), 'Models/' + model_name)
-model = keras.models.load_model(file)
-input_clusters_num = model.weights[0].shape[0]
-input_embedding_dim = model.weights[0].shape[1]
-input_hunits = model.weights[1].shape[1]//4
-if "heavy" in model_name:
-    input_n = 200
-    input_t = 600000
-elif "heavier" in model_name:
-    input_n = 200
-    input_t = 2000000
-else:
-    input_n = 50
-    input_t = 100000
+# Picking models for error analysis
+word_segmenter1 = pick_lstm_model(model_name="Thai_model4", embedding="grapheme_clusters_tf", train_data="BEST",
+                                  eval_data="BEST")
 
-word_segmenter2 = WordSegmenter(input_name=model_name, input_n=input_n, input_t=input_t,
-                                input_clusters_num=input_clusters_num, input_embedding_dim=input_embedding_dim,
-                                input_hunits=input_hunits, input_dropout_rate=0.2, input_output_dim=4, input_epochs=15,
-                                input_training_data="BEST", input_evaluating_data="BEST", input_language="Thai",
-                                input_embedding_type=input_embedding_type)
-word_segmenter2.set_model(model)
-# word_segmenter2.test_model_line_by_line()
+word_segmenter2 = pick_lstm_model(model_name="Thai_exclusive_model4", embedding="grapheme_clusters_tf",
+                                  train_data="exclusiveBEST", eval_data="exclusive BEST")
+
+word_segmenter3 = pick_lstm_model(model_name="Thai_model4_heavy", embedding="grapheme_clusters_tf", train_data="BEST",
+                                  eval_data="BEST")
+
+word_segmenter4 = pick_lstm_model(model_name="Thai_exclusive_model4_heavy", embedding="grapheme_clusters_tf",
+                                  train_data="exclusive BEST", eval_data="exclusive BEST")
+
+word_segmenter5 = pick_lstm_model(model_name="Thai_genvec_123", embedding="generalized_vectors_123", train_data="BEST",
+                                  eval_data="BEST")
+
+word_segmenter6 = pick_lstm_model(model_name="Thai_codepoints_model4_heavy", embedding="codepoints",
+                                  train_data="exclusive BEST", eval_data="exclusive BEST")
+
 
 # Testing the model by arbitrary sentences
-# file = Path.joinpath(Path(__file__).parent.absolute(), 'Data/my_test_segmented.txt')
-file = Path.joinpath(Path(__file__).parent.absolute(), 'Data/BEST/news/news_00040.txt')
-lines = get_lines_of_text(file, "man_segmented")
-for line in lines[:10]:
-    print(line.unsegmented)
-    print(line.man_segmented)
-    print(line.icu_segmented)
-    word_segmenter1.segment_arbitrary_line(line.unsegmented)
-    word_segmenter2.segment_arbitrary_line(line.unsegmented)
-    x = input()
 # '''
+verbose = True
+# Use lines in a given file
+file = Path.joinpath(Path(__file__).parent.absolute(), 'Data/wiki_thai_sample_exclusive.txt')
+lines = get_lines_of_text(file, "unsegmented")
+output_file = Path.joinpath(Path(__file__).parent.absolute(), 'Data/wiki_thai_sample_exclusive_results.txt')
+output = open(str(output_file), 'w')
+
+# Use the following list directly
+# inp_lines = ["|เพราะ|เขา|เห็น|โอกาส|ใน|การ|ซื้อ|", "|การ|เดินทาง|ใน|", "|นั่ง|นายก|ฯ|ต่อ|สมัย|หน้า|", "|พร้อม|จัดตั้ง|",
+#              "|เพราะ|ดนตรี|ที่|ชอบ|นั้น|"]
+# lines = []
+# for inp_line in inp_lines:
+#     lines.append(Line(inp_line, "man_segmented"))
+
+for line in lines:
+    deepcut_words = deepcut.tokenize(line.unsegmented)
+    deepcut_segmented = "|"
+    for word in deepcut_words:
+        deepcut_segmented += word + "|"
+    if verbose:
+        print("***************************************************************************************************")
+        print("Unsegmented                   : {}".format(line.unsegmented))
+        print("Deepcut                       : {}".format(deepcut_segmented))
+        print("ICU                           : {}".format(line.icu_segmented))
+        print("Thai_model4                   : {}".format(word_segmenter1.segment_arbitrary_line(line.unsegmented)))
+        print("Thai_exclusive_model4         : {}".format(word_segmenter2.segment_arbitrary_line(line.unsegmented)))
+        print("Thai_model4_heavy             : {}".format(word_segmenter3.segment_arbitrary_line(line.unsegmented)))
+        print("Thai_exclusive_model4_heavy   : {}".format(word_segmenter4.segment_arbitrary_line(line.unsegmented)))
+        print("Thai_genvec123                : {}".format(word_segmenter5.segment_arbitrary_line(line.unsegmented)))
+        print("Thai_codepoints_mpodel4_heavy : {}".format(word_segmenter6.segment_arbitrary_line(line.unsegmented)))
+        print("***************************************************************************************************")
+
+    output.write("********************************************************************************\n")
+    output.write("Unsegmented                        : {}\n".format(line.unsegmented))
+    output.write("Deepcut                            : {}\n".format(deepcut_segmented))
+    output.write("ICU                                : {}\n".format(line.icu_segmented))
+    # output.write("Thai_model4                 : {}\n".format(word_segmenter1.segment_arbitrary_line(line.unsegmented)))
+    # output.write("Thai_exclusive_model4       : {}\n".format(word_segmenter2.segment_arbitrary_line(line.unsegmented)))
+    # output.write("Thai_model4_heavy           : {}\n".format(word_segmenter3.segment_arbitrary_line(line.unsegmented)))
+    # output.write("Thai_exclusive_model4_heavy : {}\n".format(word_segmenter4.segment_arbitrary_line(line.unsegmented)))
+    # output.write("Thai_genvec123              : {}\n".format(word_segmenter5.segment_arbitrary_line(line.unsegmented)))
+    # output.write("Thai_codepoints             : {}\n".format(word_segmenter6.segment_arbitrary_line(line.unsegmented)))
+    output.write("LSTM Grapheme Clusters Embedding   : {}\n".format(word_segmenter4.segment_arbitrary_line(line.unsegmented)))
+    output.write("LSTM Generalized Vectors Embedding : {}\n".format(word_segmenter5.segment_arbitrary_line(line.unsegmented)))
+    output.write("LSTM Code points Embedding         : {}\n".format(word_segmenter6.segment_arbitrary_line(line.unsegmented)))
+    output.write("********************************************************************************\n")
+# '''
+
+# Measuring the time that each model need to evaluate texts
+'''
+start = timeit.default_timer()
+word_segmenter6.test_model_line_by_line()
+stop = timeit.default_timer()
+print("{} Time: {}".format(word_segmenter6.name, stop-start))
+'''

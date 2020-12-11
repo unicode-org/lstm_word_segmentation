@@ -8,7 +8,7 @@ from tensorflow import keras
 
 from . import constants
 from .helpers import sigmoid
-from .text_helpers import get_whole_file_segmented, get_best_data_text, get_lines_of_text
+from .text_helpers import get_segmented_file_in_one_line, get_best_data_text, get_lines_of_text
 from .accuracy import Accuracy
 from .line import Line
 from .bies import Bies
@@ -87,13 +87,13 @@ class WordSegmenter:
         input_output_dim: dimension of the output layer
         input_epochs: number of epochs used to train the model
         input_training_data: name of the data used to train the model
-        input_evaluating_data: name of the data used to evaluate the model
+        input_evaluation_data: name of the data used to evaluate the model
         input_language: shows what is the language used to train the model (e.g. Thai, Burmese, ...)
         input_embedding_type: determines what type of embedding to be used in the model. Possible values are
         "grapheme_clusters_tf", "grapheme_clusters_man", and "generalized_vectors"
     """
     def __init__(self, input_name, input_n, input_t, input_clusters_num, input_embedding_dim, input_hunits,
-                 input_dropout_rate, input_output_dim, input_epochs, input_training_data, input_evaluating_data,
+                 input_dropout_rate, input_output_dim, input_epochs, input_training_data, input_evaluation_data,
                  input_language, input_embedding_type):
         self.name = input_name
         self.n = input_n
@@ -101,28 +101,33 @@ class WordSegmenter:
         if self.t % self.n != 0:
             print("Warning: t is not divided by n")
         self.clusters_num = input_clusters_num
-        self.batch_size = self.t // self.n  # number of batches used to train the model. It is defined as t // n
+        # batch_size is the number of batches used in each iteration of back propagation to update model weights
+        # The default value is self.t/self.n, but it can be set to other values as well. The only constraint is that
+        # self.t should always be greater than self.batch_size * self.n
+        self.batch_size = self.t // self.n
         self.embedding_dim = input_embedding_dim
         self.hunits = input_hunits
         self.dropout_rate = input_dropout_rate
         self.output_dim = input_output_dim
         self.epochs = input_epochs
         self.training_data = input_training_data
-        self.evaluating_data = input_evaluating_data
+        self.evaluation_data = input_evaluation_data
         self.language = input_language
         self.embedding_type = input_embedding_type
         self.model = None
 
-        # Constructing the grapheme cluster dictionary
+        # Constructing the grapheme cluster dictionary -- this will be used if self.embedding_type is Grapheme Clusters
         ratios = None
         if self.language == "Thai":
-            ratios = constants.THAI_GRAPH_CLUST_RATIO
-        elif self.language == "exclusive Thai":
-            ratios = constants.THAI_EXCLUSIVE_GRAPH_CLUST_RATIO
+            if "exclusive" in self.training_data:
+                ratios = constants.THAI_EXCLUSIVE_GRAPH_CLUST_RATIO
+            else:
+                ratios = constants.THAI_GRAPH_CLUST_RATIO
         elif self.language == "Burmese":
-            ratios = constants.BURMESE_GRAPH_CLUST_RATIO
-        # elif self.language == "exclusive Burmese":
-        #     ratios = constants.BURMESE_EXCLUSIVE_GRAPH_CLUST_RATIO
+            if "exclusive" in self.training_data:
+                ratios = None
+            else:
+                ratios = constants.BURMESE_GRAPH_CLUST_RATIO
         elif self.language == "Thai_Burmese":
             ratios = constants.THAI_BURMESE_GRAPH_CLUST_RATIO
         else:
@@ -136,16 +141,18 @@ class WordSegmenter:
                 break
             cnt += 1
 
-        # Constructing the code points dictionary
-        if self.language in ["Thai", "exclusive Thai"]:
+        # Loading the code points dictionary -- this will be used if self.embedding_type is Code Points
+        # If you want to group some of the code points into buckets, that code should go here to change
+        # self.codepoint_dic appropriately
+        if self.language == "Thai":
             self.codepoint_dic = constants.THAI_CODE_POINT_DICTIONARY
-        if self.language in ["Burmese", "exclusive Burmese"]:
+        if self.language == "Burmese":
             self.codepoint_dic = constants.BURMESE_CODE_POINT_DICTIONARY
-        self.codepoints_num = len(self.codepoint_dic)+1
+        self.codepoints_num = len(self.codepoint_dic) + 1
 
-        # Constructing the letters dictionary to be used for generalized vectors w.r.t. the embedding type
+        # Constructing the letters dictionary -- this will be used if self.embedding_type is Generalized Vectors
         self.letters_dic = dict()
-        if self.language in ["Thai", "Burmese", "exclusive Burmese"]:
+        if self.language in ["Thai", "Burmese"]:
             smallest_unicode_dec = None
             largest_unicode_dec = None
 
@@ -157,7 +164,8 @@ class WordSegmenter:
                 smallest_unicode_dec = int("1000", 16)
                 largest_unicode_dec = int("109F", 16)
 
-            # Defining the character buckets that will get their own individual embedding vector
+            # Defining the code point buckets that will get their own individual embedding vector
+            # 1: Letters, 2: Marks, 3: Digits, 4: Separators, 5: Punctuations, 6: Symbols, 7: Others
             separate_slot_buckets = []
             separate_codepoints = []
             if self.embedding_type == "generalized_vectors_123":
@@ -175,10 +183,7 @@ class WordSegmenter:
             elif self.embedding_type == "generalized_vectors_1235":
                 separate_slot_buckets = [1, 2, 3, 5]
 
-            if "generalized_vectors" in self.embedding_type:
-                self.embedding_type = "generalized_vectors"
-
-            # Constructing the letters dictionary
+            # Constructing letters dictionary
             cnt = 0
             for i in range(smallest_unicode_dec, largest_unicode_dec + 1):
                 ch = chr(i)
@@ -189,7 +194,11 @@ class WordSegmenter:
                 ch = chr(unicode_dec)
                 self.letters_dic[ch] = cnt
                 cnt += 1
-            print("number of elements in letters_dic is {}".format(len(self.letters_dic)))
+
+            # After making the letters dictionary, we can call different versions of the generalized vectors same thing
+            if "generalized_vectors" in self.embedding_type:
+                self.embedding_type = "generalized_vectors"
+
         else:
             print("Warning: the generalized_vectros embedding type is not supported for this language")
 
@@ -202,36 +211,31 @@ class WordSegmenter:
         """
         # Finding word breakpoints
         # Note that it is possible that input is segmented manually instead of icu. However, for both cases we set that
-        # input_type equal to "icu_segmented" because that doesn't affect performance of this function. This is done
-        # we won't need unnecessary if/else for "man_segmented" and "icu_segmented" throughout rest of this function.
+        # input_type equal to "icu_segmented" because that doesn't affect performance of this function. This way we
+        # won't need unnecessary if/else for "man_segmented" and "icu_segmented" throughout rest of this function.
         line = Line(input_line, "icu_segmented")
 
+        # x_data and y_data will be code point based if self.embedding_type is codepoints
         if self.embedding_type == "codepoints":
             true_bies = line.get_bies_codepoints("icu")
-
-            # Making x_data and y_data
             y_data = true_bies.mat
-            line_len = len(line.char_brkpoints) - 1
             line_len = len(line.unsegmented)
             x_data = []
-
             for i in range(line_len):
                 x_data.append(CodePoint(line.unsegmented[i], self.codepoint_dic))
 
+        # x_data and y_data will be grapheme clusters based if self.embedding type is grapheme_clusters or generalized_
+        # vectors
         else:
-            true_bies = line.get_bies("icu")
-
-            # Making x_data and y_data
+            true_bies = line.get_bies_grapheme_clusters("icu")
             y_data = true_bies.mat
             line_len = len(line.char_brkpoints) - 1
             x_data = []
-
             for i in range(line_len):
                 char_start = line.char_brkpoints[i]
                 char_finish = line.char_brkpoints[i + 1]
                 curr_char = line.unsegmented[char_start: char_finish]
-                if self.embedding_type != "codepoints":
-                    x_data.append(GraphemeCluster(curr_char, self.graph_clust_dic, self.letters_dic))
+                x_data.append(GraphemeCluster(curr_char, self.graph_clust_dic, self.letters_dic))
 
         return x_data, y_data
 
@@ -250,22 +254,18 @@ class WordSegmenter:
             input_str = get_best_data_text(starting_text=1, ending_text=10, pseudo=False, exclusive=True)
         elif self.training_data == "pseudo BEST":
             input_str = get_best_data_text(starting_text=1, ending_text=10, pseudo=True, exclusive=False)
-        elif self.training_data == "BEST spaced":
-            file = Path.joinpath(Path(__file__).parent.parent.absolute(), 'Data/BEST_spaced_train.txt')
-            input_str = get_whole_file_segmented(file, input_type="man_segmented", output_type="man_segmented")
         elif self.training_data == "my":
             file = Path.joinpath(Path(__file__).parent.parent.absolute(), 'Data/my_train.txt')
-            input_str = get_whole_file_segmented(file, input_type="unsegmented", output_type="icu_segmented")
+            input_str = get_segmented_file_in_one_line(file, input_type="unsegmented", output_type="icu_segmented")
         elif self.training_data == "SAFT_Burmese":
             file = Path.joinpath(Path(__file__).parent.parent.absolute(), 'Data/SAFT_burmese_train.txt')
-            input_str = get_whole_file_segmented(file, input_type="man_segmented", output_type="man_segmented")
+            input_str = get_segmented_file_in_one_line(file, input_type="man_segmented", output_type="man_segmented")
         elif self.training_data == "BEST_my":
             file = Path.joinpath(Path(__file__).parent.parent.absolute(), 'Data/Best_my_train.txt')
-            input_str = get_whole_file_segmented(file, input_type="man_segmented", output_type="man_segmented")
+            input_str = get_segmented_file_in_one_line(file, input_type="man_segmented", output_type="man_segmented")
         else:
             print("Warning: no implementation for this training data exists!")
         x_data, y_data = self._get_trainable_data(input_str)
-
         if self.t > len(x_data):
             print("Warning: size of the training data is less than self.t")
         x_data = x_data[:self.t]
@@ -279,22 +279,18 @@ class WordSegmenter:
             input_str = get_best_data_text(starting_text=10, ending_text=20, pseudo=False, exclusive=True)
         elif self.training_data == "pseudo BEST":
             input_str = get_best_data_text(starting_text=10, ending_text=20, pseudo=True, exclusive=False)
-        elif self.training_data == "BEST spaced":
-            file = Path.joinpath(Path(__file__).parent.parent.absolute(), 'Data/BEST_spaced_valid.txt')
-            input_str = get_whole_file_segmented(file, input_type="man_segmented", output_type="man_segmented")
         elif self.training_data == "my":
             file = Path.joinpath(Path(__file__).parent.parent.absolute(), 'Data/my_valid.txt')
-            input_str = get_whole_file_segmented(file, input_type="unsegmented", output_type="icu_segmented")
+            input_str = get_segmented_file_in_one_line(file, input_type="unsegmented", output_type="icu_segmented")
         elif self.training_data == "SAFT_Burmese":
             file = Path.joinpath(Path(__file__).parent.parent.absolute(), 'Data/SAFT_burmese_test.txt')
-            input_str = get_whole_file_segmented(file, input_type="man_segmented", output_type="man_segmented")
+            input_str = get_segmented_file_in_one_line(file, input_type="man_segmented", output_type="man_segmented")
         elif self.training_data == "BEST_my":
             file = Path.joinpath(Path(__file__).parent.parent.absolute(), 'Data/Best_my_valid.txt')
-            input_str = get_whole_file_segmented(file, input_type="man_segmented", output_type="man_segmented")
+            input_str = get_segmented_file_in_one_line(file, input_type="man_segmented", output_type="man_segmented")
         else:
             print("Warning: no implementation for this validation data exists!")
         x_data, y_data = self._get_trainable_data(input_str)
-        print(len(x_data))
 
         if self.t > len(x_data):
             print("Warning: size of the validation data is less than self.t")
@@ -331,57 +327,14 @@ class WordSegmenter:
                   validation_steps=self.t // self.batch_size)
         self.model = model
 
-    def test_model(self):
+    def _test_text_line_by_line(self, file, line_limit, verbose):
         """
-        This function tests the model fitted in self.train(). It first divide the whole test data into big batches each
-        of size self.t, and then break down each big batch intor smaller batches each of size self.n.
-        """
-        # Get testing data
-        input_str = None
-        if self.evaluating_data == "BEST":
-            input_str = get_best_data_text(starting_text=40, ending_text=45, pseudo=False, exclusive=False)
-        elif self.evaluating_data == "exclusive BEST":
-            input_str = get_best_data_text(starting_text=40, ending_text=45, pseudo=False, exclusive=True)
-        elif self.evaluating_data == "SAFT":
-            file = Path.joinpath(Path(__file__).parent.parent.absolute(), 'Data/SAFT/test.txt')
-            input_str = get_whole_file_segmented(file, input_type="man_segmented", output_type="man_segmented")
-        elif self.evaluating_data == "my":
-            file = Path.joinpath(Path(__file__).parent.parent.absolute(), 'Data/my_test.txt')
-            input_str = get_whole_file_segmented(file, input_type="unsegmented", output_type="icu_segmented")
-        else:
-            print("Warning: no implementation for this evaluation data exists!")
-        x_data, y_data = self._get_trainable_data(input_str)
-
-        num_big_batches = len(x_data)//self.t
-        if len(x_data) < self.t:
-            print("Warning: length of the test data is smaller than self.t")
-        accuracy = Accuracy()
-        # Testing each big batch
-        for k in range(num_big_batches):
-            curr_x_data = x_data[k*self.t: (k+1)*self.t]
-            curr_y_data = y_data[k * self.t: (k + 1) * self.t, :]
-            test_generator = KerasBatchGenerator(curr_x_data, curr_y_data, n=self.n, batch_size=self.batch_size)
-
-            # Testing each mini batch
-            all_test_input, all_actual_y = test_generator.generate_once(embedding_type=self.embedding_type)
-            all_y_hat = self.model.predict(all_test_input, batch_size=self.batch_size)
-            for i in range(self.batch_size):
-                actual_y = all_actual_y[i, :, :]
-                actual_y = Bies(input_bies=actual_y, input_type="mat")
-                y_hat = Bies(input_bies=all_y_hat[i, :, :], input_type="mat")
-                accuracy.update(true_bies=actual_y.str, est_bies=y_hat.str)
-
-        print("The BIES accuracy in test_model function: {}".format(accuracy.get_bies_accuracy()))
-        print("The F1 socre in test_model function: {}".format(accuracy.get_f1_score()))
-        return accuracy.get_bies_accuracy()
-
-    def _test_text_line_by_line(self, file, line_limit):
-        """
-        This function tests the model fitted in self.train() using a single file textthat contains segmented lines.
-        Unlike self.test_model(), this function test texts line by line.
+        This function tests the model fitted in self.train() line by line, using the lines in file. These lines must be
+        already segmented so we can compute the performance of model.
         Args:
             file: the address of the file that is going to be tested
-            line_limit: number of lines to be tested
+            line_limit: number of lines to be tested. If set to -1, all lines will be tested.
+            verbose: determines if we want to show results line by line
         """
         lines = get_lines_of_text(file, "man_segmented")
         if len(lines) < line_limit:
@@ -390,63 +343,62 @@ class WordSegmenter:
         for line in lines[:line_limit]:
             x_data, y_data = self._get_trainable_data(line.man_segmented)
 
-            # Using the manual predict function for lines that are not necessarily self.n long
+            # Using the manual predict function for lines becasud they are not necessarily self.n long
             y_hat = Bies(input_bies=self._manual_predict(x_data), input_type="mat")
             y_hat.normalize_bies()
 
-            # Updating the accuracy using the new line
+            # Updating overall accuracy using the new line
             actual_y = Bies(input_bies=y_data, input_type="mat")
             accuracy.update(true_bies=actual_y.str, est_bies=y_hat.str)
-        print("The BIES accuracy (line by line) for file {} : {:.3f}".format(file, accuracy.get_bies_accuracy()))
-        print("The F1 score (line by line) for file {} : {:.3f}".format(file, accuracy.get_f1_score()))
+        if verbose:
+            print("The BIES accuracy (line by line) for file {} : {:.3f}".format(file, accuracy.get_bies_accuracy()))
+            print("The F1 score (line by line) for file {} : {:.3f}".format(file, accuracy.get_f1_score()))
         return accuracy
 
-    def test_model_line_by_line(self):
+    def test_model_line_by_line(self, verbose):
         """
         This function uses the evaluating data to test the model line by line.
         """
         accuracy = Accuracy()
-        if self.evaluating_data in ["BEST", "exclusive BEST"]:
-            if self.language != "Thai":
-                print("Warning: the Best data is in Thai and you are testing a model in another language")
+        if self.evaluation_data in ["BEST", "exclusive BEST"]:
             category = ["news", "encyclopedia", "article", "novel"]
-            for text_num in range(40, 45):
-                print("testing text {}".format(text_num))
+            for text_num in range(40, 60):
+                if verbose:
+                    print("testing text {}".format(text_num))
                 for cat in category:
                     text_num_str = "{}".format(text_num).zfill(5)
-                    if self.evaluating_data == "BEST":
+                    file = None
+                    if self.evaluation_data == "BEST":
                         file = Path.joinpath(Path(__file__).parent.parent.absolute(),
                                              "Data/Best/{}/{}_".format(cat, cat) + text_num_str + ".txt")
-                    elif self.evaluating_data == "exclusive BEST":
+                    elif self.evaluation_data == "exclusive BEST":
                         file = Path.joinpath(Path(__file__).parent.parent.absolute(),
                                              "Data/exclusive_Best/{}/{}_".format(cat, cat) + text_num_str + ".txt")
-                    text_acc = self._test_text_line_by_line(file, line_limit=-1)
+                    text_acc = self._test_text_line_by_line(file=file, line_limit=-1, verbose=verbose)
                     accuracy.merge_accuracy(text_acc)
-        elif self.evaluating_data == "BEST spaced":
-            if self.language != "Thai":
-                print("Warning: the Best data is in Thai and you are testing a model in another language")
-            file = Path.joinpath(Path(__file__).parent.parent.absolute(), 'Data/BEST_spaced_test.txt')
-            text_acc = self._test_text_line_by_line(file, line_limit=-1)
-            accuracy.merge_accuracy(text_acc)
-        elif self.evaluating_data == "my":
-            if self.language != "Burmese":
-                print("Warning: the my.text data is in Burmese and you are testing a model in another language")
-            file = Path.joinpath(Path(__file__).parent.parent.absolute(), 'Data/my_test_segmented.txt')
-            text_acc = self._test_text_line_by_line(file, line_limit=1000)
-            accuracy.merge_accuracy(text_acc)
-        elif self.evaluating_data == "SAFT_Burmese":
-            if self.language != "Burmese":
-                print("Warning: the my.text data is in Burmese and you are testing a model in another language")
-            file = Path.joinpath(Path(__file__).parent.parent.absolute(), 'Data/SAFT_burmese_test.txt')
-            text_acc = self._test_text_line_by_line(file, line_limit=1000)
-            accuracy.merge_accuracy(text_acc)
-        elif self.evaluating_data == "SAFT_Thai":
+
+        elif self.evaluation_data == "SAFT_Thai":
             if self.language != "Thai":
                 print("Warning: the current SAFT data is in Thai and you are testing a model in another language")
             file = Path.joinpath(Path(__file__).parent.parent.absolute(), 'Data/SAFT/test.txt')
-            text_acc = self._test_text_line_by_line(file, line_limit=-1)
+            text_acc = self._test_text_line_by_line(file=file, line_limit=-1, verbose=verbose)
             accuracy.merge_accuracy(text_acc)
-        elif self.evaluating_data == "BEST_my":
+
+        elif self.evaluation_data == "my":
+            if self.language != "Burmese":
+                print("Warning: the my.text data is in Burmese and you are testing a model in another language")
+            file = Path.joinpath(Path(__file__).parent.parent.absolute(), 'Data/my_test_segmented.txt')
+            text_acc = self._test_text_line_by_line(file=file, line_limit=1000, verbose=verbose)
+            accuracy.merge_accuracy(text_acc)
+
+        elif self.evaluation_data == "SAFT_Burmese":
+            if self.language != "Burmese":
+                print("Warning: the my.text data is in Burmese and you are testing a model in another language")
+            file = Path.joinpath(Path(__file__).parent.parent.absolute(), 'Data/SAFT_burmese_test.txt')
+            text_acc = self._test_text_line_by_line(file=file, line_limit=1000, verbose=verbose)
+            accuracy.merge_accuracy(text_acc)
+
+        elif self.evaluation_data == "BEST_my":
             if self.language != "Thai_Burmese":
                 print("Warning: the current data should be used only for Thai_Burmese multilingual models")
             # Testing for BEST
@@ -458,22 +410,28 @@ class WordSegmenter:
                     text_num_str = "{}".format(text_num).zfill(5)
                     file = Path.joinpath(Path(__file__).parent.parent.absolute(), "Data/Best/{}/{}_".format(cat, cat)
                                          + text_num_str + ".txt")
-                    text_acc = self._test_text_line_by_line(file, line_limit=-1)
+                    text_acc = self._test_text_line_by_line(file=file, line_limit=-1, verbose=verbose)
                     acc1.merge_accuracy(text_acc)
-            print("The BIES accuracy by test_model_line_by_line function (Thai): {:.3f}".format(acc1.get_bies_accuracy()))
-            print("The F1 score by test_model_line_by_line function (Thai): {:.3f}".format(acc1.get_f1_score()))
+            if verbose:
+                print("The BIES accuracy by test_model_line_by_line function (Thai): {:.3f}".
+                      format(acc1.get_bies_accuracy()))
+                print("The F1 score by test_model_line_by_line function (Thai): {:.3f}".format(acc1.get_f1_score()))
             # Testing for my
             file = Path.joinpath(Path(__file__).parent.parent.absolute(), 'Data/my_test_segmented.txt')
-            acc2 = self._test_text_line_by_line(file, line_limit=1000)
-            print("The BIES accuracy by test_model_line_by_line function (Burmese): {:.3f}".format(acc2.get_bies_accuracy()))
-            print("The F1 score by test_model_line_by_line function (Burmese): {:.3f}".format(acc2.get_f1_score()))
+            acc2 = self._test_text_line_by_line(file, line_limit=1000, verbose=verbose)
+            if verbose:
+                print("The BIES accuracy by test_model_line_by_line function (Burmese): {:.3f}".
+                      format(acc2.get_bies_accuracy()))
+                print("The F1 score by test_model_line_by_line function (Burmese): {:.3f}".format(acc2.get_f1_score()))
             accuracy.merge_accuracy(acc1)
             accuracy.merge_accuracy(acc2)
+
         else:
             print("Warning: no implementation for line by line evaluating this data exists")
-        print("The BIES accuracy by test_model_line_by_line function: {:.3f}".format(accuracy.get_bies_accuracy()))
-        print("The F1 score by test_model_line_by_line function: {:.3f}".format(accuracy.get_f1_score()))
-        return accuracy.get_bies_accuracy()
+        if verbose:
+            print("The BIES accuracy by test_model_line_by_line function: {:.3f}".format(accuracy.get_bies_accuracy()))
+            print("The F1 score by test_model_line_by_line function: {:.3f}".format(accuracy.get_f1_score()))
+        return accuracy
 
     def _manual_predict(self, test_input):
         """
@@ -483,12 +441,16 @@ class WordSegmenter:
             test_input: the input text
         """
         # Forward LSTM
-        embedarr = self.model.weights[0]
-        embedarr = embedarr.numpy()
-        weightLSTM = self.model.weights[1: 4]
-        c_fw = np.zeros([1, self.hunits])
-        h_fw = np.zeros([1, self.hunits])
-        all_h_fw = np.zeros([len(test_input), self.hunits])
+        dtype = np.float32
+        embedarr = self.model.weights[0].numpy().astype(dtype)
+        lstm_weights = [self.model.weights[1].numpy().astype(dtype), self.model.weights[2].numpy().astype(dtype),
+                        self.model.weights[3].numpy().astype(dtype)]
+
+        # print(weightLSTM[0].dtype)
+        # x = input()
+        c_fw = np.zeros([1, self.hunits], dtype=dtype)
+        h_fw = np.zeros([1, self.hunits], dtype=dtype)
+        all_h_fw = np.zeros([len(test_input), self.hunits], dtype=dtype)
         for i in range(len(test_input)):
             x_t = None
             if self.embedding_type == "grapheme_clusters_tf":
@@ -506,16 +468,15 @@ class WordSegmenter:
                 x_t = embedarr[input_codepoint_id, :]
                 x_t = x_t.reshape(1, x_t.shape[0])
             else:
-                print("Warning: this embedding type is not implemented")
-            h_fw, c_fw = self._compute_hc(weightLSTM, x_t, h_fw, c_fw)
+                print("Warning: this embedding type is not implemented for manual prediction")
+            h_fw, c_fw = self._compute_hc(lstm_weights, x_t, h_fw, c_fw)
             all_h_fw[i, :] = h_fw
 
         # Backward LSTM
-        embedarr = self.model.weights[0]
-        embedarr = embedarr.numpy()
-        weightLSTM = self.model.weights[4: 7]
-        c_bw = np.zeros([1, self.hunits])
-        h_bw = np.zeros([1, self.hunits])
+        lstm_weights = [self.model.weights[4].numpy().astype(dtype), self.model.weights[5].numpy().astype(dtype),
+                        self.model.weights[6].numpy().astype(dtype)]
+        c_bw = np.zeros([1, self.hunits], dtype=dtype)
+        h_bw = np.zeros([1, self.hunits], dtype=dtype)
         all_h_bw = np.zeros([len(test_input), self.hunits])
         for i in range(len(test_input) - 1, -1, -1):
             x_t = None
@@ -534,16 +495,14 @@ class WordSegmenter:
                 x_t = embedarr[input_codepoint_id, :]
                 x_t = x_t.reshape(1, x_t.shape[0])
             else:
-                print("Warning: this embedding type is not implemented")
-            h_bw, c_bw = self._compute_hc(weightLSTM, x_t, h_bw, c_bw)
+                print("Warning: this embedding type is not implemented for manual prediction")
+            h_bw, c_bw = self._compute_hc(lstm_weights, x_t, h_bw, c_bw)
             all_h_bw[i, :] = h_bw
 
         # Combining Forward and Backward layers through dense time-distributed layer
-        timew = self.model.weights[7]
-        timew = timew.numpy()
-        timeb = self.model.weights[8]
-        timeb = timeb.numpy()
-        est = np.zeros([len(test_input), 4])
+        timew = self.model.weights[7].numpy().astype(dtype)
+        timeb = self.model.weights[8].numpy().astype(dtype)
+        est = np.zeros([len(test_input), 4], dtype=dtype)
         for i in range(len(test_input)):
             final_h = np.concatenate((all_h_fw[i, :], all_h_bw[i, :]), axis=0)
             final_h = final_h.reshape(1, 2 * self.hunits)
@@ -553,22 +512,19 @@ class WordSegmenter:
             est[i, :] = curr_est
         return est
 
-    def _compute_hc(self, weight, x_t, h_tm1, c_tm1):
+    def _compute_hc(self, weights, x_t, h_tm1, c_tm1):
         """
         Given weights of a LSTM model, the input at time t, and values for h and c at time t-1, this function compute
         the values of h and c at time t.
         Args:
-            weight: a list of three matrices, which are W (from input to cell), U (from h to cell), and b (bias) respectively.
+            weights: a list of three matrices, which are W (from input to cell), U (from h to cell), and b (bias)
+            respectively.
             x_t: the input at time t
             h_tm1: value of h for time t-1
             c_tm1: value of c for time t-1
         """
-        warr, uarr, barr = weight
-        warr = warr.numpy()
-        uarr = uarr.numpy()
-        barr = barr.numpy()
-
-        # Implementing gates (forget, input, and output)
+        # Implementing forget, input, and output gates in LSTM model
+        warr, uarr, barr = weights
         s_t = (x_t.dot(warr) + h_tm1.dot(uarr) + barr)
         hunit = uarr.shape[0]
         i = sigmoid(s_t[:, :hunit])
@@ -583,37 +539,46 @@ class WordSegmenter:
         """
         This function uses the LSTM model to segment an unsegmented line and compare it to ICU and deepcut.
         Args:
-            input_line: the unsegmented input line
+            input_line: the string that needs to be segmented. It is supposed to be unsegmented
         """
         line = Line(input_line, "unsegmented")
-        line_len = len(line.char_brkpoints) - 1
+        grapheme_clusters_in_line = len(line.char_brkpoints) - 1
 
-        # Making the input to and the output from the lstm model
-        x_data = []
-        for i in range(line_len):
-            char_start = line.char_brkpoints[i]
-            char_finish = line.char_brkpoints[i + 1]
-            curr_char = line.unsegmented[char_start: char_finish]
-            x_data.append(GraphemeCluster(curr_char, self.graph_clust_dic, self.letters_dic))
+        # Using LSTM model to segment the input line
+        if self.embedding_type == "codepoints":
+            x_data = []
+            for i in range(len(line.unsegmented)):
+                x_data.append(CodePoint(line.unsegmented[i], self.codepoint_dic))
+        else:
+            x_data = []
+            for i in range(grapheme_clusters_in_line):
+                char_start = line.char_brkpoints[i]
+                char_finish = line.char_brkpoints[i + 1]
+                curr_char = line.unsegmented[char_start: char_finish]
+                x_data.append(GraphemeCluster(curr_char, self.graph_clust_dic, self.letters_dic))
         y_hat = Bies(input_bies=self._manual_predict(x_data), input_type="mat")
         y_hat.normalize_bies()
 
-        # Making a pretty version of the output of the LSTM, where bars shown the boundary of segmented words
+        # Making a pretty version of the output of the LSTM, where bars show the boundaries of words
         y_hat_pretty = ""
-        for i in range(line_len):
-            char_start = line.char_brkpoints[i]
-            char_finish = line.char_brkpoints[i + 1]
-            curr_char = line.unsegmented[char_start: char_finish]
-            if y_hat.str[i] in ['b', 's']:
-                y_hat_pretty += "|"
-            y_hat_pretty += curr_char
-        y_hat_pretty += "|"
+        if self.embedding_type == "codepoints":
+            for i in range(len(line.unsegmented)):
+                if y_hat.str[i] in ['b', 's']:
+                    y_hat_pretty += "|"
+                y_hat_pretty += line.unsegmented[i]
+            y_hat_pretty += "|"
+        else:
+            y_hat_pretty = ""
+            for i in range(grapheme_clusters_in_line):
+                char_start = line.char_brkpoints[i]
+                char_finish = line.char_brkpoints[i + 1]
+                curr_char = line.unsegmented[char_start: char_finish]
+                if y_hat.str[i] in ['b', 's']:
+                    y_hat_pretty += "|"
+                y_hat_pretty += curr_char
+            y_hat_pretty += "|"
 
-        # Showing the output
-        # print("Input line        : {}".format(line.unsegmented))
-        # print("ICU segmented     : {}".format(line.icu_segmented))
-        print("LSTM segmented    : {}".format(y_hat_pretty))
-        # print("Deepcut segmented : {}".format(line.get_deepcut_segmented()))
+        return y_hat_pretty
 
     def save_model(self):
         """
@@ -630,10 +595,10 @@ class WordSegmenter:
         with open(str(json_file), 'w') as wfile:
             output = dict()
             output["model"] = self.name
-            output["dic"] = self.graph_clust_dic
+            if "grapheme_clusters" in self.embedding_type:
+                output["dic"] = self.graph_clust_dic
             for i in range(len(self.model.weights)):
                 dic_model = dict()
-                dic_model["v"] = 1
                 mat = self.model.weights[i].numpy()
                 dim0 = mat.shape[0]
                 dim1 = 1
@@ -642,8 +607,9 @@ class WordSegmenter:
                 else:
                     dim1 = mat.shape[1]
                     dic_model["dim"] = [dim0, dim1]
-                serial_mat = np.reshape(mat, newshape=[1, dim0 * dim1])
-                dic_model["data"] = serial_mat.tolist()[0]
+                serial_mat = np.reshape(mat, newshape=[dim0 * dim1])
+                serial_mat = serial_mat.tolist()
+                dic_model["data"] = serial_mat
                 output["mat{}".format(i+1)] = dic_model
             json.dump(output, wfile)
 
@@ -653,3 +619,62 @@ class WordSegmenter:
         input_model: the input model
         """
         self.model = input_model
+
+
+def pick_lstm_model(model_name, embedding, train_data, eval_data):
+    """
+    This function returns a word segmentation instance w.r.t input specifics
+    Args:
+        model_name: name of the model
+        embedding: embedding type used to train the model
+        train_data: the data set used to train the model
+        eval_data: the data set to test the model. Often, it should have the same structure as training data set.
+    """
+    file = Path.joinpath(Path(__file__).parent.absolute(), 'Models/' + model_name)
+    model = keras.models.load_model(file)
+
+    # Figuring out name of the model
+    language = None
+    if "Thai" in model_name:
+        language = "Thai"
+    elif "Burmese" in model_name:
+        language = "Burmese"
+    if language is None:
+        print("This model name is not valid because it doesn't have name of a valid language in it")
+
+    # Letting the user know how this model has been trained
+    if "exclusive" in model_name:
+        print("Note: this model has been trained using an exclusive data set. However, if you like you can still test"
+              " it by other types of data sets (not recommended).")
+
+    # Figuring out values for different hyper-parameters
+    input_clusters_num = model.weights[0].shape[0]
+    input_embedding_dim = model.weights[0].shape[1]
+    input_hunits = model.weights[1].shape[1]//4
+    input_n = None
+    input_t = None
+    if "genvec" in model_name or "graph_clust" in model_name:
+        input_n = 50
+        input_t = 100000
+        if "heavy" in model_name:
+            input_n = 200
+            input_t = 600000
+        elif "heavier" in model_name:
+            input_n = 200
+            input_t = 2000000
+    elif "codepoints" in model_name:
+        input_n = 100
+        input_t = 200000
+        if "heavy" in model_name:
+            input_n = 300
+            input_t = 1200000
+    if input_n is None:
+        print("This model name is not valid because it doesn't have name of the embedding type in it")
+
+    word_segmenter = WordSegmenter(input_name=model_name, input_n=input_n, input_t=input_t,
+                                   input_clusters_num=input_clusters_num, input_embedding_dim=input_embedding_dim,
+                                   input_hunits=input_hunits, input_dropout_rate=0.2, input_output_dim=4,
+                                   input_epochs=15, input_training_data=train_data, input_evaluation_data=eval_data,
+                                   input_language=language, input_embedding_type=embedding)
+    word_segmenter.set_model(model)
+    return word_segmenter

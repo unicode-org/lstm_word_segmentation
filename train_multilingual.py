@@ -2,12 +2,12 @@ from pathlib import Path
 from tensorflow import keras
 from lstm_word_segmentation.lstm_bayesian_optimization import LSTMBayesianOptimization
 from lstm_word_segmentation.word_segmenter import WordSegmenter
-from lstm_word_segmentation.text_helpers import break_lines_based_on_spaces, merge_two_texts, add_additional_bars
+from lstm_word_segmentation.text_helpers import merge_two_texts, add_additional_bars
 
 
 # Making new files with bars around spaces in my_train.txt and my_valid.txt, so it is compatible with the format of BEST
 # data sets.
-'''
+# '''
 input_file = Path.joinpath(Path(__file__).parent.absolute(), "Data/my_train.txt")
 output_file = Path.joinpath(Path(__file__).parent.absolute(), "Data/my_train_with_bars.txt")
 add_additional_bars(read_filename=input_file, write_filename=output_file)
@@ -15,10 +15,10 @@ add_additional_bars(read_filename=input_file, write_filename=output_file)
 input_file = Path.joinpath(Path(__file__).parent.absolute(), "Data/my_valid.txt")
 output_file = Path.joinpath(Path(__file__).parent.absolute(), "Data/my_valid_with_bars.txt")
 add_additional_bars(read_filename=input_file, write_filename=output_file)
-'''
+# '''
 
 # Making a dataset that has both Thai (BEST) and Burmese (my) in it
-'''
+# '''
 thai_texts = []
 category = ["news", "encyclopedia", "article", "novel"]
 for text_num in range(10, 20):
@@ -30,14 +30,14 @@ for text_num in range(10, 20):
 burmese_texts = [Path.joinpath(Path(__file__).parent.absolute(), "Data/my_valid_with_bars.txt")]
 output_text = file = Path.joinpath(Path(__file__).parent.absolute(), "Data/Best_my_valid.txt")
 merge_two_texts(input_texts1=thai_texts, input_texts2=burmese_texts, output_text=output_text, line_limit=1200)
-'''
+# '''
 
 # Train a new model -- choose name cautiously to not overwrite other models
 # '''
 model_name = "Thai_Burmese_temp"
 word_segmenter = WordSegmenter(input_name=model_name, input_n=100, input_t=200000, input_clusters_num=500,
                                input_embedding_dim=40, input_hunits=40, input_dropout_rate=0.2, input_output_dim=4,
-                               input_epochs=15, input_training_data="BEST_my", input_evaluating_data="BEST_my",
+                               input_epochs=15, input_training_data="BEST_my", input_evaluation_data="BEST_my",
                                input_language="Thai_Burmese", input_embedding_type="grapheme_clusters_tf")
 
 # Training, testing, and saving the model
@@ -63,21 +63,13 @@ else:
     input_n = 50
     input_t = 100000
 
-print(input_embedding_dim)
-print(input_hunits)
+print("embedding dim = {}".format(input_embedding_dim))
+print("hunits = {}".format(input_hunits))
 
 word_segmenter = WordSegmenter(input_name=model_name, input_n=input_n, input_t=input_t,
                                input_clusters_num=input_clusters_num, input_embedding_dim=input_embedding_dim,
                                input_hunits=input_hunits, input_dropout_rate=0.2, input_output_dim=4, input_epochs=15,
-                               input_training_data="BEST_my", input_evaluating_data="BEST_my", input_language="Thai_Burmese",
-                               input_embedding_type=input_embedding_type)
+                               input_training_data="BEST_my", input_evaluation_data="BEST_my",
+                               input_language="Thai_Burmese", input_embedding_type=input_embedding_type)
 word_segmenter.set_model(model)
-# word_segmenter.test_model()
-word_segmenter.test_model_line_by_line()
-
-# Testing the model by arbitrary sentences
-# line = "แม้จะกะเวลาเอาไว้แม่นยำว่ากว่าเขาจะมาถึงก็คงประมาณหกโมงเย็น"
-# line = "ทำสิ่งต่างๆ ได้มากขึ้นขณะที่อุปกรณ์ล็อกและชาร์จอยู่ด้วยโหมดแอมเบียนท์"
-# line = "เกี่ยวกับนอมินีหรือการถือหุ้นแทนกันในบริษัทต่างๆที่เกี่ยวข้องกับการซื้อหุ้น"
-# word_segmenter.segment_arbitrary_line(line)
-# '''
+word_segmenter.test_model_line_by_line(verbose=True)

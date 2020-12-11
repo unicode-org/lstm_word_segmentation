@@ -1,129 +1,115 @@
 from pathlib import Path
 import numpy as np
-from .accuracy import Accuracy
 from collections import Counter
-from .text_helpers import get_lines_of_text, compute_accuracy, add_additional_bars, compute_accuracy_best
+from .text_helpers import get_lines_of_text, compute_accuracy, compute_accuracy_best
 from . import constants
 
 
-def evaluate_existing_algorithms():
-    # raw_path = Path.joinpath(Path(__file__).parent.parent.absolute(), 'Data/SAFT/test_raw.txt')
-    # not_raw_path = Path.joinpath(Path(__file__).parent.parent.absolute(), 'Data/SAFT/test.txt')
-    # add_additional_bars(raw_path, not_raw_path)
+def evaluate_existing_algorithms(algorithm, data):
+    """
+    This function evaluates the algorithms that are imported, such as ICU and Deepcut for Thai
+    Args:
+        algorithm: the algortihm to be tested. It can be ICU or Deepcut for now
+        data: the data to be used for testing algorithms. The values that it can take are:
+    """
+    acc = None
+    if algorithm == "ICU":
+        if data == "SAFT Thai":
+            file = Path.joinpath(Path(__file__).parent.parent.absolute(), 'Data/SAFT/test.txt')
+            acc = compute_accuracy(file, "icu")
+        elif data == "BEST":
+            acc = compute_accuracy_best(starting_text=40, ending_text=60, algorithm="icu", exclusive=False)
+        elif data == "exclusive BEST":
+            acc = compute_accuracy_best(starting_text=40, ending_text=60, algorithm="icu", exclusive=True)
+        elif data == "SAFT Burmese":
+            file = Path.joinpath(Path(__file__).parent.parent.absolute(), 'Data/SAFT_burmese_test_limited.txt')
+            acc = compute_accuracy(file, "icu")
+        elif data == "my":
+            file = Path.joinpath(Path(__file__).parent.parent.absolute(), 'Data/my_test_segmented.txt')
+            acc = compute_accuracy(file, "icu")
 
-    # Use SAFT data set
-    '''
-    saft_icu_acc = compute_accuracy(not_raw_path, "icu")
-    saft_deepcut_acc = compute_accuracy(not_raw_path, "deep")
-    print("ICU accuracy on SAFT data     : BIES accuracy = {}, F1-score = {}".format(saft_icu_acc.get_bies_accuracy(),
-                                                                                saft_icu_acc.get_f1_score()))
-    print("Deepcut accuracy on SAFT data : BIES accuracy = {}, F1-score = {}".format(saft_deepcut_acc.get_bies_accuracy(),
-                                                                                saft_deepcut_acc.get_f1_score()))
-    '''
+    if algorithm == "Deepcut":
+        if data == "SAFT Thai":
+            file = Path.joinpath(Path(__file__).parent.parent.absolute(), 'Data/SAFT/test.txt')
+            acc = compute_accuracy(file, "icu")
+        elif data == "BEST":
+            acc = compute_accuracy_best(starting_text=40, ending_text=60, algorithm="deep", exclusive=False)
+        elif data == "exclusive BEST":
+            acc = compute_accuracy_best(starting_text=40, ending_text=60, algorithm="deep", exclusive=True)
 
-    # Use BEST data set
-    best_icu_acc = compute_accuracy_best(starting_text=40, ending_text=45, algorithm="icu", exclusive=False)
-    # best_deepcut_acc = compute_accuracy_best(starting_text=40, ending_text=45, algorithm="deep")
-    print("ICU accuracy on BEST data     : BIES accuracy = {}, F1-score = {}".format(best_icu_acc.get_bies_accuracy(),
-                                                                                best_icu_acc.get_f1_score()))
-    # print("Deepcut accuracy on BEST data : BIES accuracy = {}, F1-score = {}".format(best_deepcut_acc.get_bies_accuracy(),
-    #                                                                             best_deepcut_acc.get_f1_score()))
+    if acc is None:
+        print("Warning: the evaluation for this combination of data and algorithm is not supported.")
+    else:
+        print(
+            "{} accuracy on {} data set: BIES accuracy = {}, F1-score = {}".format(algorithm, data,
+                                                                                   acc.get_bies_accuracy(),
+                                                                                   acc.get_f1_score()))
+    return acc
 
 
-def preprocess_thai(verbose, exclusive):
+def find_grapheme_clusters(language, exclusive, verbose):
     """
     This function uses the BEST data set to
         1) compute the grapheme cluster dictionary that holds the frequency of different grapheme clusters
-        2) demonstrate the performance of icu word breakIterator and compute its accuracy
     Args:
+        language: the language that we want to used to find grapheme clusters. It can be "Thai" or "Burmese"
         verbose: shows if we want to see how the algorithm is working or not
-        exclusive: determines to use BEST data set or exclusive BEST data set where all non-Thai code points are
-                   excluded
+        exclusive: determines to use a data set where all code points are in the script associated with the language or
+                   not
     """
     grapheme_clusters_dic = Counter()
-    accuracy = Accuracy()
-    for cat in ["news", "encyclopedia", "article", "novel"]:
-        for text_num in range(1, 96):
-            print(text_num)
-            text_num_str = "{}".format(text_num).zfill(5)
-            if exclusive:
-                file = Path.joinpath(Path(__file__).parent.parent.absolute(), "Data/exclusive_Best/{}/{}_".format(cat, cat) +
-                                     text_num_str + ".txt")
-            else:
-                file = Path.joinpath(Path(__file__).parent.parent.absolute(), "Data/Best/{}/{}_".format(cat, cat) +
-                                     text_num_str + ".txt")
+    lines = []
 
-            lines = get_lines_of_text(file=file, type_of_lines="man_segmented")
-            for line in lines:
-                # Storing the grapheme clusters and their frequency in the dictionary
-                grapheme_clusters_dic += line.get_grapheme_clusters()
-
-                # Adding spaces manually once for each line, so they be identified as a major grapheme cluster
+    # For Thai use BEST data set
+    if language == "Thai":
+        num_texts = 96
+        for text_num in range(1, num_texts):
+            for cat in ["news", "encyclopedia", "article", "novel"]:
+                text_num_str = "{}".format(text_num).zfill(5)
                 if exclusive:
-                    grapheme_clusters_dic += Counter({' ': 1})
+                    file = Path.joinpath(Path(__file__).parent.parent.absolute(), "Data/exclusive_Best/{}/{}_".
+                                         format(cat, cat) + text_num_str + ".txt")
+                else:
+                    file = Path.joinpath(Path(__file__).parent.parent.absolute(), "Data/Best/{}/{}_".format(cat, cat) +
+                                         text_num_str + ".txt")
 
-                # Computing BIES corresponding to the manually segmented and ICU segmented
-                true_bies = line.get_bies(segmentation_type="man")
-                icu_bies = line.get_bies(segmentation_type="icu")
+                lines += get_lines_of_text(file=file, type_of_lines="man_segmented")
 
-                # Computing the bies accuracy and F1 score using icu_bies_str and true_bies_str
-                accuracy.update(true_bies=true_bies.str, est_bies=icu_bies.str)
-
-                # Demonstrate how icu segmenter works
-                if verbose:
-                    line.display()
-
-    graph_clust_freq = dict(grapheme_clusters_dic)
-    graph_clust_freq = {k: v for k, v in sorted(graph_clust_freq.items(), key=lambda item: item[1], reverse=True)}
-    graph_clust_ratio = graph_clust_freq
-    total = sum(graph_clust_ratio.values(), 0.0)
-    graph_clust_ratio = {k: v / total for k, v in graph_clust_ratio.items()}
-    print("ICU BIES accuracy on BEST data is {}".format(accuracy.get_bies_accuracy()))
-    print("ICU F1 accuracy on BEST data is {}".format(accuracy.get_f1_score()))
-    save_file = Path.joinpath(Path(__file__).parent.parent.absolute(), "Data/Thai_graph_clust_ratio.npy")
-    if exclusive:
-        save_file = Path.joinpath(Path(__file__).parent.parent.absolute(), "Data/Thai_exclusive_graph_clust_ratio.npy")
-    np.save(str(save_file), graph_clust_ratio)
-
-
-def preprocess_burmese(verbose, exclusive):
-    """
-    This function uses the Google corpus crawler Burmese data set to
-        1) Clean it by removing tabs from start of it
-        1) Compute the grapheme cluster dictionary that holds the frequency of different grapheme clusters
-        2) Demonstrate the performance of icu word breakIterator and compute its accuracy
-    Args:
-        verbose: shows if we want to see how the algorithm is working or not
-        exclusive: determines to use BEST data set or exclusive BEST data set where all non-Thai code points are
-                   excluded
-    """
-    grapheme_clusters_dic = Counter()
-    if exclusive:
-        file = Path.joinpath(Path(__file__).parent.parent.absolute(), "Data/my.txt")
-    else:
-        file = Path.joinpath(Path(__file__).parent.parent.absolute(), "Data/my.txt")  # use appropriate file here
-    lines = get_lines_of_text(file=file, type_of_lines="man_segmented")
-    for line in lines:
-        # Storing the grapheme clusters and their frequency in the dictionary
-        grapheme_clusters_dic += line.get_grapheme_clusters()
-        # Adding spaces manually once for each line, so they be identified as a major grapheme cluster
+    # For Burmese use "my" data set
+    elif language == "Burmese":
         if exclusive:
-            grapheme_clusters_dic += Counter({' ': 1})
+            file = Path.joinpath(Path(__file__).parent.parent.absolute(), "Data/my.txt")
+        else:
+            file = Path.joinpath(Path(__file__).parent.parent.absolute(), "Data/my.txt")  # use appropriate file here
+        lines = get_lines_of_text(file=file, type_of_lines="man_segmented")
 
-        # Demonstrate how icu segmenter works
+    else:
+        print("Warning: the input language is not supported")
+
+    for line in lines:
+        grapheme_clusters_dic += line.get_grapheme_clusters()
         if verbose:
             line.display()
 
+    # Saving the dictionary based on frequency of grapheme clusters
     graph_clust_freq = dict(grapheme_clusters_dic)
     graph_clust_freq = {k: v for k, v in sorted(graph_clust_freq.items(), key=lambda item: item[1], reverse=True)}
     graph_clust_ratio = graph_clust_freq
     total = sum(graph_clust_ratio.values(), 0.0)
     graph_clust_ratio = {k: v / total for k, v in graph_clust_ratio.items()}
 
-    save_file = Path.joinpath(Path(__file__).parent.parent.absolute(), "Data/Burmese_graph_clust_ratio.npy")
-    if exclusive:
-        save_file = Path.joinpath(Path(__file__).parent.parent.absolute(),
-                                  "Data/Burmese_exclusive_graph_clust_ratio.npy")
+    # Saving the dictionary
+    save_file = ""
+    if language == "Thai":
+        save_file = Path.joinpath(Path(__file__).parent.parent.absolute(), "Data/Thai_graph_clust_ratio.npy")
+        if exclusive:
+            save_file = Path.joinpath(Path(__file__).parent.parent.absolute(),
+                                      "Data/Thai_exclusive_graph_clust_ratio.npy")
+    if language == "Burmese":
+        save_file = Path.joinpath(Path(__file__).parent.parent.absolute(), "Data/Burmese_graph_clust_ratio.npy")
+        if exclusive:
+            save_file = Path.joinpath(Path(__file__).parent.parent.absolute(),
+                                      "Data/Burmese_exclusive_graph_clust_ratio.npy")
     np.save(str(save_file), graph_clust_ratio)
 
 

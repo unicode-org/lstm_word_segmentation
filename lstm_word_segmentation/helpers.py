@@ -30,14 +30,15 @@ def sigmoid(x):
     Args:
         x: the scalar
     """
-    return 1.0/(1.0+np.exp(-x))
+    if x < -100:
+        return 0
+    return 1.0/(1.0 + np.exp(-x))
 
 
 def print_grapheme_clusters(thrsh, language):
     """
-    This function analyzes the grapheme clusters, to see what percentage of them form which percent of the text, and
-    provides a histogram that shows frequency of grapheme clusters
-    ratios: a dictionary that holds the ratio of text that is represented by each grapheme cluster
+    This function print the grapheme clusters and their frequencies for a given langauge. It also computes what
+    percentage of grapheme clusters form which percent of the text
     Args:
         thrsh: shows what percent of the text we want to be covered by grapheme clusters
         language: shows the language that we are working with
@@ -50,7 +51,7 @@ def print_grapheme_clusters(thrsh, language):
     if language == "Thai-Burmese":
         ratios = constants.THAI_BURMESE_GRAPH_CLUST_RATIO
     if ratios is None:
-        print("No grapheme cluster dictionary has been computed for the input language")
+        print("No grapheme cluster dictionary has been computed for the input language.")
         return
     cum_sum = 0
     cnt = 0

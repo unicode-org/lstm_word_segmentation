@@ -105,7 +105,7 @@ class Line:
             out_line += word + "|"
         return out_line
 
-    def get_bies(self, segmentation_type):
+    def get_bies_grapheme_clusters(self, segmentation_type):
         """
         This function computes the BIES matrix for grapheme clusters that represents the line in this instance.
         Args:

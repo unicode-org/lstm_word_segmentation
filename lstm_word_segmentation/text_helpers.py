@@ -52,7 +52,7 @@ def remove_tags(line, st_tag, fn_tag):
     return new_line
 
 
-def clean_line(line):
+def clean_line(line, segmented):
     """
     This line cleans a line as follows such that it is ready for process by different components of the code. It returns
     the clean line or -1, if the line should be omitted.
@@ -61,6 +61,8 @@ def clean_line(line):
         3) if line is very short (len < 3) or if it is all in English or it has a link in it, return -1
     Args:
         line: the input line
+        segmented: shows if the input line is segmented or not. This is to see if we need to check for bars at the start
+                   and end of the line or not.
     """
     line = line.strip()
 
@@ -78,13 +80,14 @@ def clean_line(line):
     if is_ascii(line):
         return -1
 
-    # Add "|" to the end of each line if it is not there
-    if len(line) >= 1 and line[len(line) - 1] != '|':
-        line += "|"
+    if segmented:
+        # Add "|" to the end of each line if it is not there
+        if len(line) >= 1 and line[len(line) - 1] != '|':
+            line += "|"
 
-    # Adding "|" to the start of each line if it is not there
-    if len(line) >= 0 and line[0] != '|':
-        line = '|' + line
+        # Adding "|" to the start of each line if it is not there
+        if len(line) >= 0 and line[0] != '|':
+            line = '|' + line
 
     return line
 
@@ -194,27 +197,28 @@ def get_lines_of_text(file, type_of_lines):
         type_of_lines: It shows what is the type of sentences in the file. It can take 3 different values: unsegmented,
         man_segmented, or icu_segmented
     """
+    segmented = True
+    if type_of_lines == "unsegmented":
+        segmented = False
     out = []
     with open(file) as f:
         for file_line in f:
-            file_line = clean_line(file_line)
+            file_line = clean_line(file_line, segmented)
             if file_line == -1:
                 continue
-            # If the line is unsegmented, we removing the bars from start and end of the clean line
-            if type_of_lines == "unsegmented":
-                file_line = file_line[1:-2]
             line = Line(file_line, type_of_lines)
             out.append(line)
     return out
 
 
-def get_whole_file_segmented(filename, input_type, output_type):
+def get_segmented_file_in_one_line(filename, input_type, output_type):
     """
     This function returns a single segmented line that contains all lines in a text file. If the output is supposed to
     be manually segmented, it just combines the manually segmented sentences inside the file. If the output is supposed
     to be icu segmented, it first combines all unsegmented versions of line of the text into a single line, and then use
-    icu to segment that single line. This decision is based on the fact that some code points in some Burmese lines are
-    not valid code points (see line 457457 of the my_train.txt).
+    icu to segment that single line.
+    The reason for this function is that some code points at the begining of lines in some Burmese texts are not
+    valid code points and need to be merged with previous line (see line 457457 of the my_train.txt).
     Args:
         filename: address of the input file
         input_type: determines if the input is unsegmented, manually segmented, or ICU segmented
@@ -239,8 +243,8 @@ def get_whole_file_segmented(filename, input_type, output_type):
 
 def get_best_data_text(starting_text, ending_text, pseudo, exclusive):
     """
-    Gives a long string, that contains all lines (separated by a single space) from BEST data with numbers in a range
-    This function uses data from all sources (news, encyclopedia, article, and novel)
+    Gives a long string, that contains all lines (separated by a single space) from BEST data. This function uses data
+    from all genres (news, encyclopedia, article, and novel) with text numbr in a given range.
     It removes all texts between pair of tags such as (<NE>, </NE>), assures that the string starts and ends with "|",
     and ignores empty lines, lines with "http" in them, and lines that are all in ascii (since these are not segmented
     in the BEST data set)
@@ -265,7 +269,8 @@ def get_best_data_text(starting_text, ending_text, pseudo, exclusive):
             output_type = "man_segmented"
             if pseudo:
                 output_type = "icu_segmented"
-            new_line = get_whole_file_segmented(filename=file, input_type="man_segmented", output_type=output_type)
+            new_line = get_segmented_file_in_one_line(filename=file, input_type="man_segmented",
+                                                      output_type=output_type)
             if len(out_str) == 0:
                 out_str = new_line
             else:
@@ -275,7 +280,8 @@ def get_best_data_text(starting_text, ending_text, pseudo, exclusive):
 
 def compute_accuracy(file, segmentation_type):
     """
-    This function uses a file with manually segmented lines to compute the accuracy of icu word breakIterator
+    This function uses a file with manually segmented lines to compute the accuracy of existing algorithms such as ICU
+    and Deepcut.
     Args:
         file: The file to be used for computing accuracy
         segmentation_type: Indicates what algorithm we want to test. For now, it can be "icu" or "deep".
@@ -283,15 +289,15 @@ def compute_accuracy(file, segmentation_type):
     accuracy = Accuracy()
     lines = get_lines_of_text(file, "man_segmented")
     for line in lines:
-        true_bies = line.get_bies(segmentation_type="man")
-        algo_bies = line.get_bies(segmentation_type=segmentation_type)
+        true_bies = line.get_bies_grapheme_clusters(segmentation_type="man")
+        algo_bies = line.get_bies_grapheme_clusters(segmentation_type=segmentation_type)
         accuracy.update(true_bies=true_bies.str, est_bies=algo_bies.str)
     return accuracy
 
 
 def compute_accuracy_best(starting_text, ending_text, algorithm, exclusive):
     """
-    This funciton computes accuracy of an algorithm on Best data set.
+    This function uses BEST data set to compute the accuracy of an existing algorithm such as ICU or Deepcut.
     Args:
         starting_text: number or the smallest text
         ending_text: number or the largest text + 1
@@ -307,32 +313,13 @@ def compute_accuracy_best(starting_text, ending_text, algorithm, exclusive):
             file = Path.joinpath(Path(__file__).parent.parent.absolute(), "Data/Best/{}/{}_".format(cat, cat) +
                                  text_num_str + ".txt")
             if exclusive:
-                file = Path.joinpath(Path(__file__).parent.parent.absolute(), "Data/exclusive_Best/{}/{}_".format(cat, cat) +
-                                     text_num_str + ".txt")
+                file = Path.joinpath(Path(__file__).parent.parent.absolute(), "Data/exclusive_Best/{}/{}_".format(
+                                     cat, cat) + text_num_str + ".txt")
             accuracy.merge_accuracy(compute_accuracy(file, segmentation_type=algorithm))
     return accuracy
 
 
-def break_lines_based_on_spaces(input_texts, output_text):
-    """
-    This function uses every space in the text to form a new line.
-    Args:
-        input_texts: list of address of a group of the input files
-        output_text: address of the new file
-    """
-    output_file = open(output_text, 'w')
-    for input_text in input_texts:
-        print(input_text)
-        with open(input_text) as f:
-            for line in f:
-                line = clean_line(line)
-                if line == -1:
-                    continue
-                new_lines = line.split(" ")
-                for new_line in new_lines:
-                    output_file.write(new_line + "\n")
-
-
+# The following function may be deleted
 def normalize_string(in_str, allowed_scripts):
     """
     Normalizes in_str by replacing letters and digits in other scripts with
@@ -405,19 +392,21 @@ def merge_two_texts(input_texts1, input_texts2, output_text, line_limit):
                 line_counter += 1
 
 
-def only_one_script_text(input_text, output_text, language):
+def only_one_script_text(input_text, output_text, script, segmented):
     """
-    This function uses lines of an input text and exclude any code point that is not in a specific langauge. The result
-    is written in a file where each line has no space. This is the type of input that current ICU language engines
-    accept
-    input_text: the path to the input text
-    output_text: the path to the output text
-    language: the specific language
+    This function uses lines of an input text and divide it into pieces where each piece has only code point in the
+    specific script. Each piece is then written in a new line. This is the type of input that current ICU language
+    engines accept, and is what we call "exclusive" data in this repository.
+    Args:
+        input_text: the path to the input text
+        output_text: the path to the output text
+        script: the specific script
+        segmented: shows if the input_text is a segmented or not, to handle '|' appropriately
     """
     accepted_code_points = []
-    if language == "Thai":
+    if script == "Thai":
         accepted_code_points = UnicodeSet("[[:Thai:]&[:LineBreak=SA:]]")
-    elif language == "Burmese":
+    elif script == "Burmese":
         accepted_code_points = UnicodeSet("[[:Mymr:]&[:LineBreak=SA:]]")
     else:
         print("Warning: the input language is not supported")
@@ -426,7 +415,7 @@ def only_one_script_text(input_text, output_text, language):
     output = open(output_text, 'w')
     with open(input_text) as f:
         for line in f:
-            line = clean_line(line)
+            line = clean_line(line, segmented=segmented)
             if line == -1:
                 continue
             new_str = ""
@@ -446,7 +435,8 @@ def only_one_script_text(input_text, output_text, language):
 
 def make_thai_specific_best_data():
     """
-    This function makes a copy of BEST data with only those code points that are identified by ICU for Thai
+    This function makes a copy of BEST data with only those code points that are identified by ICU Thai engine. This
+    copy is called "exclusive BEST"
     """
     category = ["news", "encyclopedia", "article", "novel"]
     for text_num in range(1, 96):
@@ -454,8 +444,7 @@ def make_thai_specific_best_data():
             text_num_str = "{}".format(text_num).zfill(5)
             print(text_num)
             input_text = Path.joinpath(Path(__file__).parent.parent.absolute(), "Data/Best/{}/{}_".format(cat, cat) +
-                                 text_num_str + ".txt")
+                                       text_num_str + ".txt")
             output_text = Path.joinpath(Path(__file__).parent.parent.absolute(), "Data/exclusive_Best/{}/{}_".
                                         format(cat, cat) + text_num_str + ".txt")
-            only_one_script_text(input_text=input_text, output_text=output_text, language="Thai")
-
+            only_one_script_text(input_text=input_text, output_text=output_text, script="Thai", segmented=True)

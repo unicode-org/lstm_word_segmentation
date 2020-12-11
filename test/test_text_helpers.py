@@ -4,7 +4,6 @@ from lstm_word_segmentation.text_helpers import remove_tags, clean_line, normali
 
 
 class TestRemoveTags(unittest.TestCase):
-
     def test_remove_tags(self):
         TestCase = namedtuple("TestCase", ["line", "st_tag", "fn_tag", "expected"])
         cases = [
@@ -68,40 +67,51 @@ class TestRemoveTags(unittest.TestCase):
                      "|วลาเอ| "),
         ]
         for cas in cases:
-            computed = remove_tags(cas.line, cas.st_tag, cas.fn_tag)
+            computed = remove_tags(line=cas.line, st_tag=cas.st_tag, fn_tag=cas.fn_tag)
             self.assertEqual(cas.expected, computed)
 
+
+class TestCleanLine(unittest.TestCase):
     def test_clean_line(self):
-        TestCase = namedtuple("TestCase", ["line", "expected"])
+        TestCase = namedtuple("TestCase", ["line", "segmented", "expected"])
         cases = [
-            TestCase("Word segmentation is https an interesting problem.", -1),
-            TestCase("Word segmentation is an interesting problem.", -1),
-            TestCase("|Word| |segmentation| |is| |an| |interesting| |problem|.|", -1),
-            TestCase("|", -1),
-            TestCase("", -1),
-            TestCase(" ", -1),
-            TestCase("| |", -1),
-            TestCase("|<NE>แม้จะกะเวลาเอา</NE>|", -1),
-            TestCase("|<NE>แม้จะกะเวลาเอา</NE>| |<AB>แม้จะกะเวลาเอ/AB>", -1),
-            TestCase("|<NE>แม้จะกะเวลาเอา</NE>|วลาเอ|<AB>แม้จะกะเ</AB>", "|วลาเอ|"),
-            TestCase("|<NE>แม้จะกะเวลาเอา</NE>|วลาเอ|<AB>แม้จะกะเ</AB>|", "|วลาเอ|"),
-            TestCase("|<NE>แม้จะกะเวลาเอา</NE>|วลาเอ|<AB>แม้จะกะเ</AB>| |", "|วลาเอ| |"),
-            TestCase("|<NE>แม้จะกะเวลาเอา</NE>|วลาเอ|<AB>แม้จะ https กะเ</AB>| |", -1),
-            TestCase("|<NE>แม้จะกะเวลาเอา</NE>|วลาเอ|<AB>แม้จะกะเ</AB>|a", "|วลาเอ|a|"),
-            TestCase("|<NE>แม้จะกะเวลาเอา</NE>|วลาเอ|<AB>แม้จะกะเ</AB>|ab", "|วลาเอ|ab|"),
-            TestCase("|<NE>แม้จะกะเวลาเอา</NE>|วลาเอ|<AB>แม้จะกะเ</AB>|ab|", "|วลาเอ|ab|"),
-            TestCase("|<NE>แม้จะกะเวลาเอา</NE>|วลาเอ|<AB>แม้จะกะเ</AB>|ab |", "|วลาเอ|ab |"),
-            TestCase("|<NE>แม้จะกะเวลาเอา</NE>|วลาเอ|<AB>แม้จะกะเ</AB>| |", "|วลาเอ| |"),
-            TestCase("|<NE>แม้จะกะเวลาเอา</NE>|วลาเอ|<AB>แม้จะกะเ</AB>| ", "|วลาเอ|"),
-            TestCase("<NE>แม้จะกะเวลาเอา</NE>|วลาเอ|<AB>แม้จะกะเ</AB>| ", "|วลาเอ|"),
-            TestCase("word segmentation is interesting วลาเอ ", "|word segmentation is interesting วลาเอ|"),
-            TestCase("  word segmentation is interesting วลาเอ ", "|word segmentation is interesting วลาเอ|"),
-            TestCase("  |word segmentation is interesting วลาเอ ", "|word segmentation is interesting วลาเอ|"),
+            TestCase("Word segmentation is https an interesting problem.", True, -1),
+            TestCase("Word segmentation is an interesting problem.", True, -1),
+            TestCase("|Word| |segmentation| |is| |an| |interesting| |problem|.|", True, -1),
+            TestCase("|", True, -1),
+            TestCase("", True, -1),
+            TestCase(" ", True, -1),
+            TestCase("| |", True, -1),
+            TestCase("|<NE>แม้จะกะเวลาเอา</NE>|", True, -1),
+            TestCase("|<NE>แม้จะกะเวลาเอา</NE>| |<AB>แม้จะกะเวลาเอ/AB>", True, -1),
+            TestCase("|<NE>แม้จะกะเวลาเอา</NE>|วลาเอ|<AB>แม้จะกะเ</AB>", True, "|วลาเอ|"),
+            TestCase("|<NE>แม้จะกะเวลาเอา</NE>|วลาเอ|<AB>แม้จะกะเ</AB>|", True, "|วลาเอ|"),
+            TestCase("|<NE>แม้จะกะเวลาเอา</NE>|วลาเอ|<AB>แม้จะกะเ</AB>| |", True, "|วลาเอ| |"),
+            TestCase("|<NE>แม้จะกะเวลาเอา</NE>|วลาเอ|<AB>แม้จะ https กะเ</AB>| |", True, -1),
+            TestCase("|<NE>แม้จะกะเวลาเอา</NE>|วลาเอ|<AB>แม้จะกะเ</AB>|a", True, "|วลาเอ|a|"),
+            TestCase("|<NE>แม้จะกะเวลาเอา</NE>|วลาเอ|<AB>แม้จะกะเ</AB>|ab", True, "|วลาเอ|ab|"),
+            TestCase("|<NE>แม้จะกะเวลาเอา</NE>|วลาเอ|<AB>แม้จะกะเ</AB>|ab|", True, "|วลาเอ|ab|"),
+            TestCase("|<NE>แม้จะกะเวลาเอา</NE>|วลาเอ|<AB>แม้จะกะเ</AB>|ab |", True, "|วลาเอ|ab |"),
+            TestCase("|<NE>แม้จะกะเวลาเอา</NE>|วลาเอ|<AB>แม้จะกะเ</AB>| |", True, "|วลาเอ| |"),
+            TestCase("|<NE>แม้จะกะเวลาเอา</NE>|วลาเอ|<AB>แม้จะกะเ</AB>| ", True, "|วลาเอ|"),
+            TestCase("<NE>แม้จะกะเวลาเอา</NE>|วลาเอ|<AB>แม้จะกะเ</AB>| ", True, "|วลาเอ|"),
+            TestCase("word segmentation is interesting วลาเอ ", True, "|word segmentation is interesting วลาเอ|"),
+            TestCase("  word segmentation is interesting วลาเอ ", True, "|word segmentation is interesting วลาเอ|"),
+            TestCase("  |word segmentation is interesting วลาเอ ", True, "|word segmentation is interesting วลาเอ|"),
+            TestCase("|<NE>แม้จะกะเวลาเอา</NE>| |<AB>แม้จะกะเวลาเอ/AB>", False, -1),
+            TestCase("<NE>แม้จะกะเวลาเอา</NE>| |<AB>แม้จะกะเวลาเอ/AB>", False, -1),
+            TestCase("word segmentation is interesting วลาเอ ", False, "word segmentation is interesting วลาเอ"),
+            TestCase("|<NE>แม้จะกะเวลาเอา</NE>|วลาเอ|<AB>แม้จะกะเ</AB>| ", False, "|วลาเอ|"),
+            TestCase("  |word segmentation is interesting วลาเอ ", False, "|word segmentation is interesting วลาเอ"),
+            TestCase("   word segmentation is วลาเอ   |", False, "word segmentation is วลาเอ   |"),
+
         ]
         for cas in cases:
-            computed = clean_line(cas.line)
+            computed = clean_line(line=cas.line, segmented=cas.segmented)
             self.assertEqual(cas.expected, computed)
 
+
+class TestNormalizeString(unittest.TestCase):
     def test_normalize_string(self):
         TestCase = namedtuple("TestCase", ["in_str", "scripts", "out_str"])
         cases = [
@@ -128,10 +138,9 @@ class TestRemoveTags(unittest.TestCase):
                 "ทัทททททิท ทททท็ททททททททท้ททิททททัททิทที ทททททททททททท (ททททททททิท: ททททท; 00 ทิทุทททท ท.ท. 0000 — 00 ททททิทททท ท.ท. 0000) ทททททททททททททททททททททททท็ทททททททุทททท้ททท้ทททู่ทัท"),
         ]
         for cas in cases:
-            actual = normalize_string(cas.in_str, cas.scripts)
+            actual = normalize_string(in_str=cas.in_str, allowed_scripts=cas.scripts)
             self.assertEqual(cas.out_str, actual, cas)
 
 
 if __name__ == "__main__":
     unittest.main()
-

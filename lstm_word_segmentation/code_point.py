@@ -1,8 +1,3 @@
-import numpy as np
-from . import constants
-from icu import Char
-
-
 class CodePoint:
     """
     A class to store a code point. It supports the following versions of a code point:

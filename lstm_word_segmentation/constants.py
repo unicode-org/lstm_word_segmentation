@@ -1,38 +1,34 @@
 import numpy as np
 from pathlib import Path
 from icu import UCharCategory, UnicodeSet
-from collections import Counter
 
-# The dictionary that stores different grapheme clusters of Thai and the ratio that each appear in Thai texts. It is
-# computed using BEST dataset
-# path = os.path.abspath(os.path.join(os.getcwd(), os.pardir)) + "/Data/Thai_graph_clust_ratio.npy"
-
-# path = os.path.abspath(os.path.join(os.getcwd(), os.pardir)) + '/Data/Thai_graph_clust_ratio.npy'
+# The dictionary that stores grapheme clusters and the frequency they appeared in BEST data set
 path = Path.joinpath(Path(__file__).parent.parent.absolute(), 'Data/Thai_graph_clust_ratio.npy')
 THAI_GRAPH_CLUST_RATIO = np.load(str(path), allow_pickle=True).item()
 
+# The dictionary that stores only Thai-script grapheme clusters and the frequency they appeared in BEST data set
 path = Path.joinpath(Path(__file__).parent.parent.absolute(), 'Data/Thai_graph_clust_ratio.npy')
 THAI_EXCLUSIVE_GRAPH_CLUST_RATIO = np.load(str(path), allow_pickle=True).item()
 
-# The dictionary that stores different grapheme clusters of Burmese and the ratio that each appear in Burmese texts.
-path = Path.joinpath(Path(__file__).parent.parent.absolute(), 'Data/Burmese_graph_clust_ratio.npy')
-BURMESE_GRAPH_CLUST_RATIO = np.load(str(path), allow_pickle=True).item()
-
-# The dictionary that stores different grapheme clusters of Burmese and Thaiand the ratio that each appear.
-path = Path.joinpath(Path(__file__).parent.parent.absolute(), 'Data/Thai_Burmese_graph_clust_ratio.npy')
-THAI_BURMESE_GRAPH_CLUST_RATIO = np.load(str(path), allow_pickle=True).item()
-
-# The dictionary for Thai code points
+# The dictionary for all code points in Unicode Thai boxes
 accepted_code_points = UnicodeSet("[[:Thai:]&[:LineBreak=SA:]]")
 THAI_CODE_POINT_DICTIONARY = {accepted_code_points[i]: i for i in range(len(accepted_code_points))}
 
-# The dictionary for Burmese code points
+# The dictionary that stores grapheme clusters and the frequency they appeared in my data set
+path = Path.joinpath(Path(__file__).parent.parent.absolute(), 'Data/Burmese_graph_clust_ratio.npy')
+BURMESE_GRAPH_CLUST_RATIO = np.load(str(path), allow_pickle=True).item()
+
+# The dictionary for all code points in Unicode Burmese boxes
 accepted_code_points = UnicodeSet("[[:Mymr:]&[:LineBreak=SA:]]")
 BURMESE_CODE_POINT_DICTIONARY = {accepted_code_points[i]: i for i in range(len(accepted_code_points))}
 
+# The dictionary that stores grapheme clusters and the frequency they appeared in BEST and my data sets
+path = Path.joinpath(Path(__file__).parent.parent.absolute(), 'Data/Thai_Burmese_graph_clust_ratio.npy')
+THAI_BURMESE_GRAPH_CLUST_RATIO = np.load(str(path), allow_pickle=True).item()
 
 # A dictionary that determines how different types of code points are grouped together. This dictionary will be used
-# when generalized vectors are used for embedding.
+# when generalized vectors are used for embedding. Here is meaning of numbers:
+# 1: Letters, 2: Marks, 3: Digits, 4: Separators, 5: Punctuations, 6: Symbols, 7: Others
 CHAR_TYPE_TO_BUCKET = {
      UCharCategory.UPPERCASE_LETTER: 1,
      UCharCategory.LOWERCASE_LETTER: 1,

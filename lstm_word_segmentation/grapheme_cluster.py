@@ -19,7 +19,6 @@ class GraphemeCluster:
             graph_clust_dic: the dictionary that stores all top graph clusters in a language
             letters_dic: a dictionary that determines how different code points are mapped to different slots of
             generalized_vec.
-            genvec_type: determines the version of the generalized vectors. It can be 123, 12d0, 125, or 1235
         """
         self.graph_clust = grapheme_cluster
         self.num_clusters = len(graph_clust_dic)+1

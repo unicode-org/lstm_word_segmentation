@@ -49,7 +49,8 @@ class LSTMBayesianOptimization:
                                        input_training_data=self.training_data,
                                        input_evaluation_data=self.evaluation_data, input_language=self.language,
                                        input_embedding_type=self.embedding_type)
-        self.lam = word_segmenter.model.count_paramsx()
+        word_segmenter.train_model()
+        self.lam = 1/word_segmenter.model.count_params()
 
     def lstm_score(self, hunits, embedding_dim):
         """
@@ -61,6 +62,7 @@ class LSTMBayesianOptimization:
         """
         hunits = int(round(hunits))
         embedding_dim = int(round(embedding_dim))
+        print(hunits)
         word_segmenter = WordSegmenter(input_name="temp", input_n=self.n, input_t=self.t,
                                        input_clusters_num=self.clusters_num, input_embedding_dim=embedding_dim,
                                        input_hunits=hunits, input_dropout_rate=0.2, input_output_dim=4,

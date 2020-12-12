@@ -623,14 +623,14 @@ class WordSegmenter:
 
 def pick_lstm_model(model_name, embedding, train_data, eval_data):
     """
-    This function returns a word segmentation instance w.r.t input specifics
+    This function returns a saved word segmentation instance w.r.t input specifics
     Args:
         model_name: name of the model
         embedding: embedding type used to train the model
         train_data: the data set used to train the model
         eval_data: the data set to test the model. Often, it should have the same structure as training data set.
     """
-    file = Path.joinpath(Path(__file__).parent.absolute(), 'Models/' + model_name)
+    file = Path.joinpath(Path(__file__).parent.parent.absolute(), 'Models/' + model_name)
     model = keras.models.load_model(file)
 
     # Figuring out name of the model
@@ -653,7 +653,7 @@ def pick_lstm_model(model_name, embedding, train_data, eval_data):
     input_hunits = model.weights[1].shape[1]//4
     input_n = None
     input_t = None
-    if "genvec" in model_name or "graph_clust" in model_name:
+    if "genvec" in model_name or "graphclust" in model_name:
         input_n = 50
         input_t = 100000
         if "heavy" in model_name:

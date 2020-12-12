@@ -7,28 +7,28 @@ import timeit
 
 
 # Picking models for error analysis
-word_segmenter1 = pick_lstm_model(model_name="Thai_model4", embedding="grapheme_clusters_tf", train_data="BEST",
-                                  eval_data="BEST")
+word_segmenter1 = pick_lstm_model(model_name="Thai_graphclust_model4_heavy", embedding="grapheme_clusters_tf",
+                                  train_data="BEST", eval_data="BEST")
 
-word_segmenter2 = pick_lstm_model(model_name="Thai_exclusive_model4", embedding="grapheme_clusters_tf",
-                                  train_data="exclusiveBEST", eval_data="exclusive BEST")
+word_segmenter2 = pick_lstm_model(model_name="Thai_graphclust_model5_heavy", embedding="grapheme_clusters_tf",
+                                  train_data="BEST", eval_data="BEST")
 
-word_segmenter3 = pick_lstm_model(model_name="Thai_model4_heavy", embedding="grapheme_clusters_tf", train_data="BEST",
-                                  eval_data="BEST")
+word_segmenter3 = pick_lstm_model(model_name="Thai_graphclust_model7_heavy", embedding="grapheme_clusters_tf",
+                                  train_data="BEST", eval_data="BEST")
 
-word_segmenter4 = pick_lstm_model(model_name="Thai_exclusive_model4_heavy", embedding="grapheme_clusters_tf",
+word_segmenter4 = pick_lstm_model(model_name="Thai_graphclust_exclusive_model4_heavy", embedding="grapheme_clusters_tf",
                                   train_data="exclusive BEST", eval_data="exclusive BEST")
 
-word_segmenter5 = pick_lstm_model(model_name="Thai_genvec_123", embedding="generalized_vectors_123", train_data="BEST",
-                                  eval_data="BEST")
-
-word_segmenter6 = pick_lstm_model(model_name="Thai_codepoints_model4_heavy", embedding="codepoints",
+word_segmenter5 = pick_lstm_model(model_name="Thai_codepoints_exclusive_model4_heavy", embedding="codepoints",
                                   train_data="exclusive BEST", eval_data="exclusive BEST")
 
+word_segmenter6 = pick_lstm_model(model_name="Thai_codepoints_exclusive_model7_heavy", embedding="codepoints",
+                                  train_data="exclusive BEST", eval_data="exclusive BEST")
 
 # Testing the model by arbitrary sentences
 # '''
 verbose = True
+write = False
 # Use lines in a given file
 file = Path.joinpath(Path(__file__).parent.absolute(), 'Data/wiki_thai_sample_exclusive.txt')
 lines = get_lines_of_text(file, "unsegmented")
@@ -42,6 +42,7 @@ output = open(str(output_file), 'w')
 # for inp_line in inp_lines:
 #     lines.append(Line(inp_line, "man_segmented"))
 
+word_segmenters = [word_segmenter1, word_segmenter2, word_segmenter3, word_segmenter4, word_segmenter5, word_segmenter6]
 for line in lines:
     deepcut_words = deepcut.tokenize(line.unsegmented)
     deepcut_segmented = "|"
@@ -49,37 +50,27 @@ for line in lines:
         deepcut_segmented += word + "|"
     if verbose:
         print("***************************************************************************************************")
-        print("Unsegmented                   : {}".format(line.unsegmented))
-        print("Deepcut                       : {}".format(deepcut_segmented))
-        print("ICU                           : {}".format(line.icu_segmented))
-        print("Thai_model4                   : {}".format(word_segmenter1.segment_arbitrary_line(line.unsegmented)))
-        print("Thai_exclusive_model4         : {}".format(word_segmenter2.segment_arbitrary_line(line.unsegmented)))
-        print("Thai_model4_heavy             : {}".format(word_segmenter3.segment_arbitrary_line(line.unsegmented)))
-        print("Thai_exclusive_model4_heavy   : {}".format(word_segmenter4.segment_arbitrary_line(line.unsegmented)))
-        print("Thai_genvec123                : {}".format(word_segmenter5.segment_arbitrary_line(line.unsegmented)))
-        print("Thai_codepoints_mpodel4_heavy : {}".format(word_segmenter6.segment_arbitrary_line(line.unsegmented)))
+        print("{:<40} : {}".format("Unsegmented", line.unsegmented))
+        print("{:<40} : {}".format("Deepcut", deepcut_segmented))
+        print("{:<40} : {}".format("ICU", line.icu_segmented))
+        for word_seg in word_segmenters:
+            print("{:<40} : {}".format(word_seg.name, word_seg.segment_arbitrary_line(line.unsegmented)))
         print("***************************************************************************************************")
-
-    output.write("********************************************************************************\n")
-    output.write("Unsegmented                        : {}\n".format(line.unsegmented))
-    output.write("Deepcut                            : {}\n".format(deepcut_segmented))
-    output.write("ICU                                : {}\n".format(line.icu_segmented))
-    # output.write("Thai_model4                 : {}\n".format(word_segmenter1.segment_arbitrary_line(line.unsegmented)))
-    # output.write("Thai_exclusive_model4       : {}\n".format(word_segmenter2.segment_arbitrary_line(line.unsegmented)))
-    # output.write("Thai_model4_heavy           : {}\n".format(word_segmenter3.segment_arbitrary_line(line.unsegmented)))
-    # output.write("Thai_exclusive_model4_heavy : {}\n".format(word_segmenter4.segment_arbitrary_line(line.unsegmented)))
-    # output.write("Thai_genvec123              : {}\n".format(word_segmenter5.segment_arbitrary_line(line.unsegmented)))
-    # output.write("Thai_codepoints             : {}\n".format(word_segmenter6.segment_arbitrary_line(line.unsegmented)))
-    output.write("LSTM Grapheme Clusters Embedding   : {}\n".format(word_segmenter4.segment_arbitrary_line(line.unsegmented)))
-    output.write("LSTM Generalized Vectors Embedding : {}\n".format(word_segmenter5.segment_arbitrary_line(line.unsegmented)))
-    output.write("LSTM Code points Embedding         : {}\n".format(word_segmenter6.segment_arbitrary_line(line.unsegmented)))
-    output.write("********************************************************************************\n")
+    if write:
+        output.write("********************************************************************************\n")
+        output.write("{:<40} : {}\n".format("Unsegmented", line.unsegmented))
+        output.write("{:<40} : {}\n".format("Deepcut", deepcut_segmented))
+        output.write("{:<40} : {}\n".format("ICU", line.icu_segmented))
+        for word_seg in word_segmenters:
+            output.write("{:<40} : {}\n".format(word_seg.name, word_seg.segment_arbitrary_line(line.unsegmented)))
+        output.write("********************************************************************************\n")
 # '''
 
-# Measuring the time that each model need to evaluate texts
+# Measuring the time that a model needs to evaluate texts
 '''
+word_seg = word_segmenter6
 start = timeit.default_timer()
-word_segmenter6.test_model_line_by_line()
+word_seg.test_model_line_by_line()
 stop = timeit.default_timer()
-print("{} Time: {}".format(word_segmenter6.name, stop-start))
+print("{} Time: {}".format(word_seg.name, stop-start))
 '''

@@ -24,15 +24,31 @@ def diff_strings(str1, str2):
     return sum(str1[i] != str2[i] for i in range(len(str1)))
 
 
-def sigmoid(x):
+def sigmoid(inp):
     """
-    Computes the sigmoid function for a scalar
+    Computes the sigmoid function of a scalar or a 1d numpy array
     Args:
-        x: the scalar
+        inp: the input which can be a scalar or a 1d numpy array
     """
-    if x < -100:
-        return 0
-    return 1.0/(1.0 + np.exp(-x))
+    inp = np.asarray(inp)
+    scalar_input = False
+    if inp.ndim == 0:
+        inp = inp[None]
+        scalar_input = True
+    # Checking for case when the input is an array/np.array of arrays. In this case only the first element of inp is
+    # used. A common example is when A = np.array([np.array([1, 2, 3])]).
+    if type(inp[0]) == np.ndarray:
+        inp = inp[0]
+    out = []
+    for x in inp:
+        if x < -50:
+            out.append(0)
+        else:
+            out.append(1.0/(1.0 + np.exp(-x)))
+    out = np.array(out)
+    if scalar_input:
+        return np.squeeze(out)
+    return out
 
 
 def print_grapheme_clusters(thrsh, language):

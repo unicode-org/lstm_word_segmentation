@@ -319,7 +319,8 @@ def compute_accuracy_best(starting_text, ending_text, algorithm, exclusive):
     return accuracy
 
 
-# The following function may be deleted
+# Function normalize_string is written with the goal of increasing accuracy for grapheme cluster based models. In the
+# current implementation we don't use it, but we don't delete it as it may be used later.
 def normalize_string(in_str, allowed_scripts):
     """
     Normalizes in_str by replacing letters and digits in other scripts with

@@ -1,7 +1,7 @@
 from collections import namedtuple
 import unittest
 from lstm_word_segmentation.helpers import is_ascii, diff_strings, sigmoid
-
+import numpy as np
 
 class TestIsAscii(unittest.TestCase):
     def test_is_ascii(self):
@@ -43,10 +43,10 @@ class TestDiffStrings(unittest.TestCase):
             computed = diff_strings(str1=cas.str1, str2=cas.str2)
             self.assertEqual(cas.expected, computed)
 
-
+# '''
 class TestSigmoid(unittest.TestCase):
     def test_sigmoid(self):
-        TestCase = namedtuple("TestCase", ["x", "expected"])
+        TestCase = namedtuple("TestCase", ["input", "expected"])
         cases = [
             TestCase(0, 0.5),
             TestCase(1, 0.73105858),
@@ -61,11 +61,18 @@ class TestSigmoid(unittest.TestCase):
             TestCase(-10, 0.00004540),
             TestCase(-100, 0),
             TestCase(-1000, 0),
+            TestCase(np.array([0, 1, 100, -1, -10]), np.array([0.5, 0.73105858, 1, 0.26894142, 0.00004540])),
+            TestCase(np.array([0]), np.array([0.5])),
+            TestCase(np.array([0]), 0.5),
+            TestCase(0, np.array(0.5)),
+            TestCase(np.array([0, -1000]), np.array([0.5, 0])),
+            TestCase(np.array([[0, 1, 100, -1, -10]]), np.array([0.5, 0.73105858, 1, 0.26894142, 0.00004540])),
+            TestCase(np.array([np.array([0, 1, 100, -1, -10]), np.array([1, 2, 3])]), np.array([0.5, 0.73105858, 1, 0.26894142, 0.00004540])),
         ]
         for cas in cases:
-            computed = sigmoid(x=cas.x)
-            self.assertAlmostEqual(cas.expected, computed)
-
+            computed = sigmoid(inp=cas.input)
+            np.testing.assert_almost_equal(cas.expected, computed)
+# '''
 
 if __name__ == "__main__":
     unittest.main()

@@ -3,6 +3,7 @@ Figure/
 __pycache__/
 .idea/
 README.html
+Embeddings-Discussion.html
 train_multilingual.py
 Models/Thai_temp/
 Models/Burmese_temp/

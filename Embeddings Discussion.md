@@ -14,11 +14,11 @@ For a given language, e.g. Thai, the three embedding systems explored in this do
 
 * **grapheme clusters vectors** (graph_clust): In this embedding system, first a set of grapheme clusters is found that cover 99% of the text in the given language. We use large corpora in the given language to obtain this set. Then, each grapheme cluster in this set is represented by a single vector of a fixed length. All other grapheme clusters are represented with a shared vector of the same length. For Thai and Burmese, this gives us an embedding matrix with ~350 vectors. These vectors are learned during the training of the LSTM model.
 
-  ![Figure 1. Grapheme clusters embedding.](Figures/graphclust_embedding.png)
+  ![Figure 1. Grapheme clusters embedding.](Figures/Graphclust_embedding.png)
 
 * **generalized vectors**: In this embedding system, each Unicode code point (or group of code points) in the given language is represented by a vector of a fixed length. Then, each grapheme cluster is represented by the average of vectors corresponding to code points in it. 
 
-  ![Figure 2. Generalized vectors embedding.](Figures/genvec_embedding.png)
+  ![Figure 2. Generalized vectors embedding.](Figures/Genvec_embedding.png)
   
   This embedding system has different versions:
   * **Buckets 1, 2** (genvec_12): in this version, each code point with type 1 (letters) or 2 (marks) in the given language is represented with a separate vector. Other code points are grouped as follows, and elements of each group share a single vector:
@@ -49,7 +49,7 @@ For a given language, e.g. Thai, the three embedding systems explored in this do
   
 * **Code points**: In this embedding system, each single Unicode code point in a given language is represented with a single vector. This structure potentially lets the model put word boundaries inside a grapheme cluster. Hence, we need an extra normalizer algorithm that checks for this type of word boundaries and fixes them.
 
-  ![Figure 3. Code points embedding.](Figures/codepoints_embedding.png)
+  ![Figure 3. Code points embedding.](Figures/Codepoints_embedding.png)
 
 ### Error Analysis
 All the models described in this section are trained with the same training data sets, where the same number of epochs and batch sizes are used. The value of two important hyperparameters, number of hidden units (hunits) and embedding dimension, are calculated separately for each embedding system using the Bayesian optimization. The computed value for these two hyperparameters are as follows:

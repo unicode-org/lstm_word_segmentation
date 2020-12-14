@@ -1,99 +1,257 @@
-## LSTM-based model for Word Segmentation
+## Error Analysis for Different Embedding Systems
+Author: sahandfr@gmail.com
 
-In this project we develop a bi-directional LSTM model for word segmentation. For now, this model is implemented for Thai and Burmese.
+In this project, we develop a bi-directional LSTM model for word segmentation. For now, this model is implemented for Thai and Burmese.
 
-### Quick start
-* **Use a pre-trained model:** To segment an arbitrary line go to file `train_language.py` where `language` is the language you want to use. For example, if your line is in *Thai*, you should use file `train_thai.py`. Over there, find comment `# Choose one of the saved models to use`. Everything before this line is for training a new model and can be commented for now. After this comment, you can use variable `model_name`to specify which already fitted model you want to use. List of all fitted models can be found under folder *Models* in this repository. After choosing your model, you can specify the type of embedding to be used when you create an instance of `WordSegmenter` that stores the fitted model:
-  ```python
-  word_segmenter = WordSegmenter(input_name=model_name, input_n=input_n, input_t=input_t,
-                               input_clusters_num=input_clusters_num, input_embedding_dim=input_embedding_dim,
-                               input_hunits=input_hunits, input_dropout_rate=0.2, input_output_dim=4, input_epochs=15,
-                               input_training_data="BEST", input_evaluating_data="BEST", input_language="Thai",
-                               input_embedding_type="grapheme_clusters_tf")
-  word_segmenter.set_model(model)
-  # word_segmenter.test_model()
-  # word_segmenter.test_model_line_by_line()
-  ```
-The commented lines test the picked model using large data sets, and are not needed for segmenting an arbitrary line. Next, you can use the following lines of the `train_language.py` file to specify your input and segmentt it:
-  ```python
-  line = "ทำสิ่งต่างๆ ได้มากขึ้นขณะที่อุปกรณ์ล็อกและชาร์จอยู่ด้วยโหมดแอมเบียนท์"
-  word_segmenter.segment_arbitrary_line(line)
-  ```
-By running these two lines of code, you get a segmentation using ICU, the LSTM algorithm you picked, and Deepcut algorithm. 
+### Background
+In this document, we explore a range of different embedding systems for the [bi-directional LSTM word segmentation algorithm](https://github.com/SahandFarhoodi/word_segmentation) which predicts the word boundaries of a given sentence in **Thai** or **Burmese**. The first layer of this model is the embedding layer, where the input of the LSTM model, which is a sequence of characters or letters, is mapped to a sequence of numerical vectors. There are multiple options for the embedding layer that are thoroughly explained in [this document](https://docs.google.com/document/d/1KXnTvrgISYUplOk1NRbQbJssueeXa8k1Vu8YApMud4k/edit#heading=h.bmtbd2h7j5nt). Here, we consider three of these embedding systems and implement the word segmentation algorithm for them and compare them based on the model accuracy and model size. We also spend some time on error analyses based on these different embedding systems.
 
-* **Train a new model:** In order to train a new model you need to use the file `train_language.py` where `language` is the language you want to use. For example, if your line is in *Thai*, you should use file `train_thai.py`. Over there, you need to use the code below comment `# Train a new model -- choose name cautiously to not overwrite other models` and above comment `# Choose one of the saved models to use`. You need to specify a name for your new model using the variable `model_name`, and then you can specify hyperparameters of your model, embedding type, and data sets to be used for training, validation, and test by making an instance of `WordSegmenter`:
-  ```python
-  # Train a new model -- choose name cautiously to not overwrite other models
-  model_name = "Thai_temp_genvec"
-word_segmenter = WordSegmenter(input_name=model_name, input_n=50, input_t=100000, input_clusters_num=350,
-                               input_embedding_dim=16, input_hunits=23, input_dropout_rate=0.2, input_output_dim=4,
-                               input_epochs=20, input_training_data="BEST", input_evaluating_data="BEST",
-                               input_language="Thai", input_embedding_type="grapheme_clusters_tf")
+The embedding system highly depends on the units of a sentence that we consider to be used by our model for training. There are two choices:
+* **Unicode code points**: These are often considered as the smallest part of a sentence or a word. Please see [this link](https://en.wikipedia.org/wiki/Code_point) for a formal definition.
+* **Grapheme clusters**: Each grapheme cluster can have one or more code points in it. We can distinguish between these two types of grapheme clusters as single-code-point grapheme clusters and multi-code-point grapheme clusters. The reason that grapheme clusters are in many cases considered as the basic unit for word segmentation algorithms is that a word boundary should never occur in the middle of a grapheme cluster.
 
-  ```
-Next, you will use `word_segmenter.train_model()` to train your model, `word_segmenter.test_model_line_by_line()` to test your model, and `word_segmenter.save_model()` to save the trained model:
-  ```python
-  word_segmenter.train_model()
-  # word_segmenter.test_model()
-  word_segmenter.test_model_line_by_line()
-  word_segmenter.save_model()
-  ```  
-As you can see line `word_segmenter.test_model()` is commented above, because this is a funciton that tests the model in a slightly different way and was used mostly for debugging. We don't recommend using it for testing performance of your model.
+For a given language, e.g. Thai, the three embedding systems explored in this document are:
 
+* **grapheme clusters vectors** (graph_clust): In this embedding system, first a set of grapheme clusters is found that cover 99% of the text in the given language. We use large corpora in the given language to obtain this set. Then, each grapheme cluster in this set is represented by a single vector of a fixed length. All other grapheme clusters are represented with a shared vector of the same length. For Thai and Burmese, this gives us an embedding matrix with ~350 vectors. These vectors are learned during the training of the LSTM model.
 
-### Model structure
-Figure 1 illustrates our bi-directional model structure. Below we explain what are different layers:
+  ![Figure 1. Grapheme clusters embedding.](Figures/graphclust_embedding.png)
 
-* **Input Layer**: We set [extended grapheme clusters](https://unicode.org/reports/tr29/) as the smallest units in a word. Therefore, the input layer is a sequence of extended grapheme clusters, where each one of these grapheme clusters can have few code points in it. We expect a word segmentation algorithm to not put a word boundary in the middle of a grapheme cluster, and hence by using grapheme clusters as the smallest units of a word, this can be guaranteed. We use [ICU](https://unicode-org.github.io/icu-docs/apidoc/released/icu4c/classicu_1_1BreakIterator.html) to extract grapheme clusters of a given word.
+* **generalized vectors**: In this embedding system, each Unicode code point (or group of code points) in the given language is represented by a vector of a fixed length. Then, each grapheme cluster is represented by the average of vectors corresponding to code points in it. 
 
-* **Embedding Layer**: In the embedding layer, we have to represent each grapheme cluster with a numerical vector so it can be trained by the model. The choice of embedding can significantly affect the model size and performance. In this repository, two types of embedding are implemented:
-  * **Map grapheme clusters to vectors**: In this approach, each grapheme cluster is mapped to a single vector. These vectors are trained with the model and need to be stored to be used later for evaluation. Given that the set of possible grapheme clusters is theoretically infinity, we cannot store one vector for each possible grapheme clusters. Hence, we use larg corpora to extract all grapheme clusters that actually happen in texts. Then we sort these grapheme clusters based on their frequency in the corpora, and store one vector for those grapheme clusters that cover 99% of the text, and one vector for any other grapheme cluster. Using this approach, we need to store about 350 grapheme cluster vectors for Thai and Burmese. This option can be used by setting `input_embedding_type` to `grapheme_clusters_tf` or `grapheme_clusters_man`.
-  * **Generalized encoding vecctors**: In this approach, each code point is mapped to a vector that is learned during training, and then the vector computed for a grapheme cluster is the average of vectors corresponding to code points in that grapheme cluster. The number of code points in a language is fixed and considerably less than the number of grapheme clusters, and hence the embedding matrix will have a smaller size using this approach. There are variations of this appraoch, where instead of having one vector for each code point, we can have one vector for a group of code points that we beilieve behave similarly, such as digits. This option can be used by setting `input_embedding_type` to `generalized_vectors`.
+  ![Figure 2. Generalized vectors embedding.](Figures/genvec_embedding.png)
+  
+  This embedding system has different versions:
+  * **Buckets 1, 2** (genvec_12): in this version, each code point with type 1 (letters) or 2 (marks) in the given language is represented with a separate vector. Other code points are grouped as follows, and elements of each group share a single vector:
+    * All other letters that are not represented above
+    * All other digits that are not represented above
+    * All marks, punctuations, and symbols that are not represented above
+    * All code points of type 4 (separators) and 7 (others) 
 
-* **Forward/Backward LSTM Layers**: The output of the embedding layer is fed into the forward and backward LSTM layers. *hunits* shows the number of hidden units in each cell of LSTM layers.
+    In this version, we will have 
+      * 136 embedding vectors for Burmese
+      * 77 embedding vectors for Thai
 
-* **Output Layer**: In the output layer, the output of forward and backward lstm layers are concatenated and fed into a dense layer with *softmax* activation layer to make a vector of length four for each grapheme cluster. The values in each vector add up to 1 and are probability of *BIES*, where:
-  * *B* stands for begining of the word.
-  * *I* stands for inside of the word.
-  * *E* stands for end of the word.
-  * *S* stands for a single grapheme cluster that forms a word by itself.
+  * **Buckets 1, 2, 3** (genvec_123): Same as the "Bucket 1,2" version, but now each code point with type 3 (digits) in the given language is also represented with a separate vector. In this version, we will have
+      * 156 embedding vectors for Burmese
+      * 87 embedding vectors for Thai
+      
+  * **Buckets 1, 2, digit 0** (genvec_12d0): Same as the "Bucket 1,2" version, but now the code points that represent digit 0 in the given language are represented with a new vector. In this version, we will have 
+      * 138 embedding vectors for Burmese
+      * 78 embedding vectors for Thai
+      
+  * **Buckets 1, 2, 5** (genvec_125): Same as the "Bucket 1,2" version, but now each code point with type 5 (punctuations) in the given language is also represented with a separate vector. In this version, we will have 
+      * 142 embedding vectors for Burmese
+      * 80 embedding vectors for Thai
+      
+    * **Buckets 1, 2, 3, 5** (genvec_1235): Same as the "Bucket 1,2" version, but now each code point with type 3 (digits) or type 5 (punctuations) in the given language is also represented with a separate vector. In this version, we will have 
+      * 162 embedding vectors for Burmese
+      * 90 embedding vectors for Thai
+  
+* **Code points**: In this embedding system, each single Unicode code point in a given language is represented with a single vector. This structure potentially lets the model put word boundaries inside a grapheme cluster. Hence, we need an extra normalizer algorithm that checks for this type of word boundaries and fixes them.
 
-* **Droput Layers**: We have two dropout layers in our model: one right after the embedding layer and one right before the output layer.
+  ![Figure 3. Code points embedding.](Figures/codepoints_embedding.png)
 
+### Error Analysis
+All the models described in this section are trained with the same training data sets, where the same number of epochs and batch sizes are used. The value of two important hyperparameters, number of hidden units (hunits) and embedding dimension, are calculated separately for each embedding system using the Bayesian optimization. The computed value for these two hyperparameters are as follows:
 
-![Figure 1. The model structure for a bi-directional LSTM.](Figures/model_structure.png)
+| Embedding | embedding dimension | hunits |
+| :---:     |         :----:      | :---:  |
+| Thai graph_clust | 16 | 23 |
+| Thai codepoints | 40 | 27 |
+| Thai genvec | 22 | 40 |
+| Thai genvec light | 22  | 20  |
+| Burmese graph_clust | 28  | 14  |
+| Burmese genvec | 33  | 20  |
 
-### Estimating hyperparameters of the model
-There are many hyperparameters in the model that need to be estimated before using it. Among different hyper parameters, two affect the model size and performance more significantly: *hunits* and *embedding size*. We first use stepwise grid-search to decide on all hyper parameters except these two such as *learning rate*, *batch size*, *dropout rate*, etc. After that, we use [Bayesian optimization](https://github.com/fmfn/BayesianOptimization) to decide on *hunits* and *embedding size*.
+#### Grapheme Clusters vs. Generalized Vectors
+Here, we investigate the difference between grapheme clusters and generalized vectors embedding systems. The following table shows the accuracy and model size of the fitted LSTM models for **Thai**.
 
-### Data sets
-For some languages, there are manually annotated data sets that can be used to train learning-based models, such as our model. However, for some other langauges such dataset doesn't exist. We develop a framework that let us train our model in both scenarios. In this framework (shown in Figure 2), if such dataset exist then we use it directly to train our model. However, if such data set doesn't exist, we use one of the existing algorithms, such as current ICU algorithm, to make a pseudo segmented data, and then use that pseudo segmented data to train our model. We use ICU specifically because it already supports word segmentation for almost all languages, it is light, fast, and has an acceptable performance. However, for some specific languages that better word segmentation algorithm exist, ICU can be replaced. Our analysis shows that in the absence of a segmented data set, our algorithm is capable of learning what ICU does, and in fact, it usually can outperform ICU itself. Below we explain the data sets used to train and test models:
+| Embedding | BIES accuracy | F1-Score | Model size |
+| :---:     |     :----:    |  :----:  |    :---:   |
+| graph_clust | 92 | 85.3 | 57 KB |
+| graph_clust_light | 91.9 | 85.2 | 45 KB |
+| genvec_12 | 92.2 | 85.5 | 94 KB |
+| genvec_123 | 92.3  | 85.7 | 94 KB |
+| genvec_123_light | 91.9  | 85 | 41 KB |
+| genvec_12d0 | 92.2  | 85.5  | 94 KB |
+| genvec_125 | 92.1  | 85.3  | 94 KB |
+| genvec_1235 | 92.1  | 85.5  | 94 KB |
 
-* **Thai**: We use [NECTEC BEST data set](https://thailang.nectec.or.th/downloadcenter/index4c74.html?option=com_docman&task=cat_view&gid=42&Itemid=61) to train our model. The text files in this dataset use UTF-8 encoding and are manually segmented. There are four different genre of texts in this data set: novel, news, encyclopedia, and article. For testing the model, we use both NECTEC BEST data set and Google SAFT data set.
-* **Burmese**: For Burmese, we use the [Google corpus crawler](https://github.com/google/corpuscrawler) to collect unsegmented texts, and then use ICU to generate a pseudo segmented data set to be used for training. For testing, we use both such pseudo segmented texts and SAFT data.
+The following table shows the accuracy and model size of the fitted LSTM models for **Burmese**.
 
-![Figure 2. The framework for training and testing the model.](Figures/framework.png)
+| Embedding | BIES accuracy | F1-Score | Model size |
+| :---:     |     :----:    |  :----:  |    :---:   |
+| graph_clust | 91.7 | 90.4 | 61 KB |
+| genvec_12 | 91.2 | 89.9 | 57 KB |
+| genvec_123 | 91  | 89.6 | 61 KB |
+| genvec_12d0 | 90.7  | 89.3  | 57 KB |
+| genvec_125 | 91.1  | 89.7  | 57 KB |
+| genvec_1235 | 91.5  | 90.2  | 61 KB |
 
-### Performance summary
-* **Thai**: The following table summarizes the performance of our algorithm alongside with that of the state of the art algorithm [Deepcut](https://github.com/rkcosmos/deepcut) and current ICU algorithm for Thai. We have different versions of our algorithm, where LSTM model 7 and LSTM model 5 are respectively the most accurate and the most parsimonious LSTM-based models. LSTM model 4 lies somewhere between these two models, and provides a high accuracy while still has a small data size. Based on the following table, Deepcut is by far the largest and slowest model which makes applications of it limited. The LSTM models (particularly models 4 and 5) are substantially smaller, and thereofe are more appropriate for applications where size of the model matters such as mobile applications and IoT devices. Deepcut outperforms all other methods by a considerable margin on the BEST data. However, for other data sets such as SAFT data, which are not used to train this model, this margin drops significantly.
+Based on these tables, for Thai, it seems that whatever is achievable by generalized vectors can also be achieved by grapheme clusters (compare `graph_clust_light` with `genvec_123_light`, and `graph_clust` with `genvec_123`). For Burmese, it seems that using grapheme clusters is the better choice; it has a smaller data size and shows a better performance in terms of accuracy. However, our analysis shows that the generalized vector approach is also very viable, and can be used to give model accuracy very close to what can be achieved using grapheme clusters.
 
-| Algorithm | BIES accuracy (BEST) | F1-score (BEST) | BIES accuracy (SAFT) | F1-score (SAFT) | Model size | Run time |
-| :---:     |         :----:       |      :---:      |         :----:       |      :---:      | :---:  |   :---:  |
-| LSTM (model4)  | 95.1 | 90.8 | 91.5 | 83.9 | 57 KB | ??? |
-| LSTM (model5)  | 92.4 | 85.9 | 88.9 | 79.6 | 25 KB | ??? |
-| LSTM (model7)  |  96  | 92.4 | 92 | 84.9 | 180 KB | ??? |
-| Deepcut        | 97.8 | 95.7 | 92.6 | 86  | 2.2 MB | ??? |
-| ICU            | 91.9 | 85 | 90.3 | 81.9 | 126 KB | ??? |
+#### Grapheme Clusters vs. Code Points
 
-* **Burmese**: 
-The following table summarizes the performance of our algorithm and current ICU algorithm for Burmese. Just like Thai, we have different versions of our LSTM-based algorithm, where LSTM model 7 and LSTM model 5 are respectively the most accurate and the most parsimonious LSTM-based models. LSTM model 4 lies somewhere between these two models, and provides a high accuracy while still has a small data size. Based on this table, 
+Here, we investigate the difference between grapheme clusters and code point embedding systems. The following two tables show the accuracy and model size of the fitted LSTM models for Thai and Burmese. Note that for a fair comparison between these two embedding systems, looking at the BIES accuracy can be misleading. This is due to the fact the length of the BIES accuracy computed for code point embedding is often longer than that computed for grapheme clusters and hence the BIES accuracy tends to be higher for code point embeddings. For instance, consider the following example:
 
-| Algorithm | BIES accuracy (ICU segmented) | F1-score (ICU segmented) | BIES accuracy (SAFT) | F1-score (SAFT) | Model size | Run time |
-| :---:     |         :----:                |      :---:               |     :---:  |   :---: | :---: |   :---:  |
-| LSTM (model4) | 94.7 | 92.9 | 91.7 | 90.5 | 61 KB  | ??? |
-| LSTM (model5) | 93.4 | 81.1 | 91.4 | 90.1 | 28 KB | ??? |
-| LSTM (model7) | 96.2 | 94.9 | 92.3 | 91.1 | 254 KB | ??? |
-| ICU           | 100  | 100  | 93.1 | 92.4 | 254 KB | ??? |
+* Correct segmentation: |ใหญ่ซึ่ง| 
+  
+* Our segmentation: |ใหญ่|ซึ่ง|
 
+In this case, the correct BIES sequence, the estimated BIES sequence, and BIES accuracy for grapheme clusters and code points will be:
 
+* Grapheme cluster:
+  * Correct segmentation BIES: biiie
+  * Our segmentation BIES: biebe
+  * BIES accuracy = 60
 
+* Code point:
+  * Correct segmentation BIES: biiiiiie
+  * Our segmentation BIES: biiebiie
+  * BIES accuracy = 75
+
+Therefore, the code point version of BIES accuracy is higher for the same segmentation. For this reason, in this section, we only report F1-scores. The following table shows the accuracy and model size of the fitted LSTM models for **Thai**.
+
+| Embedding |  F1-Score | Model size |
+| :---:     |   :----:  |    :---:   |
+| graph_clust | 88.7 | 57 KB
+| codepoints light | 88.9 |  57 KB |
+| codepoints | 90.2  | 72 KB |
+
+The following table shows the accuracy and model size of the fitted LSTM models for **Burmese**.
+
+| Embedding |  F1-Score | Model size |
+| :---:     |   :----:  |    :---:   |
+| graph_clust |  | 61 KB
+| codepoints |   |  KB |
+
+Based on these tables, for models of the same size, we see that code points embedding gives slightly better accuracy (compare `graph_clust` to `codepoint light` for Thai table). Besides, by using larger code points models we get considerably better performance (third row of the Thai table). We weren't able to achieve that level of accuracy using grapheme clusters, even when we train models larger than what we show in these tables.
+
+#### Case-by-case Analysis
+
+In what follows, we use some sample examples to see what kind of sentences in **Thai** to see how different algorithms segment them:
+
+**Test Case 1**
+
+| Algorithm |  Output |
+| :---:     |  :----  |
+| Unsegmented | `เพราะเขาเห็นโอกาสในการซื้อ`|
+|  Manually Segmented | `|เพราะ|เขา|เห็น|โอกาส|ใน|การ|ซือ|` |
+|  Deepcut | `|เพราะ|เขา|เห็น|โอกาส|ใน|การ|ซื้อ|` |
+|  ICU | `|เพราะ|เขา|เห็น|โอกาส|ใน|การ|ซื้อ|` |
+|  Grapheme Clusters | `|เพราะ|เขา|เห็น|โอกาส|ใน|การ|ซื้อ|`|
+|  Generalized Vectors | `|เ|พราะ|เขาเห็|นโอ|กาส|ใน|การ|ซื้อ|`|
+|  Code Points | `|เพราะ|เขา|เห็น|โอกาส|ใน|การ|ซื้อ|`|
+
+**Test Case 2**
+
+| Algorithm |  Output |
+| :---:     |  :----  |
+| Unsegmented | `การเดินทางใน` |
+|  Manually Segmented | `|การ|เดินทาง|ใน|` |
+|  Deepcut | `|การ|เดินทาง|ใน|` |
+|  ICU | `|การ|เดิน|ทางใน|` |
+|  Grapheme Clusters | `|การ|เดิน|ทาง|ใน|` |
+|  Generalized Vectors | `|การ|เดิน|ทาง|ใ|น|` |
+|  Code Points | `|การ|เดินทาง|ใน|` |
+
+**Test Case 3**
+
+| Algorithm |  Output |
+| :---:     |  :----  |
+| Unsegmented | `นั่งนายกฯต่อสมัยหน้า` |
+|  Manually Segmented | `|นั่ง|นายก|ฯ|ต่อ|สมัย|หน้า|` |
+|  Deepcut | `|นั่ง|นายก|ฯ|ต่อ|สมัย|หน้า|` |
+|  ICU | `|นั่ง|นา|ยกฯ|ต่อ|สมัย|หน้า|` |
+|  Grapheme Clusters | `|นั่ง|นายก|ฯ|ต่อ|สมัย|หน้า|` |
+|  Generalized Vectors | `|นั่ง|นายก|ฯ|ต่อสมัยหน้า|` |
+|  Code Points | `|นั่ง|นายก|ฯ|ต่อ|สมัย|หน้า|` |
+
+**Test Case 4**
+
+| Algorithm |  Output |
+| :---:     |  :----  |
+| Unsegmented | `พร้อมจัดตั้ง` |
+|  Manually Segmented | `|พร้อม|จัดตั้ง|` |
+|  Deepcut | `|พร้อม|จัด|ตั้ง|` |
+|  ICU | `|พร้อม|จัด|ตั้ง|` |
+|  Grapheme Clusters | `|พร้อม|จัด|ตั้ง|` |
+|  Generalized Vectors | `|พร้อม|จัด|ตั้ง|` |
+|  Code Points | `|พร้อม|จัดตั้ง|` |
+
+**Test Case 5**
+
+| Algorithm |  Output |
+| :---:     |  :----  |
+| Unsegmented | `เพราะดนตรีที่ชอบนั้น` |
+|  Manually Segmented | `|เพราะ|ดนตรี|ที่|ชอบ|นั้น|` |
+|  Deepcut | `|เพราะ|ดนตรี|ที่|ชอบ|นั้น|` |
+|  ICU | `|เพราะ|ดนตรี|ที่|ชอบ|นั้น|` |
+|  Grapheme Clusters | `|เพราะ|ดนตรี|ที่|ชอบ|นั้น|` |
+|  Generalized Vectors | `|เ|พราะดนตรี|ที่|ชอบ|นั้น|` |
+|  Code Points | `|เพราะ|ดนตรี|ที่|ชอบ|นั้น|` |
+
+In what follows, we use some sample examples to see what kind of sentences in **Burmese** to see how different algorithms segment them:
+
+**Test Case 1**
+
+| Algorithm |  Output |
+| :---:     |  :----  |
+| Unsegmented | `ဖော်ပြထားသည့်` |
+|  Manually Segmented | `|ဖော်ပြ|ထားသည့်|` |
+|  ICU | `|ဖော်ပြ|ထား|သည့်|` |
+|  Grapheme Clusters | `|ဖော်|ပြ|ထား|သည့်| ` |
+|  Generalized Vectors | `|ဖော်|ပြ|ထား|သည့်|` |
+|  Code Points | `` |
+
+**Test Case 2**
+
+| Algorithm |  Output |
+| :---:     |  :----  |
+| Unsegmented | `အသားအရောင်အားဖြင့်` |
+|  Manually Segmented | `|အသားအရောင်|အားဖြင့်|` |
+|  ICU | `|အသား|အရောင်|အားဖြင့်|` |
+|  Grapheme Clusters | `|အသား|အရောင်|အား|ဖြင့်|` |
+|  Generalized Vectors | `|အသား|အရောင်|အား|ဖြင့်|` |
+|  Code Points | `` |
+
+**Test Case 3**
+
+| Algorithm |  Output |
+| :---:     |  :----  |
+| Unsegmented | `သဘာဝအားဖြင့်` |
+|  Manually Segmented | `|သဘာဝ|အားဖြင့်|` |
+|  ICU | `|သဘာ|ဝ|အားဖြင့်|` |
+|  Grapheme Clusters | `|သဘာ|ဝ|အား|ဖြင့်|` |
+|  Generalized Vectors | `|သဘာ|ဝအား|ဖြင့်|` |
+|  Code Points | `` |
+
+**Test Case 4**
+
+| Algorithm |  Output |
+| :---:     |  :----  |
+| Unsegmented | `ထို့ပြင်` |
+|  Manually Segmented | `|ထို့ပြင်|` |
+|  ICU | `|ထို့ပြင်|` |
+|  Grapheme Clusters | `|ထို့|ပြင်|` |
+|  Generalized Vectors | `|ထို့|ပြင်|` |
+|  Code Points | `` |
+
+**Test Case 5**
+
+| Algorithm |  Output |
+| :---:     |  :----  |
+| Unsegmented | `နိုင်ငံရေးဆိုင်ရာ` |
+|  Manually Segmented | `|နိုင်ငံရေး|ဆိုင်ရာ|` |
+|  ICU | `|နိုင်ငံရေး|ဆိုင်ရာ|` |
+|  Grapheme Clusters | `|နိုင်ငံရေး|ဆိုင်ရာ|` |
+|  Generalized Vectors | `|နိုင်ငံရေး|ဆိုင်ရာ|` |
+|  Code Points | `` |
+
+### Conclusions
+
+Based on these analyses, it seems that for both Burmese and Thai, code points embedding is the most favorable option. This embedding system is capable of giving better accuracies and often is easier to implement. It also requires less preprocessing than the grapheme clusters approach at training time where we have to find the most common grapheme clusters first. Furthermore, at the evaluation time where we don't need to segment a sentence into its grapheme clusters anymore. Another advantage of the code point embedding is that in contrast to the grapheme clusters embedding we don't need to store any extra dictionary in the model. 
+
+One disadvantage of code point embedding is that since sentences are longer when we use code points instead of grapheme clusters, this type of embedding probably requires models to have a larger number of hidden units to learn the same amount of context. This can make them have a larger model size. However, this extra data size is covered in many cases with the reduction that we get in the embedding matrix, by having for example at most 73 columns for code points instead of 350 columns for grapheme clusters for Thai. 
+
+Another advantage of code points models (shared with generalized vectors models) is that they probably perform better for sentences for rare/unseen grapheme clusters. Such occasions can happen frequently, when we are using our algorithms to segment non-formal texts, such as text messages. For instance, to come up with an English example, one may use "the meeting is tooooo long" instead of "the meeting is too long", which has a word (it can be a grapheme cluster in Thai) that is not a formal word, and therefore can be problematic for grapheme clusters approach.

@@ -62,7 +62,6 @@ class LSTMBayesianOptimization:
         """
         hunits = int(round(hunits))
         embedding_dim = int(round(embedding_dim))
-        print(hunits)
         word_segmenter = WordSegmenter(input_name="temp", input_n=self.n, input_t=self.t,
                                        input_clusters_num=self.clusters_num, input_embedding_dim=embedding_dim,
                                        input_hunits=hunits, input_dropout_rate=0.2, input_output_dim=4,

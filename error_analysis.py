@@ -7,23 +7,28 @@ import timeit
 
 
 # Picking models for error analysis
-word_segmenter1 = pick_lstm_model(model_name="Thai_graphclust_model4_heavy", embedding="grapheme_clusters_tf",
-                                  train_data="BEST", eval_data="BEST")
+word_segmenter1 = pick_lstm_model(model_name="Burmese_graphclust_model4_heavy", embedding="grapheme_clusters_tf",
+                                  train_data="my", eval_data="my")
+word_segmenter2 = pick_lstm_model(model_name="Burmese_genvec_1235", embedding="generalized_vectors_1235",
+                                  train_data="my", eval_data="my")
 
-word_segmenter2 = pick_lstm_model(model_name="Thai_graphclust_model5_heavy", embedding="grapheme_clusters_tf",
-                                  train_data="BEST", eval_data="BEST")
+# word_segmenter1 = pick_lstm_model(model_name="Thai_graphclust_model4_heavy", embedding="grapheme_clusters_tf",
+#                                   train_data="BEST", eval_data="BEST")
+#
+# word_segmenter2 = pick_lstm_model(model_name="Thai_graphclust_model5_heavy", embedding="grapheme_clusters_tf",
+#                                   train_data="BEST", eval_data="BEST")
+#
+# word_segmenter3 = pick_lstm_model(model_name="Thai_graphclust_model7_heavy", embedding="grapheme_clusters_tf",
+#                                   train_data="BEST", eval_data="BEST")
 
-word_segmenter3 = pick_lstm_model(model_name="Thai_graphclust_model7_heavy", embedding="grapheme_clusters_tf",
-                                  train_data="BEST", eval_data="BEST")
-
-word_segmenter4 = pick_lstm_model(model_name="Thai_graphclust_exclusive_model4_heavy", embedding="grapheme_clusters_tf",
-                                  train_data="exclusive BEST", eval_data="exclusive BEST")
-
-word_segmenter5 = pick_lstm_model(model_name="Thai_codepoints_exclusive_model4_heavy", embedding="codepoints",
-                                  train_data="exclusive BEST", eval_data="exclusive BEST")
-
-word_segmenter6 = pick_lstm_model(model_name="Thai_codepoints_exclusive_model7_heavy", embedding="codepoints",
-                                  train_data="exclusive BEST", eval_data="exclusive BEST")
+# word_segmenter4 = pick_lstm_model(model_name="Thai_graphclust_exclusive_model4_heavy", embedding="grapheme_clusters_tf",
+#                                   train_data="exclusive BEST", eval_data="exclusive BEST")
+#
+# word_segmenter5 = pick_lstm_model(model_name="Thai_codepoints_exclusive_model4_heavy", embedding="codepoints",
+#                                   train_data="exclusive BEST", eval_data="exclusive BEST")
+#
+# word_segmenter6 = pick_lstm_model(model_name="Thai_codepoints_exclusive_model7_heavy", embedding="codepoints",
+#                                   train_data="exclusive BEST", eval_data="exclusive BEST")
 
 # Testing the model by arbitrary sentences
 # '''
@@ -38,11 +43,13 @@ output = open(str(output_file), 'w')
 # Use the following list directly
 # inp_lines = ["|เพราะ|เขา|เห็น|โอกาส|ใน|การ|ซื้อ|", "|การ|เดินทาง|ใน|", "|นั่ง|นายก|ฯ|ต่อ|สมัย|หน้า|", "|พร้อม|จัดตั้ง|",
 #              "|เพราะ|ดนตรี|ที่|ชอบ|นั้น|"]
-# lines = []
-# for inp_line in inp_lines:
-#     lines.append(Line(inp_line, "man_segmented"))
+inp_lines = ["|ဖော်ပြ|ထားသည့်|", "|အသားအရောင်|အားဖြင့်|", "|သဘာဝ|အားဖြင့်|", "|ထို့ပြင်|", "|နိုင်ငံရေး|ဆိုင်ရာ|"]
+lines = []
+for inp_line in inp_lines:
+    lines.append(Line(inp_line, "man_segmented"))
 
-word_segmenters = [word_segmenter1, word_segmenter2, word_segmenter3, word_segmenter4, word_segmenter5, word_segmenter6]
+# word_segmenters = [word_segmenter1, word_segmenter2, word_segmenter3, word_segmenter4, word_segmenter5, word_segmenter6]
+word_segmenters = [word_segmenter1, word_segmenter2]
 for line in lines:
     deepcut_words = deepcut.tokenize(line.unsegmented)
     deepcut_segmented = "|"

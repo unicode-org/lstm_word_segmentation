@@ -343,7 +343,7 @@ class WordSegmenter:
         for line in lines[:line_limit]:
             x_data, y_data = self._get_trainable_data(line.man_segmented)
 
-            # Using the manual predict function for lines becasud they are not necessarily self.n long
+            # Using the manual predict function for lines because they are not necessarily self.n long
             y_hat = Bies(input_bies=self._manual_predict(x_data), input_type="mat")
             y_hat.normalize_bies()
 
@@ -445,9 +445,6 @@ class WordSegmenter:
         embedarr = self.model.weights[0].numpy().astype(dtype)
         lstm_weights = [self.model.weights[1].numpy().astype(dtype), self.model.weights[2].numpy().astype(dtype),
                         self.model.weights[3].numpy().astype(dtype)]
-
-        # print(weightLSTM[0].dtype)
-        # x = input()
         c_fw = np.zeros([1, self.hunits], dtype=dtype)
         h_fw = np.zeros([1, self.hunits], dtype=dtype)
         all_h_fw = np.zeros([len(test_input), self.hunits], dtype=dtype)
@@ -597,8 +594,14 @@ class WordSegmenter:
             output["model"] = self.name
             if "grapheme_clusters" in self.embedding_type:
                 output["dic"] = self.graph_clust_dic
+            elif "codepoints" in self.embedding_type:
+                if self.language == "Thai":
+                    output["dic"] = constants.THAI_CODE_POINT_DICTIONARY
+                if self.language == "Burmese":
+                    output["dic"] = constants.BURMESE_CODE_POINT_DICTIONARY
             for i in range(len(self.model.weights)):
                 dic_model = dict()
+                dic_model["v"] = 1
                 mat = self.model.weights[i].numpy()
                 dim0 = mat.shape[0]
                 dim1 = 1

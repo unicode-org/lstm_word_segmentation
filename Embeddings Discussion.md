@@ -133,6 +133,21 @@ In what follows, we use some sample examples to see what kind of sentences in **
 
 **Test Case 1**
 
+Unsegmented &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;: เพราะเขาเห็นโอกาสในการซื้อ
+
+Manualy Segmented : |เพราะ|เขา|เห็น|โอกาส|ใน|การ|ซือ|
+
+Deepcut &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:
+
+ICU &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:
+
+Grapheme Clusters &nbsp;:
+
+Generalized Vectors :
+
+Code Points &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:
+
+
 | Algorithm |  Output |
 | :---:     |  :----  |
 | Unsegmented | `เพราะเขาเห็นโอกาสในการซื้อ`|

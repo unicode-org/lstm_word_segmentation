@@ -134,7 +134,7 @@ In what follows, we use some sample examples to see what kind of sentences in **
 | Algorithm |  Output |
 | :---:     |  :----  |
 | Unsegmented | `การเดินทางใน` |
-|  Manually Segmented | \|การ\|เดินทาง\|ใน\| |
+|  Manually Segmented | `\|การ\|เดินทาง\|ใน\|` |
 |  Deepcut | `\|การ\|เดินทาง\|ใน\|` |
 |  ICU | `\|การ\|เดิน\|ทางใน\|` |
 |  Grapheme Clusters | `\|การ\|เดิน\|ทาง\|ใน\|` |
@@ -184,10 +184,10 @@ In what follows, we use some sample examples to see what kind of sentences in **
 | Algorithm |  Output |
 | :---:     |  :----  |
 | Unsegmented | `ဖော်ပြထားသည့်` |
-|  Manually Segmented | `|ဖော်ပြ|ထားသည့်|` |
-|  ICU | `|ဖော်ပြ|ထား|သည့်|` |
-|  Grapheme Clusters | `|ဖော်|ပြ|ထား|သည့်| ` |
-|  Generalized Vectors | `|ဖော်|ပြ|ထား|သည့်|` |
+|  Manually Segmented | `\|ဖော်ပြ\|ထားသည့်\|` |
+|  ICU | `\|ဖော်ပြ\|ထား\|သည့်\|` |
+|  Grapheme Clusters | `\|ဖော်\|ပြ\|ထား\|သည့်\| ` |
+|  Generalized Vectors | `\|ဖော်\|ပြ\|ထား\|သည့်\|` |
 |  Code Points | `` |
 
 **Test Case 2**
@@ -195,10 +195,10 @@ In what follows, we use some sample examples to see what kind of sentences in **
 | Algorithm |  Output |
 | :---:     |  :----  |
 | Unsegmented | `အသားအရောင်အားဖြင့်` |
-|  Manually Segmented | `|အသားအရောင်|အားဖြင့်|` |
-|  ICU | `|အသား|အရောင်|အားဖြင့်|` |
-|  Grapheme Clusters | `|အသား|အရောင်|အား|ဖြင့်|` |
-|  Generalized Vectors | `|အသား|အရောင်|အား|ဖြင့်|` |
+|  Manually Segmented | `\|အသားအရောင်\|အားဖြင့်\|` |
+|  ICU | `\|အသား\|အရောင်\|အားဖြင့်\|` |
+|  Grapheme Clusters | `\|အသား\|အရောင်\|အား\|ဖြင့်\|` |
+|  Generalized Vectors | `\|အသား\|အရောင်\|အား\|ဖြင့်\|` |
 |  Code Points | `` |
 
 **Test Case 3**
@@ -206,10 +206,10 @@ In what follows, we use some sample examples to see what kind of sentences in **
 | Algorithm |  Output |
 | :---:     |  :----  |
 | Unsegmented | `သဘာဝအားဖြင့်` |
-|  Manually Segmented | `|သဘာဝ|အားဖြင့်|` |
-|  ICU | `|သဘာ|ဝ|အားဖြင့်|` |
-|  Grapheme Clusters | `|သဘာ|ဝ|အား|ဖြင့်|` |
-|  Generalized Vectors | `|သဘာ|ဝအား|ဖြင့်|` |
+|  Manually Segmented | `\|သဘာဝ\|အားဖြင့်\|` |
+|  ICU | `\|သဘာ\|ဝ\|အားဖြင့်\|` |
+|  Grapheme Clusters | `\|သဘာ\|ဝ\|အား\|ဖြင့်\|` |
+|  Generalized Vectors | `\|သဘာ\|ဝအား\|ဖြင့်\|` |
 |  Code Points | `` |
 
 **Test Case 4**
@@ -217,10 +217,10 @@ In what follows, we use some sample examples to see what kind of sentences in **
 | Algorithm |  Output |
 | :---:     |  :----  |
 | Unsegmented | `ထို့ပြင်` |
-|  Manually Segmented | `|ထို့ပြင်|` |
-|  ICU | `|ထို့ပြင်|` |
-|  Grapheme Clusters | `|ထို့|ပြင်|` |
-|  Generalized Vectors | `|ထို့|ပြင်|` |
+|  Manually Segmented | `\|ထို့ပြင်\|` |
+|  ICU | `\|ထို့ပြင်\|` |
+|  Grapheme Clusters | `\|ထို့\|ပြင်\|` |
+|  Generalized Vectors | `\|ထို့\|ပြင်\|` |
 |  Code Points | `` |
 
 **Test Case 5**
@@ -228,10 +228,10 @@ In what follows, we use some sample examples to see what kind of sentences in **
 | Algorithm |  Output |
 | :---:     |  :----  |
 | Unsegmented | `နိုင်ငံရေးဆိုင်ရာ` |
-|  Manually Segmented | `|နိုင်ငံရေး|ဆိုင်ရာ|` |
-|  ICU | `|နိုင်ငံရေး|ဆိုင်ရာ|` |
-|  Grapheme Clusters | `|နိုင်ငံရေး|ဆိုင်ရာ|` |
-|  Generalized Vectors | `|နိုင်ငံရေး|ဆိုင်ရာ|` |
+|  Manually Segmented | `\|နိုင်ငံရေး\|ဆိုင်ရာ\|` |
+|  ICU | `\|နိုင်ငံရေး\|ဆိုင်ရာ\|` |
+|  Grapheme Clusters | `\|နိုင်ငံရေး\|ဆိုင်ရာ\|` |
+|  Generalized Vectors | `\|နိုင်ငံရေး\|ဆိုင်ရာ\|` |
 |  Code Points | `` |
 
 ### Conclusions

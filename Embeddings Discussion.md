@@ -131,113 +131,51 @@ Based on these tables, for models of the same size, we see that code points embe
 
 In what follows, we use some sample examples to see what kind of sentences in **Thai** to see how different algorithms segment them:
 
-**Test Case 1**
-
-Unsegmented:
-
-* เพราะเขาเห็นโอกาสในการซื้อ
-
-Manualy Segmented: 
-
-* |เพราะ|เขา|เห็น|โอกาส|ใน|การ|ซื้อ|
-
-Deepcut:
-
-* |เพราะ|เขา|เห็น|โอกาส|ใน|การ|ซื้อ|
-
-ICU: 
-
-* |เพราะ|เขา|เห็น|โอกาส|ใน|การ|ซื้อ|
-
-Grapheme Clusters:
-
-* |เพราะ|เขา|เห็น|โอกาส|ใน|การ|ซื้อ|
-
-Generalized Vectors:
-
-* |เ|พราะ|เขาเห็|นโอ|กาส|ใน|การ|ซื้อ|
-
-Code Points:
-
-* |เพราะ|เขา|เห็น|โอกาส|ใน|การ|ซื้อ|
-
-
-**Test Case 2**
-
-Unsegmented:
-
-*  การเดินทางใน
-
-Manualy Segmented: 
-
-* |การ|เดินทาง|ใน|
-
-Deepcut:
-
-* |การ|เดินทาง|ใน|
-
-ICU:
-
-* |การ|เดิน|ทางใน|
-
-Grapheme Clusters:
-
-* |การ|เดิน|ทาง|ใน|
-
-Generalized Vectors:
-
-* |การ|เดิน|ทาง|ใ|น|
-
-Code Points:
-
-* |การ|เดินทาง|ใน|
-
-
 | Algorithm |  Output |
 | :---:     |  :----  |
 | Unsegmented | `การเดินทางใน` |
-|  Manually Segmented | `\|การ\|เดินทาง\|ใน\|` |
-|  Deepcut | `|การ|เดินทาง|ใน|` |
-|  ICU | `|การ|เดิน|ทางใน|` |
-|  Grapheme Clusters | `|การ|เดิน|ทาง|ใน|` |
-|  Generalized Vectors | `|การ|เดิน|ทาง|ใ|น|` |
-|  Code Points | `|การ|เดินทาง|ใน|` |
+|  Manually Segmented | \|การ\|เดินทาง\|ใน\| |
+|  Deepcut | `\|การ\|เดินทาง\|ใน\|` |
+|  ICU | `\|การ\|เดิน\|ทางใน\|` |
+|  Grapheme Clusters | `\|การ\|เดิน\|ทาง\|ใน\|` |
+|  Generalized Vectors | `\|การ\|เดิน\|ทาง\|ใ\|น\|` |
+|  Code Points | `\|การ\|เดินทาง\|ใน\|` |
 
 **Test Case 3**
 
 | Algorithm |  Output |
 | :---:     |  :----  |
 | Unsegmented | `นั่งนายกฯต่อสมัยหน้า` |
-|  Manually Segmented | `|นั่ง|นายก|ฯ|ต่อ|สมัย|หน้า|` |
-|  Deepcut | `|นั่ง|นายก|ฯ|ต่อ|สมัย|หน้า|` |
-|  ICU | `|นั่ง|นา|ยกฯ|ต่อ|สมัย|หน้า|` |
-|  Grapheme Clusters | `|นั่ง|นายก|ฯ|ต่อ|สมัย|หน้า|` |
-|  Generalized Vectors | `|นั่ง|นายก|ฯ|ต่อสมัยหน้า|` |
-|  Code Points | `|นั่ง|นายก|ฯ|ต่อ|สมัย|หน้า|` |
+|  Manually Segmented | `\|นั่ง\|นายก\|ฯ\|ต่อ\|สมัย\|หน้า\|` |
+|  Deepcut | `\|นั่ง\|นายก\|ฯ\|ต่อ\|สมัย\|หน้า\|` |
+|  ICU | `\|นั่ง\|นา\|ยกฯ\|ต่อ\|สมัย\|หน้า\|` |
+|  Grapheme Clusters | `\|นั่ง\|นายก\|ฯ\|ต่อ\|สมัย\|หน้า\|` |
+|  Generalized Vectors | `\|นั่ง\|นายก\|ฯ\|ต่อสมัยหน้า\|` |
+|  Code Points | `\|นั่ง\|นายก\|ฯ\|ต่อ\|สมัย\|หน้า\|` |
 
 **Test Case 4**
 
 | Algorithm |  Output |
 | :---:     |  :----  |
 | Unsegmented | `พร้อมจัดตั้ง` |
-|  Manually Segmented | `|พร้อม|จัดตั้ง|` |
-|  Deepcut | `|พร้อม|จัด|ตั้ง|` |
-|  ICU | `|พร้อม|จัด|ตั้ง|` |
-|  Grapheme Clusters | `|พร้อม|จัด|ตั้ง|` |
-|  Generalized Vectors | `|พร้อม|จัด|ตั้ง|` |
-|  Code Points | `|พร้อม|จัดตั้ง|` |
+|  Manually Segmented | `\|พร้อม\|จัดตั้ง\|` |
+|  Deepcut | `\|พร้อม\|จัด\|ตั้ง\|` |
+|  ICU | `\|พร้อม\|จัด\|ตั้ง\|` |
+|  Grapheme Clusters | `\|พร้อม\|จัด\|ตั้ง\|` |
+|  Generalized Vectors | `\|พร้อม\|จัด\|ตั้ง\|` |
+|  Code Points | `\|พร้อม\|จัดตั้ง\|` |
 
 **Test Case 5**
 
 | Algorithm |  Output |
 | :---:     |  :----  |
 | Unsegmented | `เพราะดนตรีที่ชอบนั้น` |
-|  Manually Segmented | `|เพราะ|ดนตรี|ที่|ชอบ|นั้น|` |
-|  Deepcut | `|เพราะ|ดนตรี|ที่|ชอบ|นั้น|` |
-|  ICU | `|เพราะ|ดนตรี|ที่|ชอบ|นั้น|` |
-|  Grapheme Clusters | `|เพราะ|ดนตรี|ที่|ชอบ|นั้น|` |
-|  Generalized Vectors | `|เ|พราะดนตรี|ที่|ชอบ|นั้น|` |
-|  Code Points | `|เพราะ|ดนตรี|ที่|ชอบ|นั้น|` |
+|  Manually Segmented | `\|เพราะ\|ดนตรี\|ที่\|ชอบ\|นั้น\|` |
+|  Deepcut | `\|เพราะ\|ดนตรี\|ที่\|ชอบ\|นั้น\|` |
+|  ICU | `\|เพราะ\|ดนตรี\|ที่\|ชอบ\|นั้น\|` |
+|  Grapheme Clusters | `\|เพราะ\|ดนตรี\|ที่\|ชอบ\|นั้น\|` |
+|  Generalized Vectors | `\|เ\|พราะดนตรี\|ที่\|ชอบ\|นั้น\|` |
+|  Code Points | `\|เพราะ\|ดนตรี\|ที่\|ชอบ\|นั้น\|` |
 
 In what follows, we use some sample examples to see what kind of sentences in **Burmese** to see how different algorithms segment them:
 

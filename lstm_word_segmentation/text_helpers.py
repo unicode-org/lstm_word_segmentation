@@ -217,7 +217,7 @@ def get_segmented_file_in_one_line(filename, input_type, output_type):
     be manually segmented, it just combines the manually segmented sentences inside the file. If the output is supposed
     to be icu segmented, it first combines all unsegmented versions of line of the text into a single line, and then use
     icu to segment that single line.
-    The reason for this function is that some code points at the begining of lines in some Burmese texts are not
+    The reason for this function is that some code points at the beginning of lines in some Burmese texts are not
     valid code points and need to be merged with previous line (see line 457457 of the my_train.txt).
     Args:
         filename: address of the input file

@@ -7,20 +7,20 @@ import timeit
 
 
 # Picking models for error analysis
-word_segmenter1 = pick_lstm_model(model_name="Burmese_graphclust_model4_heavy", embedding="grapheme_clusters_tf",
-                                  train_data="my", eval_data="my")
-word_segmenter2 = pick_lstm_model(model_name="Burmese_genvec_1235", embedding="generalized_vectors_1235",
-                                  train_data="my", eval_data="my")
+# word_segmenter1 = pick_lstm_model(model_name="Burmese_graphclust_model4_heavy", embedding="grapheme_clusters_tf",
+#                                   train_data="my", eval_data="my")
+# word_segmenter2 = pick_lstm_model(model_name="Burmese_genvec_1235", embedding="generalized_vectors_1235",
+#                                   train_data="my", eval_data="my")
 
-# word_segmenter1 = pick_lstm_model(model_name="Thai_graphclust_model4_heavy", embedding="grapheme_clusters_tf",
-#                                   train_data="BEST", eval_data="BEST")
+word_segmenter1 = pick_lstm_model(model_name="Thai_graphclust_exclusive_model4_heavy", embedding="grapheme_clusters_tf",
+                                  train_data="exclusive BEST", eval_data="exclusive BEST")
 #
 # word_segmenter2 = pick_lstm_model(model_name="Thai_graphclust_model5_heavy", embedding="grapheme_clusters_tf",
 #                                   train_data="BEST", eval_data="BEST")
 #
 # word_segmenter3 = pick_lstm_model(model_name="Thai_graphclust_model7_heavy", embedding="grapheme_clusters_tf",
 #                                   train_data="BEST", eval_data="BEST")
-
+#
 # word_segmenter4 = pick_lstm_model(model_name="Thai_graphclust_exclusive_model4_heavy", embedding="grapheme_clusters_tf",
 #                                   train_data="exclusive BEST", eval_data="exclusive BEST")
 #
@@ -29,6 +29,12 @@ word_segmenter2 = pick_lstm_model(model_name="Burmese_genvec_1235", embedding="g
 #
 # word_segmenter6 = pick_lstm_model(model_name="Thai_codepoints_exclusive_model7_heavy", embedding="codepoints",
 #                                   train_data="exclusive BEST", eval_data="exclusive BEST")
+
+# input_line = "|ทาง|ด้าน|ความ|คิด|"
+# line = Line(input_line=input_line, input_type="man_segmented")
+# print(line.get_bies_grapheme_clusters(segmentation_type="man").str)
+# x = input()
+
 
 # Testing the model by arbitrary sentences
 # '''

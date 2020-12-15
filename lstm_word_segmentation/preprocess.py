@@ -78,9 +78,9 @@ def find_grapheme_clusters(language, exclusive, verbose):
     # For Burmese use "my" data set
     elif language == "Burmese":
         if exclusive:
-            file = Path.joinpath(Path(__file__).parent.parent.absolute(), "Data/my.txt")
+            file = Path.joinpath(Path(__file__).parent.parent.absolute(), "Data/my_exclusive.txt")
         else:
-            file = Path.joinpath(Path(__file__).parent.parent.absolute(), "Data/my.txt")  # use appropriate file here
+            file = Path.joinpath(Path(__file__).parent.parent.absolute(), "Data/my.txt")
         lines = get_lines_of_text(file=file, type_of_lines="man_segmented")
 
     else:

@@ -125,7 +125,7 @@ class WordSegmenter:
                 ratios = constants.THAI_GRAPH_CLUST_RATIO
         elif self.language == "Burmese":
             if "exclusive" in self.training_data:
-                ratios = None
+                ratios = constants.BURMESE_EXCLUSIVE_GRAPH_CLUST_RATIO
             else:
                 ratios = constants.BURMESE_GRAPH_CLUST_RATIO
         elif self.language == "Thai_Burmese":
@@ -257,6 +257,9 @@ class WordSegmenter:
         elif self.training_data == "my":
             file = Path.joinpath(Path(__file__).parent.parent.absolute(), 'Data/my_train.txt')
             input_str = get_segmented_file_in_one_line(file, input_type="unsegmented", output_type="icu_segmented")
+        elif self.training_data == "exclusive my":
+            file = Path.joinpath(Path(__file__).parent.parent.absolute(), 'Data/my_train_exclusive.txt')
+            input_str = get_segmented_file_in_one_line(file, input_type="unsegmented", output_type="icu_segmented")
         elif self.training_data == "SAFT_Burmese":
             file = Path.joinpath(Path(__file__).parent.parent.absolute(), 'Data/SAFT_burmese_train.txt')
             input_str = get_segmented_file_in_one_line(file, input_type="man_segmented", output_type="man_segmented")
@@ -281,6 +284,9 @@ class WordSegmenter:
             input_str = get_best_data_text(starting_text=10, ending_text=20, pseudo=True, exclusive=False)
         elif self.training_data == "my":
             file = Path.joinpath(Path(__file__).parent.parent.absolute(), 'Data/my_valid.txt')
+            input_str = get_segmented_file_in_one_line(file, input_type="unsegmented", output_type="icu_segmented")
+        elif self.training_data == "exclusive my":
+            file = Path.joinpath(Path(__file__).parent.parent.absolute(), 'Data/my_valid_exclusive.txt')
             input_str = get_segmented_file_in_one_line(file, input_type="unsegmented", output_type="icu_segmented")
         elif self.training_data == "SAFT_Burmese":
             file = Path.joinpath(Path(__file__).parent.parent.absolute(), 'Data/SAFT_burmese_test.txt')
@@ -394,11 +400,16 @@ class WordSegmenter:
             accuracy.merge_accuracy(text_acc)
         elif self.evaluation_data == "my":
             if self.language != "Burmese":
-                print("Warning: the my.text data is in Burmese and you are testing a model in another language")
+                print("Warning: the my data is in Burmese and you are testing a model in another language")
             file = Path.joinpath(Path(__file__).parent.parent.absolute(), 'Data/my_test_segmented.txt')
             text_acc = self._test_text_line_by_line(file=file, line_limit=line_limit, verbose=verbose)
             accuracy.merge_accuracy(text_acc)
-
+        elif self.evaluation_data == "exclusive my":
+            if self.language != "Burmese":
+                print("Warning: the exvlusive my data is in Burmese and you are testing a model in another language")
+            file = Path.joinpath(Path(__file__).parent.parent.absolute(), 'Data/my_test_segmented_exclusive.txt')
+            text_acc = self._test_text_line_by_line(file=file, line_limit=line_limit, verbose=verbose)
+            accuracy.merge_accuracy(text_acc)
         elif self.evaluation_data == "SAFT_Burmese":
             if self.language != "Burmese":
                 print("Warning: the my.text data is in Burmese and you are testing a model in another language")
@@ -562,7 +573,8 @@ class WordSegmenter:
                 curr_char = line.unsegmented[char_start: char_finish]
                 x_data.append(GraphemeCluster(curr_char, self.graph_clust_dic, self.letters_dic))
         y_hat = Bies(input_bies=self._manual_predict(x_data), input_type="mat")
-        y_hat.normalize_bies()
+        # y_hat.normalize_bies()
+        print(y_hat.str)
 
         # Making a pretty version of the output of the LSTM, where bars show the boundaries of words
         y_hat_pretty = ""

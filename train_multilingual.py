@@ -9,7 +9,7 @@ from lstm_word_segmentation.text_helpers import merge_two_texts, add_additional_
 # data sets.
 # '''
 input_file = Path.joinpath(Path(__file__).parent.absolute(), "Data/my_train.txt")
-output_file = Path.joinpath(Path(__file__).parent.absolute(), "Data/my_train_with_bars.txt")
+output_file = Path.joinpath(Path(__file__).parent.absolute(), "Data/my_train_with_bars.txt")  # You have to recompute these
 add_additional_bars(read_filename=input_file, write_filename=output_file)
 
 input_file = Path.joinpath(Path(__file__).parent.absolute(), "Data/my_valid.txt")

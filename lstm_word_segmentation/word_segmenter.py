@@ -271,6 +271,7 @@ class WordSegmenter:
         x_data, y_data = self._get_trainable_data(input_str)
         if self.t > len(x_data):
             print("Warning: size of the training data is less than self.t")
+        print(len(x_data))
         x_data = x_data[:self.t]
         y_data = y_data[:self.t, :]
         train_generator = KerasBatchGenerator(x_data, y_data, n=self.n, batch_size=self.batch_size)
@@ -297,6 +298,7 @@ class WordSegmenter:
         else:
             print("Warning: no implementation for this validation data exists!")
         x_data, y_data = self._get_trainable_data(input_str)
+        print(len(x_data))
 
         if self.t > len(x_data):
             print("Warning: size of the validation data is less than self.t")

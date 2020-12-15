@@ -15,12 +15,13 @@ bayes_optimization.perform_bayesian_optimization()
 
 # Train a new model -- choose name cautiously to not overwrite other models
 # '''
-model_name = "Burmese_codepoints_exclusive_model4_heavy_"
-word_segmenter = WordSegmenter(input_name=model_name, input_n=50, input_t=100000, input_clusters_num=350,
+model_name = "Burmese_temp"
+word_segmenter = WordSegmenter(input_name=model_name, input_n=200, input_t=600000, input_clusters_num=350,
                                input_embedding_dim=28, input_hunits=14, input_dropout_rate=0.2, input_output_dim=4,
                                input_epochs=20, input_training_data="exclusive my", input_evaluation_data="exclusive my",
-                               input_language="Burmese", input_embedding_type="codepoints")
+                               input_language="Burmese", input_embedding_type="grapheme_clusters_tf")
 word_segmenter.train_model()
+x = input()
 word_segmenter.save_model()
 word_segmenter.test_model_line_by_line(verbose=True)
 # '''

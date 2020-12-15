@@ -4,7 +4,7 @@ from lstm_word_segmentation.bies import Bies
 
 
 class TestBies(unittest.TestCase):
-    def test_is_ascii(self):
+    def test_normalize_bies(self):
         TestCase = namedtuple("TestCase", ["str", "expected"])
         cases = [
             TestCase("biiie", "biiie"),

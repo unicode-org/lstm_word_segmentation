@@ -355,14 +355,23 @@ class WordSegmenter:
             print("The F1 score (line by line) for file {} : {:.3f}".format(file, accuracy.get_f1_score()))
         return accuracy
 
-    def test_model_line_by_line(self, verbose):
+    def test_model_line_by_line(self, verbose, fast=False):
         """
         This function uses the evaluating data to test the model line by line.
+        Args:
+            verbose: determines if we want to see the the accuracy of each text that is being tested.
+            fast: determines if we use small amount of text to run the test or not.
         """
+        line_limit = -1
+        if fast:
+            line_limit = 1000
         accuracy = Accuracy()
         if self.evaluation_data in ["BEST", "exclusive BEST"]:
+            texts_range = range(40, 60)
+            if fast:
+                texts_range = range(40, 45)
             category = ["news", "encyclopedia", "article", "novel"]
-            for text_num in range(40, 60):
+            for text_num in texts_range:
                 if verbose:
                     print("testing text {}".format(text_num))
                 for cat in category:
@@ -383,19 +392,18 @@ class WordSegmenter:
             file = Path.joinpath(Path(__file__).parent.parent.absolute(), 'Data/SAFT/test.txt')
             text_acc = self._test_text_line_by_line(file=file, line_limit=-1, verbose=verbose)
             accuracy.merge_accuracy(text_acc)
-
         elif self.evaluation_data == "my":
             if self.language != "Burmese":
                 print("Warning: the my.text data is in Burmese and you are testing a model in another language")
             file = Path.joinpath(Path(__file__).parent.parent.absolute(), 'Data/my_test_segmented.txt')
-            text_acc = self._test_text_line_by_line(file=file, line_limit=1000, verbose=verbose)
+            text_acc = self._test_text_line_by_line(file=file, line_limit=line_limit, verbose=verbose)
             accuracy.merge_accuracy(text_acc)
 
         elif self.evaluation_data == "SAFT_Burmese":
             if self.language != "Burmese":
                 print("Warning: the my.text data is in Burmese and you are testing a model in another language")
             file = Path.joinpath(Path(__file__).parent.parent.absolute(), 'Data/SAFT_burmese_test.txt')
-            text_acc = self._test_text_line_by_line(file=file, line_limit=1000, verbose=verbose)
+            text_acc = self._test_text_line_by_line(file=file, line_limit=line_limit, verbose=verbose)
             accuracy.merge_accuracy(text_acc)
 
         elif self.evaluation_data == "BEST_my":
@@ -418,7 +426,7 @@ class WordSegmenter:
                 print("The F1 score by test_model_line_by_line function (Thai): {:.3f}".format(acc1.get_f1_score()))
             # Testing for my
             file = Path.joinpath(Path(__file__).parent.parent.absolute(), 'Data/my_test_segmented.txt')
-            acc2 = self._test_text_line_by_line(file, line_limit=1000, verbose=verbose)
+            acc2 = self._test_text_line_by_line(file, line_limit=line_limit, verbose=verbose)
             if verbose:
                 print("The BIES accuracy by test_model_line_by_line function (Burmese): {:.3f}".
                       format(acc2.get_bies_accuracy()))

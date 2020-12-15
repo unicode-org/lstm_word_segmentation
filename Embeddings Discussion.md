@@ -133,37 +133,70 @@ In what follows, we use some sample examples to see what kind of sentences in **
 
 **Test Case 1**
 
-Unsegmented &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;: เพราะเขาเห็นโอกาสในการซื้อ
+Unsegmented:
 
-Manualy Segmented : |เพราะ|เขา|เห็น|โอกาส|ใน|การ|ซือ|
+* เพราะเขาเห็นโอกาสในการซื้อ
 
-Deepcut &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:
+Manualy Segmented: 
 
-ICU &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:
+* |เพราะ|เขา|เห็น|โอกาส|ใน|การ|ซื้อ|
 
-Grapheme Clusters &nbsp;:
+Deepcut:
 
-Generalized Vectors :
+* |เพราะ|เขา|เห็น|โอกาส|ใน|การ|ซื้อ|
 
-Code Points &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:
+ICU: 
 
+* |เพราะ|เขา|เห็น|โอกาส|ใน|การ|ซื้อ|
 
-| Algorithm |  Output |
-| :---:     |  :----  |
-| Unsegmented | `เพราะเขาเห็นโอกาสในการซื้อ`|
-|  Manually Segmented | `|เพราะ|เขา|เห็น|โอกาส|ใน|การ|ซือ|` |
-|  Deepcut | `|เพราะ|เขา|เห็น|โอกาส|ใน|การ|ซื้อ|` |
-|  ICU | `|เพราะ|เขา|เห็น|โอกาส|ใน|การ|ซื้อ|` |
-|  Grapheme Clusters | `|เพราะ|เขา|เห็น|โอกาส|ใน|การ|ซื้อ|`|
-|  Generalized Vectors | `|เ|พราะ|เขาเห็|นโอ|กาส|ใน|การ|ซื้อ|`|
-|  Code Points | `|เพราะ|เขา|เห็น|โอกาส|ใน|การ|ซื้อ|`|
+Grapheme Clusters:
+
+* |เพราะ|เขา|เห็น|โอกาส|ใน|การ|ซื้อ|
+
+Generalized Vectors:
+
+* |เ|พราะ|เขาเห็|นโอ|กาส|ใน|การ|ซื้อ|
+
+Code Points:
+
+* |เพราะ|เขา|เห็น|โอกาส|ใน|การ|ซื้อ|
+
 
 **Test Case 2**
+
+Unsegmented:
+
+*  การเดินทางใน
+
+Manualy Segmented: 
+
+* |การ|เดินทาง|ใน|
+
+Deepcut:
+
+* |การ|เดินทาง|ใน|
+
+ICU:
+
+* |การ|เดิน|ทางใน|
+
+Grapheme Clusters:
+
+* |การ|เดิน|ทาง|ใน|
+
+Generalized Vectors:
+
+* |การ|เดิน|ทาง|ใ|น|
+
+Code Points:
+
+* |การ|เดินทาง|ใน|
+
 
 | Algorithm |  Output |
 | :---:     |  :----  |
 | Unsegmented | `การเดินทางใน` |
-|  Manually Segmented | `|การ|เดินทาง|ใน|` |
+|  Manually Segmented | `\|การ\|เดินทาง\|ใน\|` |
 |  Deepcut | `|การ|เดินทาง|ใน|` |
 |  ICU | `|การ|เดิน|ทางใน|` |
 |  Grapheme Clusters | `|การ|เดิน|ทาง|ใน|` |

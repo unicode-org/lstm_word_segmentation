@@ -149,7 +149,7 @@ def permute_lines_of_text(filename, permutated_filename):
     new_file = open(permutated_filename, 'w')
     lines_list = [line for line in open(filename)]
     for bucket_id in permutated_buckets:
-        for line in lines_list[bucket_id: bucket_id+bucket_size]:
+        for line in lines_list[bucket_id*bucket_size: (bucket_id+1)*bucket_size]:
             new_file.write(line)
 
 

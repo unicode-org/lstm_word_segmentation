@@ -32,5 +32,5 @@ word_segmenter = pick_lstm_model(model_name="Thai_graphclust_model4_heavy", embe
 print("embedding dim = {}".format(word_segmenter.embedding_dim))
 print("hunits = {}".format(word_segmenter.hunits))
 # word_segmenter.save_model()
-# word_segmenter.test_model_line_by_line(verbose=True)
+word_segmenter.test_model_line_by_line(verbose=True, fast=True)
 # '''

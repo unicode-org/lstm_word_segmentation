@@ -2,6 +2,7 @@ import numpy as np
 from icu import BreakIterator, Locale
 from .bies import Bies
 from collections import Counter
+import deepcut
 
 
 class Line:
@@ -43,6 +44,8 @@ class Line:
         else:
             print("Warning: this input_type is not implemented")
 
+        self.deepcut = None
+
     def _compute_icu_segmented(self):
         """
         This function computes the ICU segmented version of the line using the unsegmented version. Therefore, in order
@@ -69,6 +72,8 @@ class Line:
             input_line = self.icu_segmented
         elif input_type == "man_segmented":
             input_line = self.man_segmented
+        elif input_type == "deepcut_segmented":
+            input_line = self.get_deepcut_segmented()
         else:
             print("Warning: the _compute_word_breakpoints function is not defined for this input type")
 
@@ -90,19 +95,32 @@ class Line:
         for brkpoint in chars_break_iterator:
             self.char_brkpoints.append(brkpoint)
 
-    def get_bies(self, segmentation_type):
+    def get_deepcut_segmented(self):
         """
-        This function computes the BIES matrix that represents the line in this instance.
+        This function returns a clean string that is the output of applying deepcut on unsegmented version of line
+        """
+        deepcut_out = deepcut.tokenize(self.unsegmented)
+        out_line = "|"
+        for word in deepcut_out:
+            out_line += word + "|"
+        return out_line
+
+    def get_bies_grapheme_clusters(self, segmentation_type):
+        """
+        This function computes the BIES matrix for grapheme clusters that represents the line in this instance.
         Args:
-            segmentation_type: this can be "icu" or "man" which indicates which segmentation we want to be used
+            segmentation_type: this can be "icu", "man", or "deep" which indicates which segmentation we want to be used
         """
         word_brkpoints = None
         if segmentation_type == "icu":
             word_brkpoints = self.icu_word_brkpoints
         elif segmentation_type == "man":
             word_brkpoints = self.man_word_brkpoints
+        elif segmentation_type == "deep":
+            word_brkpoints = self._compute_word_brkpoints(input_type="deepcut_segmented")
         else:
             print("Warning: No segmentation exist for the given type")
+
         bies_mat = np.zeros(shape=[len(self.char_brkpoints) - 1, 4])
         word_ind = 0
         for i in range(len(self.char_brkpoints) - 1):
@@ -126,6 +144,43 @@ class Line:
                 continue
         return Bies(input_bies=bies_mat, input_type="mat")
 
+    def get_bies_codepoints(self, segmentation_type):
+        """
+        This function computes the BIES matrix for code points that represents the line in this instance.
+        Args:
+            segmentation_type: this can be "icu", "man", or "deep" which indicates which segmentation we want to be used
+        """
+        word_brkpoints = None
+        if segmentation_type == "icu":
+            word_brkpoints = self.icu_word_brkpoints
+        elif segmentation_type == "man":
+            word_brkpoints = self.man_word_brkpoints
+        elif segmentation_type == "deep":
+            word_brkpoints = self._compute_word_brkpoints(input_type="deepcut_segmented")
+        else:
+            print("Warning: No segmentation exist for the given type")
+
+        bies_mat = np.zeros(shape=[len(self.unsegmented), 4])
+        word_ind = 0
+        for i in range(len(self.unsegmented)):
+            word_st = word_brkpoints[word_ind]
+            word_fn = word_brkpoints[word_ind + 1]
+            if i == word_st and i+1 < word_fn:
+                bies_mat[i, 0] = 1
+                continue
+            if i != word_st and i+1 != word_fn:
+                bies_mat[i, 1] = 1
+                continue
+            if i != word_st and i+1 == word_fn:
+                bies_mat[i, 2] = 1
+                word_ind += 1
+                continue
+            if i == word_st and i+1 == word_fn:
+                bies_mat[i, 3] = 1
+                word_ind += 1
+                continue
+        return Bies(input_bies=bies_mat, input_type="mat")
+
     def get_grapheme_clusters(self):
         """
         This function returns a Counter dictionary that holds the frequency of different grapheme clusters in the line
@@ -134,6 +189,12 @@ class Line:
         for i in range(len(self.char_brkpoints) - 1):
             new_graph_clust = self.unsegmented[self.char_brkpoints[i]: self.char_brkpoints[i + 1]]
             out[new_graph_clust] += 1
+        return out
+
+    def get_codepoints(self):
+        out = Counter()
+        for codepoint in self.unsegmented:
+            out[codepoint] += 1
         return out
 
     def display(self):

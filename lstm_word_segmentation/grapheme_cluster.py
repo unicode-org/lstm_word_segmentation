@@ -5,7 +5,7 @@ from icu import Char
 
 class GraphemeCluster:
     """
-    A class that to store a grapheme cluster. It supports three versions of a grapheme cluster:
+    A class to store a grapheme cluster. It supports three versions of a grapheme cluster:
         1) graph_clust_id: an integer that is computed with respect to a dictionary of top grapheme clusters
         2) graph_clust_vec: a vector that has only one at the slot associated with graph_clust_id
         3) generalized_vec: a vector of a fixed size that has 1/m for each code point found in the grapheme cluster,
@@ -26,14 +26,14 @@ class GraphemeCluster:
         self.graph_clust_vec = np.zeros(self.num_clusters)
         self.graph_clust_vec[self.graph_clust_id] = 1
 
-        # Making the generalized vectors representation
+        # Making the generalized vectors representation with respect to the letters_dic
         self.num_letters = len(letters_dic)
         self.generalized_vec_length = self.num_letters + 4
         self.generalized_vec = np.zeros(self.generalized_vec_length)
         for ch in self.graph_clust:
             if ch in letters_dic:
                 self.generalized_vec[letters_dic.get(ch)] += 1
-            elif constants.CHAR_TYPE_TO_BUCKET[Char.charType(ch)] in [1]:
+            elif constants.CHAR_TYPE_TO_BUCKET[Char.charType(ch)] == 1:
                 self.generalized_vec[self.num_letters] += 1
             elif constants.CHAR_TYPE_TO_BUCKET[Char.charType(ch)] in [2, 5, 6]:
                 self.generalized_vec[self.num_letters + 1] += 1
@@ -45,7 +45,7 @@ class GraphemeCluster:
 
     def display(self):
         """
-        A function that displayes different versions of the current grapheme_cluster
+        A function that displays different versions of the current grapheme_cluster
         """
         print("Grapheme cluster: \n{}".format(self.graph_clust))
         print("Grapheme cluster id: \n{}".format(self.graph_clust_id))

@@ -20,34 +20,59 @@ def diff_strings(str1, str2):
     """
     if len(str1) != len(str2):
         print("Warning: length of two strings are not equal")
+        return -1
     return sum(str1[i] != str2[i] for i in range(len(str1)))
 
 
-def sigmoid(x):
+def sigmoid(inp):
     """
-    Computes the sigmoid function for a scalar
+    Computes the sigmoid function of a scalar or a 1d numpy array
     Args:
-        x: the scalar
+        inp: the input which can be a scalar or a 1d numpy array
     """
-    return 1.0/(1.0+np.exp(-x))
+    inp = np.asarray(inp)
+    scalar_input = False
+    if inp.ndim == 0:
+        inp = inp[None]
+        scalar_input = True
+    # Checking for case when the input is an array/np.array of arrays. In this case only the first element of inp is
+    # used. A common example is when A = np.array([np.array([1, 2, 3])]).
+    if type(inp[0]) == np.ndarray:
+        inp = inp[0]
+    out = []
+    for x in inp:
+        if x < -20:
+            out.append(0)
+        else:
+            out.append(1.0/(1.0 + np.exp(-x)))
+    out = np.array(out)
+    if scalar_input:
+        return np.squeeze(out)
+    return out
 
 
-def print_grapheme_clusters(thrsh, language):
+def print_grapheme_clusters(thrsh, language, exclusive):
     """
-    This function analyzes the grapheme clusters, to see what percentage of them form which percent of the text, and
-    provides a histogram that shows frequency of grapheme clusters
-    ratios: a dictionary that holds the ratio of text that is represented by each grapheme cluster
+    This function print the grapheme clusters and their frequencies for a given langauge. It also computes what
+    percentage of grapheme clusters form which percent of the text
     Args:
         thrsh: shows what percent of the text we want to be covered by grapheme clusters
         language: shows the language that we are working with
+        exclusive: shows if we only consider grapheme clusters in a single script or not
     """
     ratios = None
-    if language == "Thai":
+    if language == "Thai" and exclusive is False:
         ratios = constants.THAI_GRAPH_CLUST_RATIO
-    if language == "Burmese":
+    if language == "Thai" and exclusive is True:
+        ratios = constants.THAI_EXCLUSIVE_GRAPH_CLUST_RATIO
+    if language == "Burmese" and exclusive is False:
         ratios = constants.BURMESE_GRAPH_CLUST_RATIO
+    if language == "Burmese" and exclusive is True:
+        ratios = constants.BURMESE_EXCLUSIVE_GRAPH_CLUST_RATIO
+    if language == "Thai-Burmese":
+        ratios = constants.THAI_BURMESE_GRAPH_CLUST_RATIO
     if ratios is None:
-        print("No grapheme cluster dictionary has been computed for the input language")
+        print("No grapheme cluster dictionary has been computed for the input language.")
         return
     cum_sum = 0
     cnt = 0
@@ -56,5 +81,6 @@ def print_grapheme_clusters(thrsh, language):
         cnt += 1
         if cum_sum > thrsh:
             break
+    print(ratios)
     print("number of different grapheme clusters in {} = {}".format(language, len(ratios.keys())))
     print("{} grapheme clusters form {} of the text".format(cnt, thrsh))

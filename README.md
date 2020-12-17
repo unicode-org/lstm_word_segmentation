@@ -29,13 +29,13 @@ In this project, we develop a bi-directional LSTM model for word segmentation. F
                                input_embedding_type="codepoints")
   ```
   
-There are some hyperparameters need to be specified that are explained in detail in [Models Specifications](https://github.com/SahandFarhoodi/word_segmentation/blob/work/Models%20Specifications.md). After specifying your model, you can use function `word_segmenter.train_model()` to train your model, `word_segmenter.save_model()` to save it, and `word_segmenter.test_model_line_by_line()` to test it:
+  There are some hyperparameters need to be specified that are explained in detail in [Models Specifications](https://github.com/SahandFarhoodi/word_segmentation/blob/work/Models%20Specifications.md). After specifying your model, you can use function `word_segmenter.train_model()` to train your model, `word_segmenter.save_model()` to save it, and `word_segmenter.test_model_line_by_line()` to test it:
   ```python
   word_segmenter.train_model()
 word_segmenter.save_model()
 word_segmenter.test_model_line_by_line(verbose=True)
   ```  
-This repository is developed in a way that makes the process of training models in a new language semi-automatic. If you are interested in doing so, you need to find appropriate data sets (or decide to use the unsupervised learning option), add a couple of lines in `word_segmenter.py` and `constants.py` that let you use those data sets, use the `LSTMBayesianOptimization` class to estimate the values of `hunits` and `embedding_dim` (see [Models Specifications](https://github.com/SahandFarhoodi/word_segmentation/blob/work/Models%20Specifications.md) for details), and then train your models as above. You may also need to do some extra preprocessing (see `preproceee.py`) if you decide to use grapheme clusters embedding. Feel free to contact me if you think I can help you with this. 
+  This repository is developed in a way that makes the process of training models in a new language semi-automatic. If you are interested in doing so, you need to find appropriate data sets (or decide to use the unsupervised learning option), add a couple of lines in `word_segmenter.py` and `constants.py` that let you use those data sets, use the `LSTMBayesianOptimization` class to estimate the values of `hunits` and `embedding_dim` (see [Models Specifications](https://github.com/SahandFarhoodi/word_segmentation/blob/work/Models%20Specifications.md) for details), and then train your models as above. You may also need to do some extra preprocessing (see `preproceee.py`) if you decide to use grapheme clusters embedding. Feel free to contact me if you think I can help you with this. 
 
 ### Model structure
 Figure 1 illustrates our bi-directional model structure. Below we explain what are different layers:

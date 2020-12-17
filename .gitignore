@@ -2,8 +2,9 @@ Data/
 __pycache__/
 .idea/
 README.html
-Embeddings Discussion.html
-Models Specifications.html
+Embedding-Discussion.html
+Models-Specifications.html
+Future-Works.html
 train_multilingual.py
 trash_bin.np
 Models/Thai_temp/

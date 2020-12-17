@@ -27,7 +27,7 @@ word_segmenter.test_model_line_by_line(verbose=True)
 
 # Choose one of the saved models to use
 # '''
-word_segmenter = pick_lstm_model(model_name="Thai_genvec123_heavy", embedding="generalized_vectors_123",
+word_segmenter = pick_lstm_model(model_name="Thai_genvec123_model5_heavy", embedding="generalized_vectors_123",
                                  train_data="BEST", eval_data="BEST")
 print("model_name = {}, embedding dim = {}, hunits = {}".format(word_segmenter.name, word_segmenter.embedding_dim,
                                                                 word_segmenter.hunits))

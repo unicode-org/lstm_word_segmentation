@@ -68,25 +68,25 @@ Here, we investigate the difference between grapheme clusters and generalized ve
 
 | Embedding | BIES accuracy | F1-Score | Model size |
 | :---:     |     :----:    |  :----:  |    :---:   |
-| graph_clust | 92 | 85.3 | 57 KB |
-| graph_clust_light | 91.9 | 85.2 | 45 KB |
-| genvec_12 | 92.2 | 85.5 | 94 KB |
-| genvec_123 | 92.3  | 85.7 | 94 KB |
-| genvec_123_light | 91.9  | 85 | 41 KB |
-| genvec_12d0 | 92.2  | 85.5  | 94 KB |
-| genvec_125 | 92.1  | 85.3  | 94 KB |
-| genvec_1235 | 92.1  | 85.5  | 94 KB |
+| graph_clust | 92 | 85.3 | 27 KB |
+| graph_clust_light | 91.9 | 85.2 | 22 KB |
+| genvec_12 | 92.2 | 85.5 | 47 KB |
+| genvec_123 | 92.3  | 85.7 | 47 KB |
+| genvec_123_light | 91.9  | 85 | 20 KB |
+| genvec_12d0 | 92.2  | 85.5  | 47 KB |
+| genvec_125 | 92.1  | 85.3  | 47 KB |
+| genvec_1235 | 92.1  | 85.5  | 47 KB |
 
 The following table shows the accuracy and model size of the fitted LSTM models for **Burmese**.
 
 | Embedding | BIES accuracy | F1-Score | Model size |
 | :---:     |     :----:    |  :----:  |    :---:   |
-| graph_clust | 91.7 | 90.4 | 61 KB |
-| genvec_12 | 91.2 | 89.9 | 57 KB |
-| genvec_123 | 91  | 89.6 | 61 KB |
-| genvec_12d0 | 90.7  | 89.3  | 57 KB |
-| genvec_125 | 91.1  | 89.7  | 57 KB |
-| genvec_1235 | 91.5  | 90.2  | 61 KB |
+| graph_clust | 91.7 | 90.4 | 30 KB |
+| genvec_12 | 91.2 | 89.9 | 28 KB |
+| genvec_123 | 91  | 89.6 | 30 KB |
+| genvec_12d0 | 90.7  | 89.3  | 28 KB |
+| genvec_125 | 91.1  | 89.7  | 28 KB |
+| genvec_1235 | 91.5  | 90.2  | 29 KB |
 
 Based on these tables, for Thai, it seems that whatever is achievable by generalized vectors can also be achieved by grapheme clusters (compare `graph_clust_light` with `genvec_123_light`, and `graph_clust` with `genvec_123`). For Burmese, it seems that using grapheme clusters is the better choice; it has a smaller data size and shows a better performance in terms of accuracy. However, our analysis shows that the generalized vector approach is also very viable, and can be used to give model accuracy very close to what can be achieved using grapheme clusters.
 
@@ -110,20 +110,21 @@ In this case, the correct BIES sequence, the estimated BIES sequence, and BIES a
   * Our segmentation BIES: biiebiie
   * BIES accuracy = 75
 
-Therefore, the code point version of BIES accuracy is higher for the same segmentation. For this reason, in this section, we only report F1-scores. The following table shows the accuracy and model size of the fitted LSTM models for **Thai**.
+Therefore, the code point version of BIES accuracy is higher for the same segmentation. For this reason, in this section, we only report F1-scores. The following table shows the accuracy and model size of the fitted LSTM models for **Thai**. Note that our comparison is slightly in favor of grapheme clusters because the value reported for code point is computed for models trained using Thai-specific script. This means that we had to exclude all spaces, marks, and Latin letters from the original data which results in much shorter sentences, and can adversely affect the model accuracy.
 
 | Embedding |  F1-Score | Model size |
 | :---:     |   :----:  |    :---:   |
-| graph_clust | 88.7 | 57 KB
-| codepoints light | 88.9 |  57 KB |
-| codepoints | 90.2  | 72 KB |
+| graph_clust | 88.7 | 28 KB
+| codepoints light | 88.9 |  28 KB |
+| codepoints | 90.1  | 36 KB |
 
-The following table shows the accuracy and model size of the fitted LSTM models for **Burmese**.
+The following table shows the accuracy and model size of the fitted LSTM models for **Burmese**. Given that there are potentially many spaces in Burmese texts, training models using Burmese-specific script results in considerably lower accuracy. Therefore, in order to make a fair comparison between grapheme clusters and code point embeddings, values reported in the following table are for models trained on the original data sets.
 
 | Embedding |  F1-Score | Model size |
 | :---:     |   :----:  |    :---:   |
-| graph_clust |  | 61 KB
-| codepoints |   |  KB |
+| graph_clust | 92.9 | 30 KB
+| codepoints light |  93 | 20 KB |
+| codepoints | 93.4 | 45 KB |
 
 Based on these tables, for models of the same size, we see that code points embedding gives slightly better accuracy (compare `graph_clust` to `codepoint light` for Thai table). Besides, by using larger code points models we get considerably better performance (third row of the Thai table). We weren't able to achieve that level of accuracy using grapheme clusters, even when we train models larger than what we show in these tables.
 
@@ -188,7 +189,7 @@ In what follows, we use some sample examples to see what kind of sentences in **
 |  ICU | `\|ဖော်ပြ\|ထား\|သည့်\|` |
 |  Grapheme Clusters | `\|ဖော်\|ပြ\|ထား\|သည့်\| ` |
 |  Generalized Vectors | `\|ဖော်\|ပြ\|ထား\|သည့်\|` |
-|  Code Points | `` |
+|  Code Points | `\|ဖော်ပြ\|ထား\|သည့်\` |
 
 **Test Case 2**
 
@@ -199,7 +200,7 @@ In what follows, we use some sample examples to see what kind of sentences in **
 |  ICU | `\|အသား\|အရောင်\|အားဖြင့်\|` |
 |  Grapheme Clusters | `\|အသား\|အရောင်\|အား\|ဖြင့်\|` |
 |  Generalized Vectors | `\|အသား\|အရောင်\|အား\|ဖြင့်\|` |
-|  Code Points | `` |
+|  Code Points | `\|အသားအရောင်\|အားဖြင့်\|` |
 
 **Test Case 3**
 
@@ -210,7 +211,7 @@ In what follows, we use some sample examples to see what kind of sentences in **
 |  ICU | `\|သဘာ\|ဝ\|အားဖြင့်\|` |
 |  Grapheme Clusters | `\|သဘာ\|ဝ\|အား\|ဖြင့်\|` |
 |  Generalized Vectors | `\|သဘာ\|ဝအား\|ဖြင့်\|` |
-|  Code Points | `` |
+|  Code Points | `\|သဘာ\|ဝ\|အား\|ဖြင့်\|` |
 
 **Test Case 4**
 
@@ -221,7 +222,7 @@ In what follows, we use some sample examples to see what kind of sentences in **
 |  ICU | `\|ထို့ပြင်\|` |
 |  Grapheme Clusters | `\|ထို့\|ပြင်\|` |
 |  Generalized Vectors | `\|ထို့\|ပြင်\|` |
-|  Code Points | `` |
+|  Code Points | `\|ထို့ပြင်\|` |
 
 **Test Case 5**
 
@@ -232,7 +233,7 @@ In what follows, we use some sample examples to see what kind of sentences in **
 |  ICU | `\|နိုင်ငံရေး\|ဆိုင်ရာ\|` |
 |  Grapheme Clusters | `\|နိုင်ငံရေး\|ဆိုင်ရာ\|` |
 |  Generalized Vectors | `\|နိုင်ငံရေး\|ဆိုင်ရာ\|` |
-|  Code Points | `` |
+|  Code Points | `\|နိုင်ငံရေး\|ဆိုင်ရာ\|` |
 
 ### Conclusions
 

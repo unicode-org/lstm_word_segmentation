@@ -53,13 +53,15 @@ for line in lines:
 
 
 # Evaluate ICU and Deepcut for Thai
-'''
-evaluate_existing_algorithms(algorithm="ICU", data="my")
-evaluate_existing_algorithms(algorithm="ICU", data="exclusive my")
-evaluate_existing_algorithms(algorithm="ICU", data="exclusive BEST")
+# '''
+# evaluate_existing_algorithms(algorithm="ICU", data="BEST")
+# evaluate_existing_algorithms(algorithm="ICU", data="exclusive BEST")
+# evaluate_existing_algorithms(algorithm="ICU", data="my")
+# evaluate_existing_algorithms(algorithm="ICU", data="exclusive my")
 evaluate_existing_algorithms(algorithm="Deepcut", data="BEST")
-evaluate_existing_algorithms(algorithm="ICU", data="SAFT Burmese")
-'''
+# evaluate_existing_algorithms(algorithm="Deepcut", data="exclusive BEST")
+# evaluate_existing_algorithms(algorithm="ICU", data="SAFT Burmese")
+# '''
 
 # Using BEST data set and Google Corpus crawler to make grapheme clusters for Thai and Burmese
 '''

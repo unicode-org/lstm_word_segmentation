@@ -11,12 +11,12 @@ word_segmenter = pick_lstm_model(model_name="Thai_codepoints_exclusive_model4_he
                                  train_data="exclusive BEST", eval_data="exclusive BEST")
   ```
   
-You need to specify three hyper-parameters: `embedding`, `train_data`, and `eval_data`. Please refer to [Models Specicitaions](https://github.com/SahandFarhoodi/word_segmentation/blob/work/Models%20Specifications.md) on this repository for a detailed explanation of these hyper-parameters, and also for a list of trained models ready to be used in this repository and their specifications. If you don't have time to do that, just pick one of the trained models and make sure that name of the embedding you choose appears in the model name (`train_data` and `eval-data` doesn't affect segmentation of arbitrary inputs). Next, you can use the following commands to specify your input and segment it:
+  You need to specify three hyper-parameters: `embedding`, `train_data`, and `eval_data`. Please refer to [Models Specicitaions](https://github.com/SahandFarhoodi/word_segmentation/blob/work/Models%20Specifications.md) on this repository for a detailed explanation of these hyper-parameters, and also for a list of trained models ready to be used in this repository and their specifications. If you don't have time to do that, just pick one of the trained models and make sure that name of the embedding you choose appears in the model name (`train_data` and `eval-data` doesn't affect segmentation of arbitrary inputs). Next, you can use the following commands to specify your input and segment it:
 
-```python
+  ```python
 line = "ทำสิ่งต่างๆ ได้มากขึ้นขณะที่อุปกรณ์ล็อกและชาร์จอยู่ด้วยโหมดแอมเบียนท์"
 word_segmenter.segment_arbitrary_line(line)
-```
+  ```
 
 * **Train a new model:** In order to train a new model in Thai or Burmese, you need to use file `train_language.py` where `language` is the language you want to work with. Over there, you need to use the code between comments `# Train a new model -- choose name cautiously to not overwrite other models` and `# Choose one of the saved models to use`. The following code let you define a new model:
   

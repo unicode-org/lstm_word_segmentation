@@ -2,7 +2,7 @@ Data/
 __pycache__/
 .idea/
 README.html
-Embedding-Discussion.html
+Embeddings-Discussion.html
 Models-Specifications.html
 Future-Works.html
 train_multilingual.py

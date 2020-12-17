@@ -10,7 +10,7 @@ The current LSTM models are trained using samples of fixed length (`self.n`). Th
 ### Complete analysis of runtime
 Our initial analysis implies that the current ICU algorithm is approximately 5 times faster than our models when `tf.predict` is used for evaluation. This number for Deepcut, which is considerably larger than our models, is about 39. Given that deep learning models perform a lot of matrix multiplication while ICU algorithms mostly look-up dictionaries, this difference in runtime is more-or-less expected. However, there are some ideas for making our algorithm faster that remain to be explored:
 
-  * Using ADMM-NN approach to reduce the data size further and making the algorithm faster. The result presented in [this paper](https://arxiv.org/abs/1812.11677) are very promising.
+  * Using ADMM-NN approach to reduce the data size further and making the algorithm faster. The results presented in [this paper](https://arxiv.org/abs/1812.11677) are very promising.
   
   * One approach is using fast versions of `sigmoid` and `tanh` functions. Based on our analysis with replacing float32 with float 16 in our moels, we don't expect a decrease in model accuracy when fast versions of `sigmoid` and `tanh` are used.
   

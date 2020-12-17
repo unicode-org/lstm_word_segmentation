@@ -41,7 +41,7 @@ def evaluate_existing_algorithms(algorithm, data, fast=False):
     if algorithm == "Deepcut":
         if data == "SAFT Thai":
             file = Path.joinpath(Path(__file__).parent.parent.absolute(), 'Data/SAFT/test.txt')
-            acc = compute_accuracy(file, "icu")
+            acc = compute_accuracy(file, "deep")
         elif data == "BEST":
             if fast:
                 acc = compute_accuracy_best(starting_text=40, ending_text=45, algorithm="deep", exclusive=False)

@@ -440,8 +440,8 @@ bayes_optimization.perform_bayesian_optimization()</code></pre>
 <li><p><strong>input_iterations:</strong> This parameter determines how many different models the Bayesian optimization algorithm should fit to find the best value for <code>hunits</code> and <code>embedding_dim</code>. For my models, values above 10 work fine.</p></li>
 </ul>
 </div>
-<div id="model-details" class="section level3">
-<h3>Model Details</h3>
+<div id="models-details" class="section level3">
+<h3>Models Details</h3>
 <p>The following table shows model size, F1-score, and estimated values for <code>hunits</code> and <code>embedding_dim</code> for different models. These values are estimated using Bayesian optimization. For Thai, we have three non-exclusive models with grapheme clusters embedding, three exclusive models with code points embedding, and one non-exclusive generalized vectors model (version 123). For Burmese, we have three non-exclusive models with grapheme clusters embedding, three exclusive models with code points embedding, and one non-exclusive generalized vectors model (version 1235).</p>
 <p>For Burmese models, the F1-score is computed using the pseudo segmented data (exclusive and non-exclusive based on the model type). For Thai models, the F1-score is computed using BEST data set (exclusive and non-exclusive based on the model type). Based on this table we see that the negative effect of using exclusive models on accuracy is much more noticeable for Burmese, probably because it has more spaces in it.</p>
 <table>
@@ -501,7 +501,7 @@ bayes_optimization.perform_bayesian_optimization()</code></pre>
 <td align="center">Thai_genvec123_model5_heavy</td>
 <td align="center">22</td>
 <td align="center">20</td>
-<td align="center"></td>
+<td align="center">85.4</td>
 <td align="center">19 KB</td>
 </tr>
 <tr class="even">

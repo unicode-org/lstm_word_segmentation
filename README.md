@@ -73,24 +73,24 @@ For some languages, there are manually annotated data sets that can be used to t
 ### Performance summary
 There are two sets of trained models, one set is models trained using the language-specific script (models with `exclusive` in their name) where all other characters, including spaces, marks, and Latin letters are excluded from the data. This forces the model to be trained on much smaller sentences and can lower its accuracy. However, these models are completely compatible with the structure of ICU4C word segmenter, and can replace language engines for Thai and Burmese directly. The second set of models are trained using standard data sets (with spaces, marks, Latin letters in them) and give better accuracies. These models can be used in ICU4X, and also in ICU4C if some changes are made to its current structure. Below we present the performance of the first set of models and compare them to existing algorithms:
 
-* **Thai**: The following table summarizes the performance of our algorithm alongside that of the state of the art algorithm [Deepcut](https://github.com/rkcosmos/deepcut) and current ICU algorithm. We have different versions of our algorithm, where LSTM model 7 and LSTM model 5 are respectively the most accurate and the most parsimonious models, and LSTM model 4 sits somewhere between these two and provides a high accuracy while still has a small data size. Based on the following table, Deepcut is by far the largest model which makes its applications in industry limited. **ADD HERE on performance of different lstms**.  Deepcut outperforms all other methods in terms of accuracy by a considerable margin when the BEST data is used. However, for the SAFT data, which is not the data used to train Deepcut, this margin drops significantly.
+* **Thai**: The following table summarizes the performance of our algorithm alongside that of the state of the art algorithm [Deepcut](https://github.com/rkcosmos/deepcut) and current ICU algorithm. We have different versions of our algorithm, where LSTM model 7 and LSTM model 5 are respectively the most accurate and the most parsimonious models, and LSTM model 4 sits somewhere between these two and provides a high accuracy while still has a small data size. Based on this table, when BEST data is used for evaluation, **all LSTM models outperform ICU based on F1-score**, where models 4 and 7 do it with a considerable margin. When SAFT data is used, we see a considerable drop in performance of our models, which is primarily due to different segmentation rules that BEST and SAFT data have (e.g. 2020 is segmented as |2020| in BEST and |2|0|2|0| in SAFT). However, LSTM models still outperform ICU. **In terms of data size, LSTM models 4, 5, and 7 show respectively 79%, 92%, and 32% reduction**. Deepcut is by far the largest model which makes its applications in industry limited. It also outperforms all other methods in terms of accuracy by a considerable margin when the BEST data is used. However, for the SAFT data, which is not the data used to train Deepcut, this margin drops significantly.
 
-| Algorithm | BIES accuracy (BEST) | F1-score (BEST) | BIES accuracy (SAFT) | F1-score (SAFT) | Model size |
-| :---:     |         :----:       |      :---:      |         :----:       |      :---:      | :---:  |
-| LSTM model 4  | 94.5 | 89.9 | 91.5 | 83.9 | 27 KB |
-| LSTM model 5  | 92.6 | 86.6 | 88.9 | 79.6 | 10 KB |
-| LSTM model 7  |  95.7  | 91.9 | 92 | 84.9 | 86 KB |
-| Deepcut        | 97.8 | 95.7 | 92.6 | 86  | 2.2 MB |
-| ICU            | 93 | 86.4 | 90.3 | 81.9 | 126 KB |
+  | Algorithm | BIES accuracy (BEST) | F1-score (BEST) | BIES accuracy (SAFT) | F1-score (SAFT) | Model size |
+  | :---:     |         :----:       |      :---:      |         :----:       |      :---:      | :---:  |
+  | LSTM model 4  | 94.5 | 89.9 | 90.8 | 82.8 | 27 KB |
+  | LSTM model 5  | 92.6 | 86.6 | 88.9 | 79.6 | 10 KB |
+  | LSTM model 7  |  95.7  | 91.9 | 92 | 84.9 | 86 KB |
+  | Deepcut        | 97.8 | 95.7 | 92.5 | 86  | 2.2 MB |
+  | ICU            | 93 | 86.4 | 90.3 | 81.9 | 126 KB |
 
 * **Burmese**: 
-The following table summarizes the performance of our algorithm and the current ICU algorithm for Burmese. Again, we have different versions of our LSTM models, where LSTM model 7 and LSTM model 5 are respectively the most accurate and the most parsimonious models. Based on this table, **ADD HERE**
+The following table summarizes the performance of our algorithm and the current ICU algorithm for Burmese. Again, we have different versions of our LSTM models, where LSTM model 7 and LSTM model 5 are respectively the most accurate and the most parsimonious models. Based on this table, LSTM models learn to mimic what the ICU algorithm does pretty well. **For instance, on SAFT data, the relative error with respect to ICU is less than 1% (93.1/92.4) for model 7 and less than 2% for models 4 and 5. In terms of data size, LSTM models 4, 5, and 7 show respectively 88%, 94%, and 51% reduction**.
 
-| Algorithm | BIES accuracy (ICU segmented) | F1-score (ICU segmented) | BIES accuracy (SAFT) | F1-score (SAFT) | Model size |
-| :---:     |         :----:                |      :---:               |     :---:  |   :---: | :---: |
-| LSTM model 4 | 94.7 | 92.9 | 91.7 | 90.5 | 30 KB  |
-| LSTM model 5 | 93.4 | 81.1 | 91.4 | 90.1 | 15 KB |
-| LSTM model 7 | 96.2 | 94.9 | 92.3 | 91.1 | 125 KB |
-| ICU           | 100  | 100  | 93.1 | 92.4 | 254 KB |
+  | Algorithm | BIES accuracy (ICU segmented) | F1-score (ICU segmented) | BIES accuracy (SAFT) | F1-score (SAFT) | Model size |
+  | :---:     |         :----:                |      :---:               |     :---:  |   :---: | :---: |
+  | LSTM model 4 | 94.7 | 92.9 | 91.7 | 90.5 | 30 KB  |
+  | LSTM model 5 | 93.4 | 91.1 | 91.4 | 90.1 | 15 KB |
+  | LSTM model 7 | 96.2 | 94.9 | 92.3 | 91.1 | 125 KB |
+  | ICU           | 100  | 100  | 93.1 | 92.4 | 254 KB |
 
-There are areas that this project can be improved. Please see [Future Works](https://github.com/SahandFarhoodi/word_segmentation/blob/work/Future%20Works.md) for some ideas we have, and contact [me](http://math.bu.edu/people/sahand/) if you have any idea!
+There are several directions for improving this project. Please see [Future Works](https://github.com/SahandFarhoodi/word_segmentation/blob/work/Future%20Works.md) for some ideas we have, and contact [me](http://math.bu.edu/people/sahand/) if you have any idea!

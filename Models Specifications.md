@@ -95,7 +95,7 @@ There are a few new hyper-parameters here that I explain:
 
 * **input_iterations:** This parameter determines how many different models the Bayesian optimization algorithm should fit to find the best value for `hunits` and `embedding_dim`. For my models, values above 10 work fine.
 
-### Model Details
+### Models Details
 The following table shows model size, F1-score, and estimated values for `hunits` and `embedding_dim` for different models. These values are estimated using Bayesian optimization. For Thai, we have three non-exclusive models with grapheme clusters embedding, three exclusive models with code points embedding, and one non-exclusive generalized vectors model (version 123). For Burmese, we have three non-exclusive models with grapheme clusters embedding, three exclusive models with code points embedding, and one non-exclusive generalized vectors model (version 1235).
 
 For Burmese models, the F1-score is computed using the pseudo segmented data (exclusive and non-exclusive based on the model type). For Thai models, the F1-score is computed using BEST data set (exclusive and non-exclusive based on the model type). Based on this table we see that the negative effect of using exclusive models on accuracy is much more noticeable for Burmese, probably because it has more spaces in it.
@@ -109,7 +109,7 @@ For Burmese models, the F1-score is computed using the pseudo segmented data (ex
 | Thai_codepoints_exclusive_model4_heavy | 40 | 27 | 90.1 | 36 KB |
 | Thai_codepoints_exclusive_model5_heavy | 20 | 15 | 86.7 | 12 KB |
 | Thai_codepoints_exclusive_model7_heavy | 34 | 58 | 91.3 | 93 KB |
-| Thai_genvec123_model5_heavy | 22 | 20 | | 19 KB |
+| Thai_genvec123_model5_heavy | 22 | 20 | 85.4 | 19 KB |
 | Burmese_graphclust_model4_heavy | 28 | 14 | 92.9 | 30 KB |
 | Burmese_graphclust_model5_heavy | 12 | 12 | 91.1 | 15 KB |
 | Burmese_graphclust_model7_heavy | 54 | 44 | 94.9 | 125 KB |

@@ -105,7 +105,7 @@ For Burmese models, the F1-score is computed using the pseudo segmented data (ex
 | :---: | :----:  | :---:  | :---: | :---: |
 | Thai_graphclust_model4_heavy | 16 | 23 | 89.9 | 27 KB |
 | Thai_graphclust_model5_heavy | 15 | 12 | 86.6 | 10 KB |
-| Thai_graphclust_model7_heavy | 29 | 47 | | 86 KB |
+| Thai_graphclust_model7_heavy | 29 | 47 | 91.9 | 86 KB |
 | Thai_codepoints_exclusive_model4_heavy | 40 | 27 | 90.1 | 36 KB |
 | Thai_codepoints_exclusive_model5_heavy | 20 | 15 | 86.7 | 12 KB |
 | Thai_codepoints_exclusive_model7_heavy | 34 | 58 | 91.3 | 93 KB |
@@ -116,7 +116,7 @@ For Burmese models, the F1-score is computed using the pseudo segmented data (ex
 | Burmese_codepoints_exclusive_model4_heavy | 40 | 27 | 85.7 | 45 KB |
 | Burmese_codepoints_exclusive_model5_heavy | 20 | 15 | 82.3 | 17 KB |
 | Burmese_codepoints_exclusive_model7_heavy | 29 | 47 | 87.8 | 70 KB |
-| Burmese_genvec1235_model4_heavy | 33 | 20 | | 29 KB |
+| Burmese_genvec1235_model4_heavy | 33 | 20 | 90.3 | 29 KB |
 
 
 

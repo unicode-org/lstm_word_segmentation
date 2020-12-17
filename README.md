@@ -7,22 +7,22 @@ In this project, we develop a bi-directional LSTM model for word segmentation. F
 * **Use a pre-trained model:** To segment an arbitrary line go to file `train_language.py` where `language` is the language you want to use. For example, if the arbitrary line is in Thai, you should use the file `train_thai.py`. Over there, find comment `# Choose one of the saved models to use`. Everything before this line is for training a new model and can be ignored. After this comment, you can use the function `pick_lstm_model` to choose the model you want to use for segmentation:
 
   ```python
-word_segmenter = pick_lstm_model(model_name="Thai_codepoints_exclusive_model4_heavy", embedding="codepoints",
+  word_segmenter = pick_lstm_model(model_name="Thai_codepoints_exclusive_model4_heavy", embedding="codepoints",
                                  train_data="exclusive BEST", eval_data="exclusive BEST")
   ```
   
-  You need to specify three hyper-parameters: `embedding`, `train_data`, and `eval_data`. Please refer to [Models Specicitaions](https://github.com/SahandFarhoodi/word_segmentation/blob/work/Models%20Specifications.md) on this repository for a detailed explanation of these hyper-parameters, and also for a list of trained models ready to be used in this repository and their specifications. If you don't have time to do that, just pick one of the trained models and make sure that name of the embedding you choose appears in the model name (`train_data` and `eval-data` doesn't affect segmentation of arbitrary inputs). Next, you can use the following commands to specify your input and segment it:
+  You need to specify three hyper-parameters: `embedding`, `train_data`, and `eval_data`. Please refer to [Models Specicitaions](https://github.com/SahandFarhoodi/word_segmentation/blob/work/Models%20Specifications.md) for a detailed explanation of these hyper-parameters, and also for a list of trained models ready to be used in this repository and their specifications. If you don't have time to do that, just pick one of the trained models and make sure that name of the embedding you choose appears in the model name (`train_data` and `eval-data` doesn't affect segmentation of arbitrary inputs). Next, you can use the following commands to specify your input and segment it:
 
   ```python
-line = "ทำสิ่งต่างๆ ได้มากขึ้นขณะที่อุปกรณ์ล็อกและชาร์จอยู่ด้วยโหมดแอมเบียนท์"
-word_segmenter.segment_arbitrary_line(line)
+  line = "ทำสิ่งต่างๆ ได้มากขึ้นขณะที่อุปกรณ์ล็อกและชาร์จอยู่ด้วยโหมดแอมเบียนท์"
+  word_segmenter.segment_arbitrary_line(line)
   ```
 
 * **Train a new model:** In order to train a new model in Thai or Burmese, you need to use file `train_language.py` where `language` is the language you want to work with. Over there, you need to use the code between comments `# Train a new model -- choose name cautiously to not overwrite other models` and `# Choose one of the saved models to use`. The following code let you define a new model:
   
   ```python
-model_name = "Thai_new_model"
-word_segmenter = WordSegmenter(input_name=model_name, input_n=50, input_t=10000, input_clusters_num=350,
+  model_name = "Thai_new_model"
+  word_segmenter = WordSegmenter(input_name=model_name, input_n=50, input_t=10000, input_clusters_num=350,
                                input_embedding_dim=16, input_hunits=23, input_dropout_rate=0.2, input_output_dim=4,
                                input_epochs=1, input_training_data="exclusive BEST",
                                input_evaluation_data="exclusive BEST", input_language="Thai",
@@ -79,7 +79,7 @@ There are two sets of trained models, one set is models trained using the langua
 | :---:     |         :----:       |      :---:      |         :----:       |      :---:      | :---:  |
 | LSTM model 4  | 94.5 | 89.9 | 91.5 | 83.9 | 27 KB |
 | LSTM model 5  | 92.6 | 86.6 | 88.9 | 79.6 | 10 KB |
-| LSTM model 7  |  96  | 92.4 | 92 | 84.9 | 86 KB |
+| LSTM model 7  |  95.7  | 91.9 | 92 | 84.9 | 86 KB |
 | Deepcut        | 97.8 | 95.7 | 92.6 | 86  | 2.2 MB |
 | ICU            | 93 | 86.4 | 90.3 | 81.9 | 126 KB |
 

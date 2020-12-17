@@ -86,7 +86,7 @@ The following table shows the accuracy and model size of the fitted LSTM models 
 | genvec_123 | 91  | 89.6 | 30 KB |
 | genvec_12d0 | 90.7  | 89.3  | 28 KB |
 | genvec_125 | 91.1  | 89.7  | 28 KB |
-| genvec_1235 | 91.5  | 90.2  | 29 KB |
+| genvec_1235 | 91.5  | 90.1  | 29 KB |
 
 Based on these tables, for Thai, it seems that whatever is achievable by generalized vectors can also be achieved by grapheme clusters (compare `graph_clust_light` with `genvec_123_light`, and `graph_clust` with `genvec_123`). For Burmese, it seems that using grapheme clusters is the better choice; it has a smaller data size and shows a better performance in terms of accuracy. However, our analysis shows that the generalized vector approach is also very viable, and can be used to give model accuracy very close to what can be achieved using grapheme clusters.
 

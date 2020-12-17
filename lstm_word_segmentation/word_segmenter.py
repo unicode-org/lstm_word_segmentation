@@ -189,7 +189,7 @@ class WordSegmenter:
                 ch = chr(i)
                 if constants.CHAR_TYPE_TO_BUCKET[Char.charType(ch)] in separate_slot_buckets:
                     self.letters_dic[ch] = cnt
-                cnt += 1
+                    cnt += 1
             for unicode_dec in separate_codepoints:
                 ch = chr(unicode_dec)
                 self.letters_dic[ch] = cnt

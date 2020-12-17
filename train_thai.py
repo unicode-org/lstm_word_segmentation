@@ -32,5 +32,5 @@ word_segmenter = pick_lstm_model(model_name="Thai_genvec123_model5_heavy", embed
 print("model_name = {}, embedding dim = {}, hunits = {}".format(word_segmenter.name, word_segmenter.embedding_dim,
                                                                 word_segmenter.hunits))
 word_segmenter.save_model()
-# word_segmenter.test_model_line_by_line(verbose=True, fast=True)
+word_segmenter.test_model_line_by_line(verbose=True, fast=True)
 # '''

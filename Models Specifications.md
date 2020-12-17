@@ -101,7 +101,7 @@ The following table shows model size, F1-score, and estimated values for `hunits
 For Burmese models, the F1-score is computed using the pseudo segmented data (exclusive and non-exclusive based on the model type). For Thai models, the F1-score is computed using BEST data set (exclusive and non-exclusive based on the model type). Based on this table we see that the negative effect of using exclusive models on accuracy is much more noticeable for Burmese, probably because it has more spaces in it.
 
 
-| Model | hunits | embedding_dim | F1-score | model size |
+| Model | embedding_dim | hunits | F1-score | model size |
 | :---: | :----:  | :---:  | :---: | :---: |
 | Thai_graphclust_model4_heavy | 16 | 23 | 89.9 | 27 KB |
 | Thai_graphclust_model5_heavy | 15 | 12 | 86.6 | 10 KB |

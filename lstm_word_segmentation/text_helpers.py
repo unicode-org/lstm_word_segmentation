@@ -307,7 +307,7 @@ def compute_accuracy_best(starting_text, ending_text, algorithm, exclusive):
     category = ["news", "encyclopedia", "article", "novel"]
     accuracy = Accuracy()
     for text_num in range(starting_text, ending_text):
-        print(text_num)
+        print("comuting accuracy for text number {}".format(text_num))
         for cat in category:
             text_num_str = "{}".format(text_num).zfill(5)
             file = Path.joinpath(Path(__file__).parent.parent.absolute(), "Data/Best/{}/{}_".format(cat, cat) +
@@ -443,7 +443,6 @@ def make_thai_specific_best_data():
     for text_num in range(1, 96):
         for cat in category:
             text_num_str = "{}".format(text_num).zfill(5)
-            print(text_num)
             input_text = Path.joinpath(Path(__file__).parent.parent.absolute(), "Data/Best/{}/{}_".format(cat, cat) +
                                        text_num_str + ".txt")
             output_text = Path.joinpath(Path(__file__).parent.parent.absolute(), "Data/exclusive_Best/{}/{}_".

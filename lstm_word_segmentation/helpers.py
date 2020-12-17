@@ -41,7 +41,7 @@ def sigmoid(inp):
         inp = inp[0]
     out = []
     for x in inp:
-        if x < -50:
+        if x < -20:
             out.append(0)
         else:
             out.append(1.0/(1.0 + np.exp(-x)))

@@ -271,7 +271,6 @@ class WordSegmenter:
         x_data, y_data = self._get_trainable_data(input_str)
         if self.t > len(x_data):
             print("Warning: size of the training data is less than self.t")
-        print(len(x_data))
         x_data = x_data[:self.t]
         y_data = y_data[:self.t, :]
         train_generator = KerasBatchGenerator(x_data, y_data, n=self.n, batch_size=self.batch_size)
@@ -298,7 +297,6 @@ class WordSegmenter:
         else:
             print("Warning: no implementation for this validation data exists!")
         x_data, y_data = self._get_trainable_data(input_str)
-        print(len(x_data))
 
         if self.t > len(x_data):
             print("Warning: size of the validation data is less than self.t")
@@ -575,8 +573,6 @@ class WordSegmenter:
                 curr_char = line.unsegmented[char_start: char_finish]
                 x_data.append(GraphemeCluster(curr_char, self.graph_clust_dic, self.letters_dic))
         y_hat = Bies(input_bies=self._manual_predict(x_data), input_type="mat")
-        # y_hat.normalize_bies()
-        print(y_hat.str)
 
         # Making a pretty version of the output of the LSTM, where bars show the boundaries of words
         y_hat_pretty = ""
@@ -669,8 +665,8 @@ def pick_lstm_model(model_name, embedding, train_data, eval_data):
 
     # Letting the user know how this model has been trained
     if "exclusive" in model_name:
-        print("Note: this model has been trained using an exclusive data set. However, if you like you can still test"
-              " it by other types of data sets (not recommended).")
+        print("Note: model {} has been trained using an exclusive data set. However, if you like you can still test"
+              " it by other types of data sets (not recommended).".format(model_name))
 
     # Figuring out values for different hyper-parameters
     input_clusters_num = model.weights[0].shape[0]

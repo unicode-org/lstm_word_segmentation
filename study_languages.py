@@ -41,7 +41,6 @@ only_one_script_text(input_text=input_text, output_text=output_text, script="Bur
 input_text = Path.joinpath(Path(__file__).parent.absolute(), "Data/my_test.txt")
 output_text = Path.joinpath(Path(__file__).parent.absolute(), "Data/my_test_exclusive.txt")
 only_one_script_text(input_text=input_text, output_text=output_text, script="Burmese", segmented=False)
-'''
 
 # Test data segmented
 input_text = Path.joinpath(Path(__file__).parent.absolute(), "Data/my_test_exclusive.txt")
@@ -50,23 +49,13 @@ output_text = Path.joinpath(Path(__file__).parent.absolute(), "Data/my_test_segm
 output_file = open(str(output_text), 'w')
 for line in lines:
     output_file.write(line.icu_segmented+"\n")
-# '''
-
-
-# input_text = Path.joinpath(Path(__file__).parent.absolute(), "Data/my_test_exclusive.txt")
-# lines = get_lines_of_text(file=input_text, type_of_lines="unsegmented")
-# output_text = Path.joinpath(Path(__file__).parent.absolute(), "Data/my_test_segmented_exclusive.txt")
-# output_file = open(str(output_text), 'w')
-# for line in lines:
-#     print(line.unsegmented)
-#     print(line.icu_segmented)
-#     output_file.write(line.icu_segmented+"\n")
-
+'''
 
 
 # Evaluate ICU and Deepcut for Thai
 '''
-evaluate_existing_algorithms(algorithm="ICU", data="BEST")
+evaluate_existing_algorithms(algorithm="ICU", data="my")
+evaluate_existing_algorithms(algorithm="ICU", data="exclusive my")
 evaluate_existing_algorithms(algorithm="ICU", data="exclusive BEST")
 evaluate_existing_algorithms(algorithm="Deepcut", data="BEST")
 evaluate_existing_algorithms(algorithm="ICU", data="SAFT Burmese")
@@ -74,14 +63,15 @@ evaluate_existing_algorithms(algorithm="ICU", data="SAFT Burmese")
 
 # Using BEST data set and Google Corpus crawler to make grapheme clusters for Thai and Burmese
 '''
-# Thaifind_grapheme_clusters(language="Thai", exclusive=True, verbose=False)
-# print_grapheme_clusters(thrsh=0.99, language="Thai")
-# 
+# Thai
+find_grapheme_clusters(language="Thai", exclusive=True, verbose=False)
+print_grapheme_clusters(thrsh=0.99, language="Thai", exclusive=True)
+
 # Burmese
-# find_grapheme_clusters(language="Burmese", exclusive=True, verbose=False)
-# print_grapheme_clusters(thrsh=0.99, language="Burmese", exclusive=True)
-# 
+find_grapheme_clusters(language="Burmese", exclusive=True, verbose=False)
+print_grapheme_clusters(thrsh=0.99, language="Burmese", exclusive=True)
+
 # Multilingual Thai/Burmese
-# make_thai_burmese_dictionary()
-print_grapheme_clusters(thrsh=0.99, language="Thai-Burmese")
+make_thai_burmese_dictionary()
+print_grapheme_clusters(thrsh=0.99, language="Thai-Burmese", exclusive=True)
 '''

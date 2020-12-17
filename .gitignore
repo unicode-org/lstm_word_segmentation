@@ -4,6 +4,7 @@ __pycache__/
 README.html
 Embeddings-Discussion.html
 train_multilingual.py
+trash_bin.np
 Models/Thai_temp/
 Models/Burmese_temp/
 Models/Thai_temp_genvec/

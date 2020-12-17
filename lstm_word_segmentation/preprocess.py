@@ -5,12 +5,13 @@ from .text_helpers import get_lines_of_text, compute_accuracy, compute_accuracy_
 from . import constants
 
 
-def evaluate_existing_algorithms(algorithm, data):
+def evaluate_existing_algorithms(algorithm, data, fast=False):
     """
     This function evaluates the algorithms that are imported, such as ICU and Deepcut for Thai
     Args:
-        algorithm: the algortihm to be tested. It can be ICU or Deepcut for now
-        data: the data to be used for testing algorithms. The values that it can take are:
+        algorithm: the algorithm to be tested. It can be ICU or Deepcut for now
+        data: the data to be used for testing algorithms.
+        fast: determines if we use small amount of text to run the test or not.
     """
     acc = None
     if algorithm == "ICU":
@@ -18,14 +19,23 @@ def evaluate_existing_algorithms(algorithm, data):
             file = Path.joinpath(Path(__file__).parent.parent.absolute(), 'Data/SAFT/test.txt')
             acc = compute_accuracy(file, "icu")
         elif data == "BEST":
-            acc = compute_accuracy_best(starting_text=40, ending_text=60, algorithm="icu", exclusive=False)
+            if fast:
+                acc = compute_accuracy_best(starting_text=40, ending_text=45, algorithm="icu", exclusive=False)
+            else:
+                acc = compute_accuracy_best(starting_text=40, ending_text=60, algorithm="icu", exclusive=False)
         elif data == "exclusive BEST":
-            acc = compute_accuracy_best(starting_text=40, ending_text=60, algorithm="icu", exclusive=True)
+            if fast:
+                acc = compute_accuracy_best(starting_text=40, ending_text=45, algorithm="icu", exclusive=True)
+            else:
+                acc = compute_accuracy_best(starting_text=40, ending_text=60, algorithm="icu", exclusive=True)
         elif data == "SAFT Burmese":
             file = Path.joinpath(Path(__file__).parent.parent.absolute(), 'Data/SAFT_burmese_test_limited.txt')
             acc = compute_accuracy(file, "icu")
         elif data == "my":
             file = Path.joinpath(Path(__file__).parent.parent.absolute(), 'Data/my_test_segmented.txt')
+            acc = compute_accuracy(file, "icu")
+        elif data == "exclusive my":
+            file = Path.joinpath(Path(__file__).parent.parent.absolute(), 'Data/my_test_segmented_exclusive.txt')
             acc = compute_accuracy(file, "icu")
 
     if algorithm == "Deepcut":
@@ -33,9 +43,15 @@ def evaluate_existing_algorithms(algorithm, data):
             file = Path.joinpath(Path(__file__).parent.parent.absolute(), 'Data/SAFT/test.txt')
             acc = compute_accuracy(file, "icu")
         elif data == "BEST":
-            acc = compute_accuracy_best(starting_text=40, ending_text=60, algorithm="deep", exclusive=False)
+            if fast:
+                acc = compute_accuracy_best(starting_text=40, ending_text=45, algorithm="deep", exclusive=False)
+            else:
+                acc = compute_accuracy_best(starting_text=40, ending_text=60, algorithm="deep", exclusive=False)
         elif data == "exclusive BEST":
-            acc = compute_accuracy_best(starting_text=40, ending_text=60, algorithm="deep", exclusive=True)
+            if fast:
+                acc = compute_accuracy_best(starting_text=40, ending_text=45, algorithm="deep", exclusive=True)
+            else:
+                acc = compute_accuracy_best(starting_text=40, ending_text=60, algorithm="deep", exclusive=True)
 
     if acc is None:
         print("Warning: the evaluation for this combination of data and algorithm is not supported.")

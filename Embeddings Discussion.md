@@ -1,5 +1,5 @@
 ## Error Analysis for Different Embedding Systems
-Author: sahandfr@gmail.com
+Author: Sahand Farhoodi (sahandfr@gmail.com, sahand.farhoodi93@gmail.com)
 
 In this project, we develop a bi-directional LSTM model for word segmentation. For now, this model is implemented for Thai and Burmese.
 

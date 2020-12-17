@@ -6,10 +6,10 @@ In this project, we develop a bi-directional LSTM model for word segmentation. F
 ### Quick start
 * **Use a pre-trained model:** To segment an arbitrary line go to file `train_language.py` where `language` is the language you want to use. For example, if the arbitrary line is in Thai, you should use the file `train_thai.py`. Over there, find comment `# Choose one of the saved models to use`. Everything before this line is for training a new model and can be ignored. After this comment, you can use the function `pick_lstm_model` to choose the model you want to use for segmentation:
 
-```
-word_segmenter = pick_lstm_model(model_name="Thai_codepoints_exclusive_model4_heavy", embedding="codepoints",
+  ```
+  word_segmenter = pick_lstm_model(model_name="Thai_codepoints_exclusive_model4_heavy", embedding="codepoints",
                                  train_data="exclusive BEST", eval_data="exclusive BEST")
-```
+  ```
   
   You need to specify three hyper-parameters: `embedding`, `train_data`, and `eval_data`. Please refer to [Models Specicitaions](https://github.com/SahandFarhoodi/word_segmentation/blob/work/Models%20Specifications.md) on this repository for a detailed explanation of these hyper-parameters, and also for a list of trained models ready to be used in this repository and their specifications. If you don't have time to do that, just pick one of the trained models and make sure that name of the embedding you choose appears in the model name (`train_data` and `eval-data` doesn't affect segmentation of arbitrary inputs). Next, you can use the following commands to specify your input and segment it:
 

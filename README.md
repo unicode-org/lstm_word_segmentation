@@ -88,3 +88,4 @@ The following table summarizes the performance of our algorithm and the current 
 | LSTM model 7 | 96.2 | 94.9 | 92.3 | 91.1 | 125 KB |
 | ICU           | 100  | 100  | 93.1 | 92.4 | 254 KB |
 
+There are areas that this project can be improved. Please see [Future Works](https://github.com/SahandFarhoodi/word_segmentation/blob/work/Future%20Works.md) for some ideas we have, and contact [me](http://math.bu.edu/people/sahand/) if you have any idea!

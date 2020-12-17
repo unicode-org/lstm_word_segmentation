@@ -6,7 +6,7 @@ In this project, we develop a bi-directional LSTM model for word segmentation. F
 ### Quick start
 * **Use a pre-trained model:** To segment an arbitrary line go to file `train_language.py` where `language` is the language you want to use. For example, if the arbitrary line is in Thai, you should use the file `train_thai.py`. Over there, find comment `# Choose one of the saved models to use`. Everything before this line is for training a new model and can be ignored. After this comment, you can use the function `pick_lstm_model` to choose the model you want to use for segmentation:
 
-  ```python
+  ```
 word_segmenter = pick_lstm_model(model_name="Thai_codepoints_exclusive_model4_heavy", embedding="codepoints",
                                  train_data="exclusive BEST", eval_data="exclusive BEST")
   ```

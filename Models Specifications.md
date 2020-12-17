@@ -6,6 +6,7 @@ Here, I explain what are different hyper-parameters in each model and what are t
 
 ### Hyper-parameters
 When you make a new instance of `WordSegmenter` using command
+
 ``` python
 model_name = "Thai_codepoints_exclusive_model4_heavy"
 word_segmenter = WordSegmenter(input_name=model_name, input_n=300, input_t=1200000, input_clusters_num=350,
@@ -26,6 +27,7 @@ you need to specify the following hyper-parameters:
     * The last part shows how much data you used to train your model. This ties to the values of `input_n` and `input_t` that I define later. It can be `heavy`, `heavier`, or nothing. 
   
   You can take a look at `pick_lstm_model` function in `word_segmenter.py` to see how these names are used in the code. For example, the following code shows the relation between `heavy` and `heavier` and `input_n` and `input_t`.
+  
   ```python
   input_n = None
     input_t = None

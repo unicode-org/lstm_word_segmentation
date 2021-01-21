@@ -652,7 +652,7 @@ def pick_lstm_model(model_name, embedding, train_data, eval_data):
         eval_data: the data set to test the model. Often, it should have the same structure as training data set.
     """
     file = Path.joinpath(Path(__file__).parent.parent.absolute(), 'Models/' + model_name)
-    model = keras.models.load_model(file)
+    model = keras.models.load_model(str(file))
 
     # Figuring out name of the model
     language = None

@@ -6,7 +6,9 @@ import sys, getopt, json, struct
 
 """
 Tool to convert Models/*/weights.json files into a resource file could be build
-into ICU. The result should be copy to icu/icu4c/source/data/brkiter/lstm.
+into ICU. The result should be copy to icu/icu4c/source/data/brkitr/lstm.
+See https://docs.google.com/document/d/1EVK2CwOmUamJwMOMbbdTz7tuaV0IR21rMoH7a3pyFwE/edit#heading=h.qkedw6o6vy20
+for detail design.
 """
 
 def main(argv):

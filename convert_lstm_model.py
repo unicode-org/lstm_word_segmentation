@@ -49,15 +49,15 @@ def main(argv):
    print("    hunits:int{{{hunits}}}".format(hunits=hunits))
    print_dict(input["dic"])
    print("    data:intvector{")
-   print_flaot_in_int(input["mat1"]["data"])
-   print_flaot_in_int(input["mat2"]["data"])
-   print_flaot_in_int(input["mat3"]["data"])
-   print_flaot_in_int(input["mat4"]["data"])
-   print_flaot_in_int(input["mat5"]["data"])
-   print_flaot_in_int(input["mat6"]["data"])
-   print_flaot_in_int(input["mat7"]["data"])
-   print_flaot_in_int(input["mat8"]["data"])
-   print_flaot_in_int(input["mat9"]["data"])
+   print_float_in_int(input["mat1"]["data"])
+   print_float_in_int(input["mat2"]["data"])
+   print_float_in_int(input["mat3"]["data"])
+   print_float_in_int(input["mat4"]["data"])
+   print_float_in_int(input["mat5"]["data"])
+   print_float_in_int(input["mat6"]["data"])
+   print_float_in_int(input["mat7"]["data"])
+   print_float_in_int(input["mat8"]["data"])
+   print_float_in_int(input["mat9"]["data"])
    print("    }")
    print("}")
 
@@ -73,7 +73,7 @@ def print_dict(dict):
      i += 1
    print("    }")
 
-def print_flaot_in_int(data):
+def print_float_in_int(data):
    # TODO currently we print each float as 32 bit int. We may later change it to
    # print two float as float16 into one 32 bit int.
    for i in data:

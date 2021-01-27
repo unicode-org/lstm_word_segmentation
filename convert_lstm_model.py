@@ -71,7 +71,7 @@ def print_dict(dict, file):
    print("    dict{", file=file)
    i = 0
    for k in dict:
-     print("        \"{key}\",".format(key=k), file=file)
+     print("        \"{key}\",".format(key=k.replace('"', '\\"')), file=file)
      if i != dict[k]:
        print("Incorrect value for dic \"{k}\": {v}- expecting {i}"
              .format(k=k, v=dict[k], i=i))

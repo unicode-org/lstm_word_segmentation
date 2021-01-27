@@ -13,71 +13,77 @@ for detail design.
 
 def main(argv):
    inputfile = ''
-   script = 'Thai'
-   type = "codepoint"
    try:
-     opts, args = getopt.getopt(argv,"hist::",["ifile=","script=","type="])
+     opts, args = getopt.getopt(argv,"hio::",["ifile=","ofile="])
    except getopt.GetoptError:
-     print('convert_lstm_model.py -i <inputfile> -s <script> -t (*codepoint*|graphemecluster)')
+     print('convert_lstm_model.py -i <inputfile> -o <outputfile>')
      sys.exit(2)
    for opt, arg in opts:
       if opt == '-h':
-        print('convert_lstm_model.py -i <inputfile> -s <script> -t (*codepoint*|graphemecluster)')
+        print('convert_lstm_model.py -i <inputfile> -o <outputfile>')
         sys.exit()
       elif opt in ("-i", "--ifile"):
         inputfile = arg
-      elif opt in ("-s", "--script"):
-        script = arg
-      elif opt in ("-t", "--type"):
-        type = arg
+      elif opt in ("-o", "--ofile"):
+        outfile = arg
 
    input = json.load(open(inputfile, 'r'))
    embeddings = input["mat1"]["dim"][1];
    hunits = input["mat3"]["dim"][0];
    dict_size = len(input["dic"])
    model = input["model"]
+   type = ""
+   if str.find(model, "_codepoints_") > 0:
+     type = "codepoints"
+   elif str.find(model, "_graphclust_") > 0:
+     type = "graphclust"
+
+   if type == "":
+     print("Unknon type specified in the model. Need to be either 'codepoints' or 'graphclust'")
+     sys.exit(2)
 
    verify_dimension(input, dict_size, embeddings, hunits)
 
    copyright="""// © 2021 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html"""
-   print(copyright)
-   print("{script}:table(nofallback){{".format(script=script))
-   print("    model{{\"{model}\"}}".format(model=model))
-   print("    type{{\"{type}\"}}".format(type=type))
-   print("    embeddings:int{{{embeddings}}}".format(embeddings=embeddings))
-   print("    hunits:int{{{hunits}}}".format(hunits=hunits))
-   print_dict(input["dic"])
-   print("    data:intvector{")
-   print_float_in_int(input["mat1"]["data"])
-   print_float_in_int(input["mat2"]["data"])
-   print_float_in_int(input["mat3"]["data"])
-   print_float_in_int(input["mat4"]["data"])
-   print_float_in_int(input["mat5"]["data"])
-   print_float_in_int(input["mat6"]["data"])
-   print_float_in_int(input["mat7"]["data"])
-   print_float_in_int(input["mat8"]["data"])
-   print_float_in_int(input["mat9"]["data"])
-   print("    }")
-   print("}")
+   with open(outfile, 'w') as f:
+     print(copyright, file=f)
+     print("{model}:table(nofallback){{".format(model=model), file=f)
+     print("    model{{\"{model}\"}}".format(model=model), file=f)
+     print("    type{{\"{type}\"}}".format(type=type), file=f)
+     print("    embeddings:int{{{embeddings}}}".format(embeddings=embeddings), file=f)
+     print("    hunits:int{{{hunits}}}".format(hunits=hunits), file=f)
+     print_dict(input["dic"], file=f)
+     print("    data:intvector{", file=f)
+     print_float_in_int(input["mat1"]["data"], file=f)
+     print_float_in_int(input["mat2"]["data"], file=f)
+     print_float_in_int(input["mat3"]["data"], file=f)
+     print_float_in_int(input["mat4"]["data"], file=f)
+     print_float_in_int(input["mat5"]["data"], file=f)
+     print_float_in_int(input["mat6"]["data"], file=f)
+     print_float_in_int(input["mat7"]["data"], file=f)
+     print_float_in_int(input["mat8"]["data"], file=f)
+     print_float_in_int(input["mat9"]["data"], file=f)
+     print("    }", file=f)
+     print("}", file=f)
 
-def print_dict(dict):
-   print("    dict{")
+def print_dict(dict, file):
+   print("    dict{", file=file)
    i = 0
    for k in dict:
-     print("        \"{key}\",".format(key=k))
+     print("        \"{key}\",".format(key=k), file=file)
      if i != dict[k]:
        print("Incorrect value for dic \"{k}\": {v}- expecting {i}"
              .format(k=k, v=dict[k], i=i))
        sys.exit(2)
      i += 1
-   print("    }")
+   print("    }", file=file)
 
-def print_float_in_int(data):
+def print_float_in_int(data, file):
    # TODO currently we print each float as 32 bit int. We may later change it to
    # print two float as float16 into one 32 bit int.
    for i in data:
-     print("        {f},".format(f=struct.unpack("i", struct.pack("f", i))[0]))
+     print("        {f},".format(f=struct.unpack("i", struct.pack("f", i))[0]), file=file)
 
 def verify_dimension(input, dict_size, embeddings, hunits):
    hunits4 = 4 * hunits

@@ -117,15 +117,15 @@ def find_grapheme_clusters(language, exclusive, verbose):
     # Saving the dictionary
     save_file = ""
     if language == "Thai":
-        save_file = Path.joinpath(Path(__file__).parent.parent.absolute(), "Data/Thai_graph_clust_ratio.npy")
+        save_file = Path.joinpath(Path(__file__).parent.parent.absolute(), "Public_Data/Thai_graph_clust_ratio.npy")
         if exclusive:
             save_file = Path.joinpath(Path(__file__).parent.parent.absolute(),
-                                      "Data/Thai_exclusive_graph_clust_ratio.npy")
+                                      "Public_Data/Thai_exclusive_graph_clust_ratio.npy")
     if language == "Burmese":
-        save_file = Path.joinpath(Path(__file__).parent.parent.absolute(), "Data/Burmese_graph_clust_ratio.npy")
+        save_file = Path.joinpath(Path(__file__).parent.parent.absolute(), "Public_Data/Burmese_graph_clust_ratio.npy")
         if exclusive:
             save_file = Path.joinpath(Path(__file__).parent.parent.absolute(),
-                                      "Data/Burmese_exclusive_graph_clust_ratio.npy")
+                                      "Public_Data/Burmese_exclusive_graph_clust_ratio.npy")
     np.save(str(save_file), graph_clust_ratio)
 
 
@@ -139,5 +139,5 @@ def make_thai_burmese_dictionary():
     new_dic = {k: v for k, v in sorted(new_dic.items(), key=lambda item: item[1], reverse=True)}
     total = sum(new_dic.values(), 0.0)
     graph_clust_ratio = {k: v / total for k, v in new_dic.items()}
-    save_file = Path.joinpath(Path(__file__).parent.parent.absolute(), "Data/Thai_Burmese_graph_clust_ratio.npy")
+    save_file = Path.joinpath(Path(__file__).parent.parent.absolute(), "Public_Data/Thai_Burmese_graph_clust_ratio.npy")
     np.save(str(save_file), graph_clust_ratio)

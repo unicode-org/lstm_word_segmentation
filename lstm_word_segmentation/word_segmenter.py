@@ -368,7 +368,6 @@ class WordSegmenter:
             verbose: determines if we want to see the the accuracy of each text that is being tested.
             fast: determines if we use small amount of text to run the test or not.
         """
-        print(self.graph_clust_dic)
         line_limit = -1
         if fast:
             line_limit = 1000

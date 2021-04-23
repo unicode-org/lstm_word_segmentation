@@ -63,15 +63,15 @@ def main(argv):
    word_segmenter = pick_lstm_model(model_name=model_name, embedding=embedding,
                                     train_data="", eval_data="")
 
-   print("Model:", model_name)
-   print("Embedding:", embedding)
+   print("Model:", model_name, sep='\t')
+   print("Embedding:", embedding, sep='\t')
 
    count = 0
    # Strips the newline character
    for line in Lines:
      line = line.strip()
-     print("Input:\t", line)
-     print("Output:\t", word_segmenter.segment_arbitrary_line(line))
+     print("Input:", line, sep='\t')
+     print("Output:", word_segmenter.segment_arbitrary_line(line), sep='\t')
 
 if __name__ == "__main__":
   main(sys.argv[1:])

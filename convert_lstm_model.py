@@ -44,9 +44,9 @@ def main(argv):
 
    verify_dimension(input, dict_size, embeddings, hunits)
 
-   copyright="""// © 2021 and later: Unicode, Inc. and others.
+   copyright="""\uFEFF// © 2021 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html"""
-   with open(outfile, 'w') as f:
+   with open(outfile, 'w', encoding='utf-8') as f:
      print(copyright, file=f)
      print("{model}:table(nofallback){{".format(model=model), file=f)
      print("    model{{\"{model}\"}}".format(model=model), file=f)

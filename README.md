@@ -10,7 +10,7 @@ In this project, we develop a bi-directional LSTM model for word segmentation. F
   word_segmenter = pick_lstm_model(model_name="Thai_codepoints_exclusive_model4_heavy", embedding="codepoints",
                                  train_data="exclusive BEST", eval_data="exclusive BEST")
   ```
-  
+
   You need to specify three hyper-parameters: `embedding`, `train_data`, and `eval_data`. Please refer to [Models Specicitaions](https://github.com/SahandFarhoodi/word_segmentation/blob/work/Models%20Specifications.md) for a detailed explanation of these hyper-parameters, and also for a list of trained models ready to be used in this repository and their specifications. If you don't have time to do that, just pick one of the trained models and make sure that name of the embedding you choose appears in the model name (`train_data` and `eval-data` doesn't affect segmentation of arbitrary inputs). Next, you can use the following commands to specify your input and segment it:
 
   ```python
@@ -19,7 +19,7 @@ In this project, we develop a bi-directional LSTM model for word segmentation. F
   ```
 
 * **Train a new model:** In order to train a new model in Thai or Burmese, you need to use file `train_language.py` where `language` is the language you want to work with. Over there, you need to use the code between comments `# Train a new model -- choose name cautiously to not overwrite other models` and `# Choose one of the saved models to use`. The following code let you define a new model:
-  
+
   ```python
   model_name = "Thai_new_model"
   word_segmenter = WordSegmenter(input_name=model_name, input_n=50, input_t=10000, input_clusters_num=350,
@@ -28,14 +28,14 @@ In this project, we develop a bi-directional LSTM model for word segmentation. F
                                input_evaluation_data="exclusive BEST", input_language="Thai",
                                input_embedding_type="codepoints")
   ```
-  
+
   There are some hyperparameters need to be specified that are explained in detail in [Models Specifications](https://github.com/SahandFarhoodi/word_segmentation/blob/work/Models%20Specifications.md). After specifying your model, you can use function `word_segmenter.train_model()` to train your model, `word_segmenter.save_model()` to save it, and `word_segmenter.test_model_line_by_line()` to test it:
   ```python
   word_segmenter.train_model()
   word_segmenter.save_model()
   word_segmenter.test_model_line_by_line(verbose=True)
-  ```  
-  This repository is developed in a way that makes the process of training models in a new language semi-automatic. If you are interested in doing so, you need to find appropriate data sets (or decide to use the unsupervised learning option), add a couple of lines in `word_segmenter.py` and `constants.py` that let you use those data sets, use the `LSTMBayesianOptimization` class to estimate the values of `hunits` and `embedding_dim` (see [Models Specifications](https://github.com/SahandFarhoodi/word_segmentation/blob/work/Models%20Specifications.md) for details), and then train your models as above. You may also need to do some extra preprocessing (see `preproceee.py`) if you decide to use grapheme clusters embedding. Feel free to contact me if you think I can help you with this. 
+  ```
+  This repository is developed in a way that makes the process of training models in a new language semi-automatic. If you are interested in doing so, you need to find appropriate data sets (or decide to use the unsupervised learning option), add a couple of lines in `word_segmenter.py` and `constants.py` that let you use those data sets, use the `LSTMBayesianOptimization` class to estimate the values of `hunits` and `embedding_dim` (see [Models Specifications](https://github.com/SahandFarhoodi/word_segmentation/blob/work/Models%20Specifications.md) for details), and then train your models as above. You may also need to do some extra preprocessing (see `preproceee.py`) if you decide to use grapheme clusters embedding. Feel free to contact me if you think I can help you with this.
 
 ### Model structure
 Figure 1 illustrates our bi-directional model structure. Below we explain what are different layers:
@@ -43,9 +43,9 @@ Figure 1 illustrates our bi-directional model structure. Below we explain what a
 * **Input Layer**: In the input layer we have a sequence of letters or characters that we want to segment. To be more specific, when you look at a string you can see it as a sequence of code points or [extended grapheme clusters](https://unicode.org/reports/tr29/). The choice of units for your input sequence (grapheme clusters or code points) results in different models, which should be chosen carefully. The code in this repository supports both of these options.
 
 * **Embedding Layer**: In the embedding layer, we represent each unit of the input line (grapheme cluster or code point) with a numerical vector so it can be used by the rest of the model. The choice of embedding can significantly affect the model size and performance. The length of each embedding vector is denoted by *embedding size* throughout the rest of this document. In this repository, three types of embeddings are implemented:
-  * **grapheme clusters to vectors**: In this approach, each grapheme cluster is mapped to a single vector. These vectors are learned during model training and need to be stored to be used later for evaluation. Given that the set of possible grapheme clusters is theoretically infinity, we cannot store one vector for each possible grapheme clusters. Hence, we use large corpora to extract all grapheme clusters that actually happen in texts. Then we sort these grapheme clusters based on their frequency in the corpora and store one vector for those grapheme clusters that cover 99% of the text, and one vector for any other grapheme cluster. Using this approach, we need to store about 350 grapheme cluster vectors for Thai and Burmese. 
+  * **grapheme clusters to vectors**: In this approach, each grapheme cluster is mapped to a single vector. These vectors are learned during model training and need to be stored to be used later for evaluation. Given that the set of possible grapheme clusters is theoretically infinity, we cannot store one vector for each possible grapheme clusters. Hence, we use large corpora to extract all grapheme clusters that actually happen in texts. Then we sort these grapheme clusters based on their frequency in the corpora and store one vector for those grapheme clusters that cover 99% of the text, and one vector for any other grapheme cluster. Using this approach, we need to store about 350 grapheme cluster vectors for Thai and Burmese.
   * **Generalized encoding vectors**: In this approach, each code point is mapped to a vector that is learned during training, and then the vector computed for a grapheme cluster is the average of vectors corresponding to code points in it. The number of code points in a language is fixed and considerably less than the number of grapheme clusters, and hence the embedding matrix will have a smaller size using this approach. However, this approach typically requires a larger number of hidden units and embedding size in the model. There are variations of this approach (explained in [Embedding Discussion](https://github.com/SahandFarhoodi/word_segmentation/blob/work/Embeddings%20Discussion.md)) that are centered around the idea of having one vector for a group of code points that we believe behave similarly, such as digits.
-  * **code points to vectors**: In this approach, each code point is mapped to a single vector and these vectors are used directly in the remaining of the model. Therefore, in contrast to the two previous methods, here the smallest part of a sentence is code point instead of grapheme clusters. Again, this approach reduces the number of vectors we need to store, but often increases the number of hidden units and also the embedding size. 
+  * **code points to vectors**: In this approach, each code point is mapped to a single vector and these vectors are used directly in the remaining of the model. Therefore, in contrast to the two previous methods, here the smallest part of a sentence is code point instead of grapheme clusters. Again, this approach reduces the number of vectors we need to store, but often increases the number of hidden units and also the embedding size.
 * **Forward/Backward LSTM Layers**: The output of the embedding layer is fed into the forward and backward LSTM layers. We show the number of hidden units in each cell of LSTM by *hunits*.
 
 * **Output Layer**: Here, the output of forward and backward LSTM layers are concatenated and fed into a dense layer with *softmax* activation function to make a vector of length four for each grapheme cluster. The values in each vector add up to 1 and are probabilities of *BIES*, where:
@@ -83,7 +83,7 @@ There are two sets of trained models, one set is models trained using the langua
   | Deepcut        | 97.8 | 95.7 | 92.5 | 86  | 2.2 MB |
   | ICU            | 93 | 86.4 | 90.3 | 81.9 | 126 KB |
 
-* **Burmese**: 
+* **Burmese**:
 The following table summarizes the performance of our algorithm and the current ICU algorithm for Burmese. Again, we have different versions of our LSTM models, where LSTM model 7 and LSTM model 5 are respectively the most accurate and the most parsimonious models. Based on this table, LSTM models learn to mimic what the ICU algorithm does pretty well. **For instance, on SAFT data, the relative error with respect to ICU is less than 1% (93.1/92.4) for model 7 and less than 2% for models 4 and 5. In terms of data size, LSTM models 4, 5, and 7 show respectively 88%, 94%, and 51% reduction**.
 
   | Algorithm | BIES accuracy (ICU segmented) | F1-score (ICU segmented) | BIES accuracy (SAFT) | F1-score (SAFT) | Model size |
@@ -94,3 +94,11 @@ The following table summarizes the performance of our algorithm and the current 
   | ICU           | 100  | 100  | 93.1 | 92.4 | 254 KB |
 
 There are several directions for improving this project. Please see [Future Works](https://github.com/SahandFarhoodi/word_segmentation/blob/work/Future%20Works.md) for some ideas we have, and contact [me](http://math.bu.edu/people/sahand/) if you have any idea!
+
+### Copyright & Licenses
+
+Copyright © 2020-2023 Unicode, Inc. Unicode and the Unicode Logo are registered trademarks of Unicode, Inc. in the United States and other countries.
+
+The project is released under [LICENSE](./LICENSE).
+
+A CLA is required to contribute to this project - please refer to the [CONTRIBUTING.md](https://github.com/unicode-org/.github/blob/main/.github/CONTRIBUTING.md) file (or start a Pull Request) for more information.

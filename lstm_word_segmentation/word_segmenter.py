@@ -5,6 +5,7 @@ from icu import Char
 from keras.models import Sequential
 from keras.layers import LSTM, Dense, TimeDistributed, Bidirectional, Embedding, Dropout
 from tensorflow import keras
+import tensorflow as tf
 
 from . import constants
 from .helpers import sigmoid
@@ -600,7 +601,9 @@ class WordSegmenter:
         This function saves the current trained model of this word_segmenter instance.
         """
         # Save the model using Keras
-        self.model.save(Path.joinpath(Path(__file__).parent.parent.absolute(), "Models/" + self.name))
+        model_path = (Path.joinpath(Path(__file__).parent.parent.absolute(), "Models/" + self.name))
+        tf.saved_model.save(self.model, model_path)
+
         # Save one np array that holds all weights
         file = Path.joinpath(Path(__file__).parent.parent.absolute(), "Models/" + self.name + "/weights")
         np.save(str(file), self.model.weights)
@@ -652,7 +655,7 @@ def pick_lstm_model(model_name, embedding, train_data, eval_data):
         eval_data: the data set to test the model. Often, it should have the same structure as training data set.
     """
     file = Path.joinpath(Path(__file__).parent.parent.absolute(), 'Models/' + model_name)
-    model = keras.models.load_model(file)
+    model = keras.layers.TFSMLayer(file, call_endpoint='serving_default')
 
     # Figuring out name of the model
     language = None

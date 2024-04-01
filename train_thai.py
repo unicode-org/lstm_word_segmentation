@@ -28,11 +28,9 @@ word_segmenter.test_model_line_by_line(verbose=True)
 # Choose one of the saved models to use
 # '''
 word_segmenter = pick_lstm_model(model_name="Thai_graphclust_model4_heavy", embedding="grapheme_clusters_tf",
-                                 train_data="/", eval_data="/")
+                                 train_data="BEST", eval_data="BEST")
 print("model_name = {}, embedding dim = {}, hunits = {}".format(word_segmenter.name, word_segmenter.embedding_dim,
                                                                 word_segmenter.hunits))
 # word_segmenter.save_model()
-line = "ภาษาฮินกา กัวซาซาปานเป็นของตระกูลภาษาฮินกา ถูกพูดในเมืองของกัวซาซาปานในประเทศกัวเตมาลา"
-print(word_segmenter.segment_arbitrary_line(line))
 word_segmenter.test_model_line_by_line(verbose=True, fast=True)
 # '''

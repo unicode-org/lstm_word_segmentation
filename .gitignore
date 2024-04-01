@@ -1,6 +1,7 @@
 Data/
 __pycache__/
 .idea/
+.venv/
 README.html
 Embeddings-Discussion.html
 Models-Specifications.html

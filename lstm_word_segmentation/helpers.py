@@ -31,24 +31,11 @@ def sigmoid(inp):
         inp: the input which can be a scalar or a 1d numpy array
     """
     inp = np.asarray(inp)
-    scalar_input = False
-    if inp.ndim == 0:
-        inp = inp[None]
-        scalar_input = True
     # Checking for case when the input is an array/np.array of arrays. In this case only the first element of inp is
     # used. A common example is when A = np.array([np.array([1, 2, 3])]).
-    if type(inp[0]) == np.ndarray:
+    if inp.ndim == 2:
         inp = inp[0]
-    out = []
-    for x in inp:
-        if x < -20:
-            out.append(0)
-        else:
-            out.append(1.0/(1.0 + np.exp(-x)))
-    out = np.array(out)
-    if scalar_input:
-        return np.squeeze(out)
-    return out
+    return 1.0 / (1.0 + np.exp(-np.clip(inp, -709.78, 709.78)))
 
 
 def print_grapheme_clusters(thrsh, language, exclusive):

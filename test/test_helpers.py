@@ -67,7 +67,8 @@ class TestSigmoid(unittest.TestCase):
             TestCase(0, np.array(0.5)),
             TestCase(np.array([0, -1000]), np.array([0.5, 0])),
             TestCase(np.array([[0, 1, 100, -1, -10]]), np.array([0.5, 0.73105858, 1, 0.26894142, 0.00004540])),
-            TestCase(np.array([np.array([0, 1, 100, -1, -10]), np.array([1, 2, 3])]), np.array([0.5, 0.73105858, 1, 0.26894142, 0.00004540])),
+            TestCase(np.array([np.array([0, 1, 100, -1, -10]), np.array([1, 2, 3, 4, 5])]), np.array([0.5, 0.73105858, 1, 0.26894142, 0.00004540])),
+            TestCase(np.array([np.array([1, 2, 3])]), [0.73105858, 0.88079708, 0.95257413]),
         ]
         for cas in cases:
             computed = sigmoid(inp=cas.input)

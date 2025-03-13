@@ -1,5 +1,6 @@
 from pathlib import Path
 import numpy as np
+import h5py  
 import json
 from icu import Char
 from keras.models import Sequential

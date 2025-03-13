@@ -6,6 +6,7 @@ from keras.models import Sequential
 from keras.layers import LSTM, Dense, TimeDistributed, Bidirectional, Embedding, Dropout
 from tensorflow import keras
 import tensorflow as tf
+from convert_weights import convert_weights
 
 from . import constants
 from .helpers import sigmoid
@@ -607,7 +608,7 @@ class WordSegmenter:
         # Save one np array that holds all weights
         file = Path.joinpath(Path(__file__).parent.parent.absolute(), "Models/" + self.name + "/weights")
         np.save(str(file), self.model.weights)
-
+        convert_weights(str(file) + ".npy")
         # Save the model in json format, that has both weights and grapheme clusters dictionary
         json_file = Path.joinpath(Path(__file__).parent.parent.absolute(), "Models/" + self.name + "/weights.json")
         with open(str(json_file), 'w') as wfile:

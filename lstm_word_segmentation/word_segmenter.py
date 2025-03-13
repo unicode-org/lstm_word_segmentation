@@ -605,10 +605,13 @@ class WordSegmenter:
         model_path = (Path.joinpath(Path(__file__).parent.parent.absolute(), "Models/" + self.name))
         tf.saved_model.save(self.model, model_path)
 
-        # Save one np array that holds all weights
-        file = Path.joinpath(Path(__file__).parent.parent.absolute(), "Models/" + self.name + "/weights")
-        np.save(str(file), self.model.weights)
-        convert_weights(str(file) + ".npy")
+        # Inlining weight saving directly into HDF5 format
+        weights_file = Path.joinpath(Path(__file__).parent.parent.absolute(), "Models/" + self.name + "/weights.h5")
+        with h5py.File(str(weights_file), 'w') as hdf5_file:
+         # Iterate over the model weights and save each one as a dataset in the HDF5 file
+         for i, weight in enumerate(self.model.weights):
+            weight_name = f"weight_{i+1}"
+            hdf5_file.create_dataset(weight_name, data=weight.numpy())  # Save weight tensor directly
         # Save the model in json format, that has both weights and grapheme clusters dictionary
         json_file = Path.joinpath(Path(__file__).parent.parent.absolute(), "Models/" + self.name + "/weights.json")
         with open(str(json_file), 'w') as wfile:
@@ -637,6 +640,7 @@ class WordSegmenter:
                 dic_model["data"] = serial_mat
                 output["mat{}".format(i+1)] = dic_model
             json.dump(output, wfile)
+    print(f"Model, weights in .h5, and weights metadata in .json saved successfully!")        
 
     def set_model(self, input_model):
         """

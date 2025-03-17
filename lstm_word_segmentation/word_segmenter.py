@@ -7,7 +7,6 @@ from keras.models import Sequential
 from keras.layers import LSTM, Dense, TimeDistributed, Bidirectional, Embedding, Dropout
 from tensorflow import keras
 import tensorflow as tf
-from convert_weights import convert_weights
 
 from . import constants
 from .helpers import sigmoid

@@ -15,3 +15,4 @@ Models/Burmese_model4_version2/
 Models/Other/
 *~
 venv/
+convert_weights.py

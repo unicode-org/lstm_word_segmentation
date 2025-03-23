@@ -601,44 +601,41 @@ class WordSegmenter:
         This function saves the current trained model of this word_segmenter instance.
         """
         # Save the model using Keras
-        model_path = (Path.joinpath(Path(__file__).parent.parent.absolute(), "Models/" + self.name))
-        tf.saved_model.save(self.model, model_path)
+        model_dir = Path(__file__).parent.parent / "Models" / self.name
+        model_dir.mkdir(parents=True, exist_ok=True)
 
         # Save model as .h5 file
-        h5_path = model_path / "weights.h5"
-        self.model.save(h5_path)
-        # Save one np array that holds all weights
-        file = Path.joinpath(Path(__file__).parent.parent.absolute(), "Models/" + self.name + "/weights")
-        np.save(str(file), self.model.weights)
+        self.model.save(model_dir / "weights.h5")
 
-        # Save the model in json format, that has both weights and grapheme clusters dictionary
-        json_file = Path.joinpath(Path(__file__).parent.parent.absolute(), "Models/" + self.name + "/weights.json")
-        with open(str(json_file), 'w') as wfile:
-            output = dict()
-            output["model"] = self.name
+        # Save weights as a NumPy file
+        np.save(model_dir / "weights.npy", np.array([w.numpy() for w in self.model.weights], dtype=object))
+
+        # Save the model in JSON format
+        json_file = model_dir / "weights.json"
+        with open(json_file, 'w') as wfile:
+            output = {"model": self.name}
+
+            # Store grapheme clusters or codepoints
             if "grapheme_clusters" in self.embedding_type:
-                output["dic"] = self.graph_clust_dic
+              output["dic"] = self.graph_clust_dic
             elif "codepoints" in self.embedding_type:
-                if self.language == "Thai":
-                    output["dic"] = constants.THAI_CODE_POINT_DICTIONARY
-                if self.language == "Burmese":
-                    output["dic"] = constants.BURMESE_CODE_POINT_DICTIONARY
-            for i in range(len(self.model.weights)):
-                dic_model = dict()
-                dic_model["v"] = 1
-                mat = self.model.weights[i].numpy()
-                dim0 = mat.shape[0]
-                dim1 = 1
-                if len(mat.shape) == 1:
-                    dic_model["dim"] = [dim0]
-                else:
-                    dim1 = mat.shape[1]
-                    dic_model["dim"] = [dim0, dim1]
-                serial_mat = np.reshape(mat, newshape=[dim0 * dim1])
-                serial_mat = serial_mat.tolist()
-                dic_model["data"] = serial_mat
-                output["mat{}".format(i+1)] = dic_model
-            json.dump(output, wfile)
+               output["dic"] = (
+                constants.THAI_CODE_POINT_DICTIONARY if self.language == "Thai"
+                else constants.BURMESE_CODE_POINT_DICTIONARY if self.language == "Burmese"
+                else {}
+            )
+
+             # Serialized weights into JSON format
+            for i, weight in enumerate(self.model.weights, start=1):
+               mat = weight.numpy()
+               output[f"mat{i}"] = {
+                "v": 1,
+                "dim": list(mat.shape),
+                "data": mat.flatten().tolist()
+            }
+
+        # Write JSON output to file
+        json.dump(output, wfile, indent=4) 
 
     def set_model(self, input_model):
         """

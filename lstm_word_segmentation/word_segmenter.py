@@ -604,6 +604,9 @@ class WordSegmenter:
         model_path = (Path.joinpath(Path(__file__).parent.parent.absolute(), "Models/" + self.name))
         tf.saved_model.save(self.model, model_path)
 
+        # Save model as .h5 file
+        h5_path = model_path / "weights.h5"
+        self.model.save(h5_path)
         # Save one np array that holds all weights
         file = Path.joinpath(Path(__file__).parent.parent.absolute(), "Models/" + self.name + "/weights")
         np.save(str(file), self.model.weights)

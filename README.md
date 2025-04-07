@@ -2,7 +2,11 @@
 Author: Sahand Farhoodi (sahandfr@gmail.com, sahand.farhoodi93@gmail.com)
 
 In this project, we develop a bi-directional LSTM model for word segmentation. For now, these models are trained for Thai and Burmese.
+### Install dependencies
 
+```bash
+pip install -r requirements.txt
+```
 ### Quick start
 * **Use a pre-trained model:** To segment an arbitrary line go to file `train_language.py` where `language` is the language you want to use. For example, if the arbitrary line is in Thai, you should use the file `train_thai.py`. Over there, find comment `# Choose one of the saved models to use`. Everything before this line is for training a new model and can be ignored. After this comment, you can use the function `pick_lstm_model` to choose the model you want to use for segmentation:
 

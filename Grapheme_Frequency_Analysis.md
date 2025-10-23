@@ -6,7 +6,7 @@
 
 `Public_Data` folder ထဲတွင် `Burmese_graph_clust_ratio.npy` ကဲ့သို့သော `.npy` ဖိုင်များ ပါဝင်ပါသည်။ ဤဖိုင်များသည် NumPy library ကို အသုံးပြု၍ သိမ်းဆည်းထားသော binary ဖိုင်များ ဖြစ်ကြသည်။
 
-အတွင်းတွင် **Dictionary** รูปแบบဖြင့် data များကို သိမ်းဆည်းထားပြီး၊ Key မှာ **Grapheme Cluster** (စာလုံး) ဖြစ်ပြီး၊ Value မှာ ထို Grapheme Cluster ၏ **ဖြစ်ပွားနှုန်း အချိုး (Frequency Ratio)** ဖြစ်ပါသည်။
+အတွင်းတွင် **Dictionary** ပုံစံဖြင့် data များကို သိမ်းဆည်းထားပြီး၊ Key မှာ **Grapheme Cluster** (စာလုံး) ဖြစ်ပြီး၊ Value မှာ ထို Grapheme Cluster ၏ **ဖြစ်ပွားနှုန်း အချိုး (Frequency Ratio)** ဖြစ်ပါသည်။
 
 **ဥပမာ (`Burmese_graph_clust_ratio.npy` မှ):**
 *   Grapheme Cluster: ' ' (space), Ratio: 0.1355

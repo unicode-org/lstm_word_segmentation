@@ -93,7 +93,51 @@ The following table summarizes the performance of our algorithm and the current 
   | LSTM model 7 | 96.2 | 94.9 | 92.3 | 91.1 | 125 KB |
   | ICU           | 100  | 100  | 93.1 | 92.4 | 254 KB |
 
-There are several directions for improving this project. Please see [Future Works](https://github.com/SahandFarhoodi/word_segmentation/blob/work/Future%20Works.md) for some ideas we have, and contact [me](http://math.bu.edu/people/sahand/) if you have any idea!
+### Qualitative Examples
+#### Example 1: Oxford
+
+| Model       | Text                                                                 |
+|-------------|---------------------------------------------------------------------|
+| Dictionary  | . อ้างอิง . จาก . พจนานุกรม . ภาษา . อังกฤษ . ของ . อ็อก . ซ์ . ฟอร์ด . |
+| LSTM        | . อ้าง . อิง . จากพจนานุกรม . ภาษา . อังกฤษ . ของ . อ็อกซ์ฟอร์ด . |
+| Translation | According to the Oxford English Dictionary                          |
+
+- **Analysis**: The token "อ็อกซ์ฟอร์ด" or "Oxford" is retained as a single token in LSTM, whereas Dictionary incorrectly splits it into multiple words. Dictionary segments it into something like: "O xf ord".
+- **At the start of the sentence**: The Dictionary model correctly identifies "อ้างอิง (reference) จาก (from) พจนานุกรม (dictionary)". LSTM splits อ้างอิง into two words; it should preferably be one word, but it is arguably a compound word.
+
+#### Example 2: Kingdom of Kushan
+
+| Model       | Text                                                                 |
+|-------------|---------------------------------------------------------------------|
+| Dictionary  | . กษัตริย์ . ที่ . ปกครอง . อาณาจักร . กุ . ษา . ณะ . |
+| LSTM        | . กษัตริย์ . ที่ . ปกครอง . อาณาจักร . กุษาณะ . |
+| Translation | The king who ruled the Kingdom of Kushan                            |
+
+- **Analysis**: Should be "อาณาจักร กุษาณะ" "Kingdom (of) Kushan". LSTM correctly identifies this. But it's arguable that อาณาจักร is a compound word of อาณา + จักร.
+
+#### Example 3: Impact
+
+| Model       | Text                                                                 |
+|-------------|---------------------------------------------------------------------|
+| Dictionary  | . ซึ่ง . จัด . ขึ้น . ที่ . ศูนย์ . แสดง . สินค้า . และ . การ . ประชุม . อิมแ . พค . |
+| LSTM        | . ซึ่ง . จัด . ขึ้น . ที่ . ศูนย์ . แสดง . สินค้า . และ . การ . ประชุม . อิมแพค . |
+| Translation | Center (for) showing product and Meeting Impact / "Impact Exhibition and Convention Center" where Impact is a English-borrowed name. |
+
+- **Analysis**: LSTM identifies "อิมแพค", "Impact", as being a single borrow word.
+
+#### Example 4: Land of Assam
+
+| Model       | Text                                                                 |
+|-------------|---------------------------------------------------------------------|
+| Dictionary  | . ทำให้ . พม่า . ต้อง . สูญ . เสีย . ดิน . แดน . อัส . สัม . |
+| LSTM        | . ทำ . ให้ . พม่า . ต้อง . สูญเสีย . ดินแดนอัส . สัม . |
+| Translation | Causing Burmese to lose land (of) Assam                            |
+
+- **Analysis**: Neither of the models gets "อัสสัม", "Assam", as a single token.
+- **Prefer the Dictionary result of "ดิน แดน อัส สัม" over "ดินแดนอัส สัม"**.
+- **The differences in the first part of the sentence appear to be more disagreements over what is a compound word**. Dictionary retains "ทำให้" as a single token, but LSTM retains "สูญเสีย" as a single token. I think ideally both are single tokens.
+
+---
 
 ### Copyright & Licenses
 
